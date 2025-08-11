@@ -2,9 +2,10 @@
 // Handles drawing dotted lines connecting components to show optical path
 
 import { componentState } from './componentManager.js';
+import { componentDimensions } from './components.js';
 
 // Trace line settings
-export let showTraceLines = false;
+export let showTraceLines = true;
 
 // Show trace lines connecting parent-child relationships
 export function drawTraceLines() {
@@ -27,6 +28,12 @@ export function drawTraceLines() {
         
         if (!parentState || !childState) return;
         
+        // Get component dimensions for centerPoint calculations
+        const parentDims = componentDimensions[parentState.type];
+        const childDims = componentDimensions[childState.type];
+        
+        if (!parentDims || !childDims) return;
+        
         // Create a unique connection identifier (sorted to avoid duplicates)
         const connectionKey = [parentId, childId].sort().join('-');
         
@@ -34,12 +41,18 @@ export function drawTraceLines() {
         if (drawnConnections.has(connectionKey)) return;
         drawnConnections.add(connectionKey);
         
-        // Draw dotted line between component centers
+        // Calculate centerPoint positions for both components
+        const parentCenterX = parentState.posX + parentDims.centerPoint.x;
+        const parentCenterY = parentState.posY + parentDims.centerPoint.y;
+        const childCenterX = childState.posX + childDims.centerPoint.x;
+        const childCenterY = childState.posY + childDims.centerPoint.y;
+        
+        // Draw dotted line between component centerPoints
         const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", parentState.posX);
-        line.setAttribute("y1", parentState.posY);
-        line.setAttribute("x2", childState.posX);
-        line.setAttribute("y2", childState.posY);
+        line.setAttribute("x1", parentCenterX);
+        line.setAttribute("y1", parentCenterY);
+        line.setAttribute("x2", childCenterX);
+        line.setAttribute("y2", childCenterY);
         line.setAttribute("stroke", "black");
         line.setAttribute("stroke-width", "1");
         line.setAttribute("stroke-dasharray", "5,5");

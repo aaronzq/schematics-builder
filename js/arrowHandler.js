@@ -2,6 +2,7 @@
 // Handles arrow creation and positioning (drag functionality moved to dragHandler.js)
 
 import { componentState } from './componentManager.js';
+import { componentDimensions } from './components.js';
 import { makeArrowHandleDraggable, makeRotationHandleDraggable } from './dragHandler.js';
 
 const COMPONENT_SPACING = 150;
@@ -13,11 +14,17 @@ export function showArrowForComponent(component) {
     
     // Get persistent state
     const compId = component.getAttribute('data-id');
+    const type = component.getAttribute('data-type');
     const state = componentState[compId];
     if (!state) return;
 
-    const centerX = state.posX;
-    const centerY = state.posY;
+    // Get component dimensions for centerPoint
+    const dims = componentDimensions[type];
+    if (!dims) return;
+
+    // Calculate arrow start position from centerPoint (in world coordinates)
+    const centerX = state.posX + dims.centerPoint.x;
+    const centerY = state.posY + dims.centerPoint.y;
     const rotation = state.rotation;
 
     // Always use the latest stored arrow endpoint for initial arrow position
@@ -61,7 +68,7 @@ export function showArrowForComponent(component) {
         // Place handle 40px above center (relative to rotation)
         const handleRadius = 12;
         const handleDistance = 40;
-        // Calculate rotated position
+        // Calculate rotated position relative to centerPoint
         const angleRad = rotation * Math.PI / 180;
         const rx = centerX + handleDistance * Math.cos(angleRad - Math.PI/2);
         const ry = centerY + handleDistance * Math.sin(angleRad - Math.PI/2);

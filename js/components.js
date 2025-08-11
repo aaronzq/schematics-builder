@@ -3,11 +3,54 @@
 
 // Component dimensions definition
 export const componentDimensions = {
-    objective: { width: 129, height: 60, offsetX: 0 },  // Centered: -82.5 to +46.5, total width 129px
-    lens: { width: 60, height: 60, offsetX: 0 },
-    mirror: { width: 60, height: 60, offsetX: 0 },
-    detector: { width: 56, height: 80, offsetX: 0 },  // Updated to match actual detector size with connector
-    'lenslet-array': { width: 25, height: 60, offsetX: 0 }  // 5 small lenses stacked vertically
+    objective: { 
+        width: 129, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 } // Forward direction (positive X)
+    },
+    lens: { 
+        width: 60, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 } // Forward direction (positive X)
+    },
+    mirror: { 
+        width: 60, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: -3, y: 0 }, // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 } // Forward direction (positive X)
+    },
+    detector: { 
+        width: 56, 
+        height: 80, 
+        offsetX: 0,
+        centerPoint: { x: -25, y: 0 }, // Center at component origin
+        upVector: { x: 0, y: -1 },     // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }  // Forward direction (positive X)
+    },
+    'lenslet-array': { 
+        width: 25, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 } // Forward direction (positive X)
+    },
+    plane: { 
+        width: 6, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 } // Forward direction (positive X)
+    }
 };
 
 // Component drawing functions
@@ -34,7 +77,7 @@ export const components = {
 
             // Conical front (tapered head)
             const cone = document.createElementNS(ns, "path");
-            cone.setAttribute("d", "M -46.5 -30 L -48.5 -30 L -64.5 -9 L -64.5 9 L -48.5 30 L -46.5 30 Z");
+            cone.setAttribute("d", "M -46.5 -30 L -48.5 -30 L -64.5 -15 L -64.5 15 L -48.5 30 L -46.5 30 Z");
             cone.setAttribute("fill", "#d9d9d9");
             cone.setAttribute("stroke", "black");
             cone.setAttribute("stroke-width", "1.5");
@@ -203,6 +246,24 @@ export const components = {
                 g.appendChild(lens);
             }
             
+            return g;
+        }
+    },
+
+    plane: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            // Solid vertical line
+            const plane = document.createElementNS(ns, "line");
+            plane.setAttribute("x1", "0");
+            plane.setAttribute("y1", "-20");
+            plane.setAttribute("x2", "0");
+            plane.setAttribute("y2", "20");
+            plane.setAttribute("stroke", "black");
+            plane.setAttribute("stroke-width", "1.5");
+            g.appendChild(plane);
+
             return g;
         }
     }

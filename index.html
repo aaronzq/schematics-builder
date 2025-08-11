@@ -11,11 +11,12 @@
   <div class="container">
     <div class="sidebar">
       <div class="toolbar">
-        <button onclick="addComponent('lens')">Lens</button>
+        <button onclick="addComponent('plane')">Plane</button>
         <button onclick="addComponent('objective')">Objective</button>
+        <button onclick="addComponent('lens')">Lens</button>
         <button onclick="addComponent('mirror')">Mirror</button>
-        <button onclick="addComponent('detector')">Detector</button>
         <button onclick="addComponent('lenslet-array')">Lenslet Array</button>
+        <button onclick="addComponent('detector')">Detector</button>
       </div>
     </div>
     <div class="workspace">
@@ -29,7 +30,7 @@
     </div>
   </div>
   <button id="delete-btn" style="position: absolute; top: 10px; right: 10px; z-index: 10;">Delete Selected</button>
-  <button id="trace-btn" style="position: absolute; top: 10px; right: 140px; z-index: 10;">Show Trace Line</button>
+  <button id="trace-btn" style="position: absolute; top: 10px; right: 140px; z-index: 10;">Hide Trace Line</button>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

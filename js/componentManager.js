@@ -12,7 +12,7 @@ let nextY = 0;
 
 // Constants
 const COMPONENT_SPACING = 150;
-const SHOW_CENTER_MARKERS = false;
+const SHOW_DEBUG_DRAWING = true;
 
 // Component state management
 export const componentState = {};
@@ -77,15 +77,23 @@ export function addComponent(type) {
     const compId = idCounter++;
     g.setAttribute("data-id", compId);
     g.setAttribute("data-type", type);
-    g.setAttribute("transform", `translate(${placeX},${placeY}) rotate(${initialRotation})`);
+    
+    // Get component dimensions
+    const dims = componentDimensions[type];
+    
+    // Apply rotation around centerPoint
+    g.setAttribute("transform", `translate(${placeX},${placeY}) rotate(${initialRotation} ${dims.centerPoint.x} ${dims.centerPoint.y})`);
 
     // Store persistent state
+    const centerPointX = placeX + dims.centerPoint.x;
+    const centerPointY = placeY + dims.centerPoint.y;
+    
     componentState[compId] = {
         posX: placeX,
         posY: placeY,
         rotation: initialRotation,
-        arrowX: placeX + COMPONENT_SPACING * Math.cos(initialRotation * Math.PI / 180),
-        arrowY: placeY + COMPONENT_SPACING * Math.sin(initialRotation * Math.PI / 180),
+        arrowX: centerPointX + COMPONENT_SPACING * Math.cos(initialRotation * Math.PI / 180),
+        arrowY: centerPointY + COMPONENT_SPACING * Math.sin(initialRotation * Math.PI / 180),
         selected: false,
         type: type,
         parentId: null,  // Parent component ID (null for root components)
@@ -98,9 +106,6 @@ export function addComponent(type) {
     // Update nextX/nextY for default placement
     nextX = componentState[compId].arrowX;
     nextY = componentState[compId].arrowY;
-
-    // Get component dimensions
-    const dims = componentDimensions[type];
 
     // Add hit area for better selection, centered on component
     const hitArea = document.createElementNS(ns, "rect");
@@ -121,15 +126,45 @@ export function addComponent(type) {
         g.appendChild(child);
     }
 
-    // Add center marker (red dot) on top - only if debug is enabled
-    if (SHOW_CENTER_MARKERS) {
+    // Add center marker (red dot) and direction vectors - only if debug is enabled
+    if (SHOW_DEBUG_DRAWING) {
+        // Center marker (red dot)
         const centerMarker = document.createElementNS(ns, "circle");
-        centerMarker.setAttribute("cx", dims.offsetX);
-        centerMarker.setAttribute("cy", "0");
+        centerMarker.setAttribute("cx", dims.centerPoint.x);
+        centerMarker.setAttribute("cy", dims.centerPoint.y);
         centerMarker.setAttribute("r", "2");
         centerMarker.setAttribute("fill", "red");
         centerMarker.setAttribute('pointer-events', 'none');
         g.appendChild(centerMarker);
+        
+        // Up vector (green arrow)
+        const upVectorLength = 60;
+        const upLine = document.createElementNS(ns, "line");
+        upLine.setAttribute("x1", dims.centerPoint.x);
+        upLine.setAttribute("y1", dims.centerPoint.y);
+        upLine.setAttribute("x2", dims.centerPoint.x + dims.upVector.x * upVectorLength);
+        upLine.setAttribute("y2", dims.centerPoint.y + dims.upVector.y * upVectorLength);
+        upLine.setAttribute("stroke", "green");
+        upLine.setAttribute("stroke-width", "1");
+        upLine.setAttribute("marker-end", "url(#upVectorArrow)");
+        upLine.setAttribute('pointer-events', 'none');
+        g.appendChild(upLine);
+        
+        // Forward vector (blue arrow)
+        const forwardVectorLength = 60;
+        const forwardLine = document.createElementNS(ns, "line");
+        forwardLine.setAttribute("x1", dims.centerPoint.x);
+        forwardLine.setAttribute("y1", dims.centerPoint.y);
+        forwardLine.setAttribute("x2", dims.centerPoint.x + dims.forwardVector.x * forwardVectorLength);
+        forwardLine.setAttribute("y2", dims.centerPoint.y + dims.forwardVector.y * forwardVectorLength);
+        forwardLine.setAttribute("stroke", "blue");
+        forwardLine.setAttribute("stroke-width", "1");
+        forwardLine.setAttribute("marker-end", "url(#forwardVectorArrow)");
+        forwardLine.setAttribute('pointer-events', 'none');
+        g.appendChild(forwardLine);
+        
+        // Ensure vector arrow markers exist
+        _ensureVectorArrowMarkers(svg);
     }
 
     // Add to components group
@@ -208,10 +243,18 @@ export function updateComponentRotation(component, rotation) {
 
     const compId = component.getAttribute('data-id');
     const state = componentState[compId];
-    if (!state) return;
+    const type = component.getAttribute('data-type');
+    const dims = componentDimensions[type];
+    if (!state || !dims) return;
 
     state.rotation = rotation;
-    component.setAttribute("transform", `translate(${state.posX},${state.posY}) rotate(${rotation})`);
+    
+    // Calculate rotation center (component position + centerPoint offset)
+    const rotationCenterX = state.posX + dims.centerPoint.x;
+    const rotationCenterY = state.posY + dims.centerPoint.y;
+    
+    // Apply rotation around the centerPoint
+    component.setAttribute("transform", `translate(${state.posX},${state.posY}) rotate(${rotation} ${dims.centerPoint.x} ${dims.centerPoint.y})`);
 }
 
 // Private helper functions
@@ -290,4 +333,47 @@ export function logComponentInfo(compId) {
         'No Children';
     
     console.log(`Selected Component ${compId} (${state.type}) - ${parentInfo}, ${childrenInfo}`);
+}
+
+// Private helper function to ensure vector arrow markers exist
+function _ensureVectorArrowMarkers(svg) {
+    let defs = svg.querySelector("defs");
+    if (!defs) {
+        defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+        svg.insertBefore(defs, svg.firstChild);
+    }
+    
+    // Up vector arrow marker (green)
+    if (!svg.querySelector("#upVectorArrow")) {
+        const upMarker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+        upMarker.setAttribute("id", "upVectorArrow");
+        upMarker.setAttribute("markerWidth", "8");
+        upMarker.setAttribute("markerHeight", "6");
+        upMarker.setAttribute("refX", "8");
+        upMarker.setAttribute("refY", "3");
+        upMarker.setAttribute("orient", "auto");
+        upMarker.setAttribute("markerUnits", "strokeWidth");
+        const upPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        upPath.setAttribute("d", "M0,0 L8,3 L0,6 Z");
+        upPath.setAttribute("fill", "green");
+        upMarker.appendChild(upPath);
+        defs.appendChild(upMarker);
+    }
+    
+    // Forward vector arrow marker (blue)
+    if (!svg.querySelector("#forwardVectorArrow")) {
+        const forwardMarker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
+        forwardMarker.setAttribute("id", "forwardVectorArrow");
+        forwardMarker.setAttribute("markerWidth", "8");
+        forwardMarker.setAttribute("markerHeight", "6");
+        forwardMarker.setAttribute("refX", "8");
+        forwardMarker.setAttribute("refY", "3");
+        forwardMarker.setAttribute("orient", "auto");
+        forwardMarker.setAttribute("markerUnits", "strokeWidth");
+        const forwardPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
+        forwardPath.setAttribute("d", "M0,0 L8,3 L0,6 Z");
+        forwardPath.setAttribute("fill", "blue");
+        forwardMarker.appendChild(forwardPath);
+        defs.appendChild(forwardMarker);
+    }
 }
