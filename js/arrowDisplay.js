@@ -3,7 +3,7 @@
 
 import { componentState } from './componentManager.js';
 import { componentDimensions } from './components.js';
-import { makeArrowHandleDraggable, makeRotationHandleDraggable } from './dragHandler.js';
+import { makeArrowHandleDraggable, makeRotationHandleDraggable } from './interactionHandler.js';
 import { 
     COMPONENT_SPACING, 
     ARROW_COLOR, 

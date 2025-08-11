@@ -1,7 +1,7 @@
 // Event handlers and application initialization
 // Centralized event management and application startup
 
-import { initCanvas, updateCanvasViewBox } from './canvasManager.js';
+import { initCanvas, updateCanvasViewBox } from './viewportManager.js';
 import { 
     addComponent, 
     removeComponent, 
@@ -10,8 +10,8 @@ import {
     componentState,
     logComponentInfo
 } from './componentManager.js';
-import { startDrag, showHitbox } from './dragHandler.js';
-import { showArrowForComponent, removeArrowFromComponent } from './arrowHandler.js';
+import { startDrag, showHitbox } from './interactionHandler.js';
+import { showArrowForComponent, removeArrowFromComponent } from './arrowDisplay.js';
 import { toggleTraceLines, drawTraceLines, showTraceLines } from './traceLines.js';
 
 // Initialize the application

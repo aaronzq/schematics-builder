@@ -1,7 +1,7 @@
 // Consolidated drag functionality
 // Handles all dragging behavior: components, arrows, and rotation handles
 
-import { screenToSVG, snapToGrid, updateCanvasViewBox } from './canvasManager.js';
+import { screenToSVG, snapToGrid, updateCanvasViewBox } from './viewportManager.js';
 import { componentState, updateComponentPosition, updateComponentRotation, getSelectedComponent, setSelectedComponent } from './componentManager.js';
 import { ANGLE_SNAP_INCREMENT, ROTATION_SNAP_INCREMENT } from './constants.js';
 import { snapAngle } from './utils/mathUtils.js';
@@ -47,7 +47,7 @@ export function drag(e) {
     updateComponentPosition(draggingElement, snapped.x, snapped.y);
     
     // Update arrow for the dragged component (dynamic import to avoid circular dependency)
-    import('./arrowHandler.js').then(({ showArrowForComponent }) => {
+    import('./arrowDisplay.js').then(({ showArrowForComponent }) => {
         showArrowForComponent(draggingElement);
     });
     
@@ -164,7 +164,7 @@ export function makeRotationHandleDraggable(rotationHandle, component, centerX, 
         showAngleDisplay(centerX, centerY, angle);
         
         // Update arrow and hitbox
-        import('./arrowHandler.js').then(({ showArrowForComponent }) => {
+        import('./arrowDisplay.js').then(({ showArrowForComponent }) => {
             showArrowForComponent(component);
         });
         showHitbox(component, true);

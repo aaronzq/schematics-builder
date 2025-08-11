@@ -7,21 +7,21 @@ import './eventHandler.js'; // This will initialize the app when DOM loads
 // The eventHandler module handles initialization and sets up the global addComponent function
 // All other functionality is modularized into their respective files:
 
+// Core modules:
 // components.js - Component definitions and drawing functions
 // componentManager.js - Component lifecycle (add/remove) and state management  
-// canvasManager.js - Canvas/viewport management and coordinate transformations
-// dragHandler.js - Drag and drop functionality
-// arrowHandler.js - Arrow display and rotation controls
+// viewportManager.js - Viewport management and coordinate transformations
+// interactionHandler.js - Drag, rotation, and interaction functionality
+// arrowDisplay.js - Arrow display and rotation controls
 // traceLines.js - Trace line visualization
 // eventHandler.js - Event management and application initialization
 
-// The application is now fully modular with clear separation of concerns:
-// 1. Component definitions are isolated and easily extensible
-// 2. Component lifecycle management is centralized 
-// 3. Canvas operations are abstracted
-// 4. Drag operations are self-contained
-// 5. Arrow/rotation logic is separated
-// 6. Trace lines are their own feature module
-// 7. Event handling is centralized and coordinates all modules
+// Component sub-modules (in modules/):
+// modules/componentAperture.js - Aperture scaling functionality
+// modules/componentHierarchy.js - Parent-child relationship management
+// modules/componentPlacement.js - Component positioning and placement logic
+// modules/componentRenderer.js - SVG rendering and visual elements
+
+// The application uses a clean modular architecture with clear separation of concerns
 
 console.log('Optical Schematic Builder initialized with modular architecture');
