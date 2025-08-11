@@ -25,14 +25,23 @@ export function drawTraceLines() {
         const cos = Math.cos(rotation);
         const sin = Math.sin(rotation);
         
-        // Rotate point around centerPoint
-        const rotatedX = localX * cos - localY * sin;
-        const rotatedY = localX * sin + localY * cos;
+        // Get the component's center point
+        const dims = state.dimensions;
+        const centerX = dims.centerPoint.x;
+        const centerY = dims.centerPoint.y;
         
-        // Translate to world position
+        // First, translate point relative to center point
+        const relativeX = localX - centerX;
+        const relativeY = localY - centerY;
+        
+        // Apply rotation around center point
+        const rotatedX = relativeX * cos - relativeY * sin;
+        const rotatedY = relativeX * sin + relativeY * cos;
+        
+        // Translate back and add world position
         return {
-            x: state.posX + rotatedX,
-            y: state.posY + rotatedY
+            x: state.posX + centerX + rotatedX,
+            y: state.posY + centerY + rotatedY
         };
     }
     
