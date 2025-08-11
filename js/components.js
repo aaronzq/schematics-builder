@@ -1,6 +1,20 @@
 // Component definitions and drawing functions
 // All optical component shapes, dimensions, and drawing logic
 
+// Helper function to calculate aperture points based on center, upVector, and radius
+function calculateAperturePoints(centerPoint, upVector, apertureRadius) {
+    return {
+        upper: { 
+            x: centerPoint.x + upVector.x * apertureRadius, 
+            y: centerPoint.y + upVector.y * apertureRadius 
+        },
+        lower: { 
+            x: centerPoint.x - upVector.x * apertureRadius, 
+            y: centerPoint.y - upVector.y * apertureRadius 
+        }
+    };
+}
+
 // Component dimensions definition
 export const componentDimensions = {
     objective: { 
@@ -9,7 +23,9 @@ export const componentDimensions = {
         offsetX: 0,
         centerPoint: { x: 0, y: 0 },  // Center at component origin
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
-        forwardVector: { x: 1, y: 0 } // Forward direction (positive X)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: 15,           // Scalar radius for aperture points
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     lens: { 
         width: 60, 
@@ -17,7 +33,9 @@ export const componentDimensions = {
         offsetX: 0,
         centerPoint: { x: 0, y: 0 },  // Center at component origin
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
-        forwardVector: { x: 1, y: 0 } // Forward direction (positive X)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: 15,           // Scalar radius for aperture points
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     mirror: { 
         width: 60, 
@@ -25,7 +43,9 @@ export const componentDimensions = {
         offsetX: 0,
         centerPoint: { x: -3, y: 0 }, // Center at component origin
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
-        forwardVector: { x: 1, y: 0 } // Forward direction (positive X)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: 15,           // Scalar radius for aperture points
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     detector: { 
         width: 56, 
@@ -33,7 +53,9 @@ export const componentDimensions = {
         offsetX: 0,
         centerPoint: { x: -25, y: 0 }, // Center at component origin
         upVector: { x: 0, y: -1 },     // Up direction (negative Y)
-        forwardVector: { x: 1, y: 0 }  // Forward direction (positive X)
+        forwardVector: { x: 1, y: 0 },  // Forward direction (positive X)
+        apertureRadius: 15,            // Scalar radius for aperture points
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     'lenslet-array': { 
         width: 25, 
@@ -41,7 +63,9 @@ export const componentDimensions = {
         offsetX: 0,
         centerPoint: { x: 0, y: 0 },  // Center at component origin
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
-        forwardVector: { x: 1, y: 0 } // Forward direction (positive X)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: 15,           // Scalar radius for aperture points
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     plane: { 
         width: 6, 
@@ -49,7 +73,9 @@ export const componentDimensions = {
         offsetX: 0,
         centerPoint: { x: 0, y: 0 },  // Center at component origin
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
-        forwardVector: { x: 1, y: 0 } // Forward direction (positive X)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: 15,           // Scalar radius for aperture points
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     }
 };
 

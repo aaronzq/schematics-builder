@@ -2,7 +2,7 @@
 // Handles adding, removing, and state management of components
 
 import { components, componentDimensions } from './components.js';
-import { showTraceLines, drawTraceLines } from './traceLines.js';
+import { showTraceLines, drawTraceLines, updateTraceLines } from './traceLines.js';
 
 // Global state
 let idCounter = 0;
@@ -163,6 +163,25 @@ export function addComponent(type) {
         forwardLine.setAttribute('pointer-events', 'none');
         g.appendChild(forwardLine);
         
+        // Aperture points (pair of blue dots with explicit coordinates)
+        // Upper aperture point (in upVector direction)
+        const upperAperturePoint = document.createElementNS(ns, "circle");
+        upperAperturePoint.setAttribute("cx", dims.aperturePoints.upper.x);
+        upperAperturePoint.setAttribute("cy", dims.aperturePoints.upper.y);
+        upperAperturePoint.setAttribute("r", "2");
+        upperAperturePoint.setAttribute("fill", "blue");
+        upperAperturePoint.setAttribute('pointer-events', 'none');
+        g.appendChild(upperAperturePoint);
+        
+        // Lower aperture point (opposite to upVector direction)
+        const lowerAperturePoint = document.createElementNS(ns, "circle");
+        lowerAperturePoint.setAttribute("cx", dims.aperturePoints.lower.x);
+        lowerAperturePoint.setAttribute("cy", dims.aperturePoints.lower.y);
+        lowerAperturePoint.setAttribute("r", "2");
+        lowerAperturePoint.setAttribute("fill", "blue");
+        lowerAperturePoint.setAttribute('pointer-events', 'none');
+        g.appendChild(lowerAperturePoint);
+        
         // Ensure vector arrow markers exist
         _ensureVectorArrowMarkers(svg);
     }
@@ -235,6 +254,9 @@ export function updateComponentPosition(component, x, y) {
         state.arrowX += dx;
         state.arrowY += dy;
     }
+    
+    // Update trace lines if they are currently visible
+    updateTraceLines();
 }
 
 // Update component rotation
@@ -255,6 +277,9 @@ export function updateComponentRotation(component, rotation) {
     
     // Apply rotation around the centerPoint
     component.setAttribute("transform", `translate(${state.posX},${state.posY}) rotate(${rotation} ${dims.centerPoint.x} ${dims.centerPoint.y})`);
+    
+    // Update trace lines if they are currently visible
+    updateTraceLines();
 }
 
 // Private helper functions

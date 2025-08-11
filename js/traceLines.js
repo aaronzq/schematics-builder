@@ -41,24 +41,70 @@ export function drawTraceLines() {
         if (drawnConnections.has(connectionKey)) return;
         drawnConnections.add(connectionKey);
         
-        // Calculate centerPoint positions for both components
-        const parentCenterX = parentState.posX + parentDims.centerPoint.x;
-        const parentCenterY = parentState.posY + parentDims.centerPoint.y;
-        const childCenterX = childState.posX + childDims.centerPoint.x;
-        const childCenterY = childState.posY + childDims.centerPoint.y;
+        // Helper function to transform local component coordinates to global canvas coordinates
+        function transformToGlobal(localX, localY, state, dims) {
+            // Apply rotation transformation around centerPoint
+            const rotation = (state.rotation || 0) * Math.PI / 180; // Convert to radians
+            const cos = Math.cos(rotation);
+            const sin = Math.sin(rotation);
+            
+            // Rotate point around centerPoint
+            const rotatedX = localX * cos - localY * sin;
+            const rotatedY = localX * sin + localY * cos;
+            
+            // Translate to world position
+            return {
+                x: state.posX + rotatedX,
+                y: state.posY + rotatedY
+            };
+        }
+        
+        // Calculate centerPoint positions for both components (transformed to global)
+        const parentCenter = transformToGlobal(parentDims.centerPoint.x, parentDims.centerPoint.y, parentState, parentDims);
+        const childCenter = transformToGlobal(childDims.centerPoint.x, childDims.centerPoint.y, childState, childDims);
         
         // Draw dotted line between component centerPoints
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", parentCenterX);
-        line.setAttribute("y1", parentCenterY);
-        line.setAttribute("x2", childCenterX);
-        line.setAttribute("y2", childCenterY);
-        line.setAttribute("stroke", "black");
-        line.setAttribute("stroke-width", "1");
-        line.setAttribute("stroke-dasharray", "5,5");
-        line.setAttribute("pointer-events", "none");
+        const centerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        centerLine.setAttribute("x1", parentCenter.x);
+        centerLine.setAttribute("y1", parentCenter.y);
+        centerLine.setAttribute("x2", childCenter.x);
+        centerLine.setAttribute("y2", childCenter.y);
+        centerLine.setAttribute("stroke", "black");
+        centerLine.setAttribute("stroke-width", "1");
+        centerLine.setAttribute("stroke-dasharray", "5,5");
+        centerLine.setAttribute("pointer-events", "none");
+        traceLinesGroup.appendChild(centerLine);
         
-        traceLinesGroup.appendChild(line);
+        // Calculate aperture point positions for both components (transformed to global)
+        const parentUpper = transformToGlobal(parentDims.aperturePoints.upper.x, parentDims.aperturePoints.upper.y, parentState, parentDims);
+        const childUpper = transformToGlobal(childDims.aperturePoints.upper.x, childDims.aperturePoints.upper.y, childState, childDims);
+        
+        const parentLower = transformToGlobal(parentDims.aperturePoints.lower.x, parentDims.aperturePoints.lower.y, parentState, parentDims);
+        const childLower = transformToGlobal(childDims.aperturePoints.lower.x, childDims.aperturePoints.lower.y, childState, childDims);
+        
+        // Draw dotted line between upper aperture points
+        const upperLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        upperLine.setAttribute("x1", parentUpper.x);
+        upperLine.setAttribute("y1", parentUpper.y);
+        upperLine.setAttribute("x2", childUpper.x);
+        upperLine.setAttribute("y2", childUpper.y);
+        upperLine.setAttribute("stroke", "blue");
+        upperLine.setAttribute("stroke-width", "1");
+        upperLine.setAttribute("stroke-dasharray", "3,3");
+        upperLine.setAttribute("pointer-events", "none");
+        traceLinesGroup.appendChild(upperLine);
+        
+        // Draw dotted line between lower aperture points
+        const lowerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        lowerLine.setAttribute("x1", parentLower.x);
+        lowerLine.setAttribute("y1", parentLower.y);
+        lowerLine.setAttribute("x2", childLower.x);
+        lowerLine.setAttribute("y2", childLower.y);
+        lowerLine.setAttribute("stroke", "blue");
+        lowerLine.setAttribute("stroke-width", "1");
+        lowerLine.setAttribute("stroke-dasharray", "3,3");
+        lowerLine.setAttribute("pointer-events", "none");
+        traceLinesGroup.appendChild(lowerLine);
     }
     
     // Draw lines from each parent to all of its children
@@ -99,5 +145,12 @@ export function toggleTraceLines() {
     } else {
         hideTraceLines();
         traceBtn.textContent = 'Show Trace Line';
+    }
+}
+
+// Update trace lines if they are currently visible
+export function updateTraceLines() {
+    if (showTraceLines) {
+        drawTraceLines();
     }
 }
