@@ -56,12 +56,49 @@ export function addComponent(type) {
         const selId = selectedComponent.getAttribute('data-id');
         const selState = componentState[selId];
         if (selState && typeof selState.arrowX === "number" && typeof selState.arrowY === "number") {
-            placeX = selState.arrowX;
-            placeY = selState.arrowY;
-            // Calculate arrow direction to align new component
-            const dx = selState.arrowX - selState.posX;
-            const dy = selState.arrowY - selState.posY;
-            initialRotation = Math.atan2(dy, dx) * 180 / Math.PI;
+            // Get component dimensions 
+            let dims = componentDimensions[type];
+            
+            // Step 1: Center point of new component = arrow tip of parent
+            const newCenterX = selState.arrowX;
+            const newCenterY = selState.arrowY;
+            
+            // Step 2: Calculate arrow direction vector (normalized)
+            // Arrow starts from the selected component's center point (not its SVG position)
+            const selectedDims = componentDimensions[selectedComponent.getAttribute('data-type')];
+            const selectedCenterX = selState.posX + selectedDims.centerPoint.x;
+            const selectedCenterY = selState.posY + selectedDims.centerPoint.y;
+            
+            const dx = selState.arrowX - selectedCenterX;
+            const dy = selState.arrowY - selectedCenterY;
+            const arrowLength = Math.sqrt(dx * dx + dy * dy);
+            const arrowDirX = dx / arrowLength;  // Normalized arrow direction
+            const arrowDirY = dy / arrowLength;
+            
+            // Step 3: Calculate rotation to align new component's forwardVector with arrow direction
+            // Current forwardVector in component's local coordinates
+            const currentForwardX = dims.forwardVector.x;
+            const currentForwardY = dims.forwardVector.y;
+            
+            // Calculate required rotation angle
+            // We want: rotated_forwardVector = arrow_direction
+            const currentAngle = Math.atan2(currentForwardY, currentForwardX);
+            const targetAngle = Math.atan2(arrowDirY, arrowDirX);
+            initialRotation = (targetAngle - currentAngle) * 180 / Math.PI;
+            
+            // Log alignment verification
+            const arrowAngleDeg = targetAngle * 180 / Math.PI;
+            const forwardAngleDeg = currentAngle * 180 / Math.PI;
+            console.log(`ForwardVector alignment: Arrow angle=${arrowAngleDeg.toFixed(1)}°, Original forward=${forwardAngleDeg.toFixed(1)}°, Rotation applied=${initialRotation.toFixed(1)}°`);
+            console.log(`Arrow direction vector: (${arrowDirX.toFixed(3)}, ${arrowDirY.toFixed(3)})`);
+            console.log(`Original forwardVector: (${currentForwardX}, ${currentForwardY})`);
+            
+            // Step 4: Calculate component position to place center point at arrow tip
+            // Since SVG transform = translate(placeX, placeY) + rotate(..., centerPoint.x, centerPoint.y)
+            // The actual center point will be at (placeX + centerPoint.x, placeY + centerPoint.y)
+            // We want this to equal (newCenterX, newCenterY)
+            placeX = newCenterX - dims.centerPoint.x;
+            placeY = newCenterY - dims.centerPoint.y;
         } else {
             placeX = nextX;
             placeY = nextY;
@@ -113,19 +150,19 @@ export function addComponent(type) {
             if (!linesCrossFlipped) {
                 shouldFlipUpVector = true;
                 dims = flippedDims;
-                console.log(`Component ${compId} (${type}) FLIPPED to avoid crossing aperture lines - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
+                console.log(`Component ${compId} (${type}) FLIPPED to avoid crossing aperture lines - forwardVector: (${dims.forwardVector.x}, ${dims.forwardVector.y})`);
             } else {
                 // Both orientations create crossing lines, keep normal
-                console.log(`Component ${compId} (${type}) kept NORMAL orientation (both would cross) - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
+                console.log(`Component ${compId} (${type}) kept NORMAL orientation (both would cross) - forwardVector: (${dims.forwardVector.x}, ${dims.forwardVector.y})`);
             }
         } else {
-            console.log(`Component ${compId} (${type}) created with NORMAL upVector (no crossing) - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
+            console.log(`Component ${compId} (${type}) created with NORMAL forwardVector (no crossing) - forwardVector: (${dims.forwardVector.x}, ${dims.forwardVector.y})`);
         }
         
         // Remove temporary state entry (will be recreated properly below)
         delete componentState[compId];
     } else {
-        console.log(`Component ${compId} (${type}) created with NORMAL upVector (root component) - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
+        console.log(`Component ${compId} (${type}) created with NORMAL upVector (root component) - forwardVector: (${dims.forwardVector.x}, ${dims.forwardVector.y})`);
     }
     
     // Apply rotation around centerPoint
@@ -406,12 +443,24 @@ export function logComponentInfo(compId) {
     const state = componentState[compId];
     if (!state) return;
     
+    // Calculate global center coordinates
+    const centerX = state.posX + state.dimensions.centerPoint.x;
+    const centerY = state.posY + state.dimensions.centerPoint.y;
+    
+    // Parent/children information
     const parentInfo = state.parentId !== null ? `Parent: ${state.parentId} (${componentState[state.parentId].type})` : 'No Parent (Root)';
     const childrenInfo = state.children.length > 0 ? 
         `Children: [${state.children.map(childId => `${childId} (${componentState[childId].type})`).join(', ')}]` : 
         'No Children';
     
-    console.log(`Selected Component ${compId} (${state.type}) - ${parentInfo}, ${childrenInfo}`);
+    // Coordinate information
+    const coordinateInfo = `SVG Position: (${state.posX.toFixed(1)}, ${state.posY.toFixed(1)}) | Center: (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) | Rotation: ${(state.rotation || 0).toFixed(1)}°`;
+    const arrowInfo = `Arrow Endpoint: (${state.arrowX.toFixed(1)}, ${state.arrowY.toFixed(1)})`;
+    
+    console.log(`=== Selected Component ${compId} (${state.type}) ===`);
+    console.log(`  Hierarchy: ${parentInfo}, ${childrenInfo}`);
+    console.log(`  Coordinates: ${coordinateInfo}`);
+    console.log(`  Arrow: ${arrowInfo}`);
 }
 
 // Private helper function to ensure vector arrow markers exist

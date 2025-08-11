@@ -88,14 +88,36 @@ export function makeArrowHandleDraggable(handle, line, state) {
         if (!draggingArrow) return;
         const cursorpt = screenToSVG(e.clientX, e.clientY);
         
-        // Snap to 10px grid
-        const snapped = snapToGrid(cursorpt.x - dragOffsetX, cursorpt.y - dragOffsetY);
+        // Get arrow start position (center of component)
+        const startX = parseFloat(line.getAttribute("x1"));
+        const startY = parseFloat(line.getAttribute("y1"));
+        
+        // Calculate angle from start point to cursor
+        const dx = cursorpt.x - startX;
+        const dy = cursorpt.y - startY;
+        let angle = Math.atan2(dy, dx) * 180 / Math.PI;
+        
+        // Snap angle to 5-degree increments (0, 5, 10, 15, ..., 355)
+        const snappedAngle = Math.round(angle / 5) * 5;
+        
+        // Log the absolute angle
+        console.log(`Arrow angle: ${snappedAngle}°`);
+        
+        // Convert back to radians
+        const angleRad = snappedAngle * Math.PI / 180;
+        
+        // Calculate distance from start to cursor for arrow length
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        // Calculate snapped position based on angle and distance
+        const snappedX = startX + distance * Math.cos(angleRad);
+        const snappedY = startY + distance * Math.sin(angleRad);
         
         // Update arrow line and handle
-        line.setAttribute("x2", snapped.x);
-        line.setAttribute("y2", snapped.y);
-        handle.setAttribute("cx", snapped.x);
-        handle.setAttribute("cy", snapped.y);
+        line.setAttribute("x2", snappedX);
+        line.setAttribute("y2", snappedY);
+        handle.setAttribute("cx", snappedX);
+        handle.setAttribute("cy", snappedY);
     }
     
     function stopDragArrowHandle() {
