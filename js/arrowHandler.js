@@ -9,6 +9,8 @@ const COMPONENT_SPACING = 150;
 
 // Show arrow for component with draggable handle and rotation control
 export function showArrowForComponent(component) {
+    if (!component) return; // Guard against null/undefined component
+    
     removeArrowFromComponent(component); // Remove any existing arrow for this component
     const svg = document.getElementById("canvas");
     
@@ -97,6 +99,8 @@ export function showArrowForComponent(component) {
 
 // Remove arrow from component
 export function removeArrowFromComponent(component) {
+    if (!component) return; // Guard against null/undefined component
+    
     const svg = document.getElementById("canvas");
     const arrow = svg.querySelector(`#arrow-preview-${component.getAttribute('data-id')}`);
     if (arrow) arrow.remove();

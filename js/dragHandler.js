@@ -156,6 +156,8 @@ export function makeRotationHandleDraggable(rotationHandle, component, centerX, 
 
 // Remove arrow from component (helper function to avoid circular imports)
 function removeArrowFromComponent(component) {
+    if (!component) return; // Guard against null/undefined component
+    
     const svg = document.getElementById("canvas");
     const arrow = svg.querySelector(`#arrow-preview-${component.getAttribute('data-id')}`);
     if (arrow) arrow.remove();

@@ -285,6 +285,11 @@ export function updateComponentPosition(component, x, y) {
     const state = componentState[compId];
     if (!state) return;
 
+    // Get component dimensions for centerPoint
+    const type = component.getAttribute('data-type');
+    const dims = componentDimensions[type];
+    if (!dims) return;
+
     // Calculate delta for moving arrow endpoint
     const dx = x - state.posX;
     const dy = y - state.posY;
@@ -293,9 +298,9 @@ export function updateComponentPosition(component, x, y) {
     state.posX = x;
     state.posY = y;
 
-    // Update transform
+    // Update transform with correct rotation around centerPoint
     const rotation = state.rotation || 0;
-    component.setAttribute("transform", `translate(${x},${y}) rotate(${rotation})`);
+    component.setAttribute("transform", `translate(${x},${y}) rotate(${rotation} ${dims.centerPoint.x} ${dims.centerPoint.y})`);
 
     // Move arrow endpoint by same delta
     if (typeof state.arrowX === "number" && typeof state.arrowY === "number") {
