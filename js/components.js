@@ -15,6 +15,30 @@ function calculateAperturePoints(centerPoint, upVector, apertureRadius) {
     };
 }
 
+// Helper function to flip upVector and recalculate aperture points
+export function flipComponentUpVector(componentDims) {
+    // Create a copy of the component dimensions
+    const flippedDims = { ...componentDims };
+    
+    // Flip the upVector (multiply by -1)
+    flippedDims.upVector = { 
+        x: -componentDims.upVector.x, 
+        y: -componentDims.upVector.y 
+    };
+    
+    // Keep forwardVector unchanged
+    flippedDims.forwardVector = { ...componentDims.forwardVector };
+    
+    // Recalculate aperture points with the flipped upVector
+    flippedDims.aperturePoints = calculateAperturePoints(
+        componentDims.centerPoint, 
+        flippedDims.upVector, 
+        componentDims.apertureRadius
+    );
+    
+    return flippedDims;
+}
+
 // Component dimensions definition
 export const componentDimensions = {
     objective: { 

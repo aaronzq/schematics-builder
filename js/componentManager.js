@@ -1,8 +1,8 @@
 // Component lifecycle management
 // Handles adding, removing, and state management of components
 
-import { components, componentDimensions } from './components.js';
-import { showTraceLines, drawTraceLines, updateTraceLines } from './traceLines.js';
+import { components, componentDimensions, flipComponentUpVector } from './components.js';
+import { showTraceLines, drawTraceLines, updateTraceLines, doApertureLinessCross } from './traceLines.js';
 
 // Global state
 let idCounter = 0;
@@ -79,7 +79,17 @@ export function addComponent(type) {
     g.setAttribute("data-type", type);
     
     // Get component dimensions
-    const dims = componentDimensions[type];
+    let dims = componentDimensions[type];
+    
+    // Randomly decide whether to flip the upVector (50% chance)
+    const shouldFlipUpVector = Math.random() < 0.5;
+    
+    if (shouldFlipUpVector) {
+        dims = flipComponentUpVector(dims);
+        console.log(`Component ${compId} (${type}) created with FLIPPED upVector - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
+    } else {
+        console.log(`Component ${compId} (${type}) created with NORMAL upVector - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
+    }
     
     // Apply rotation around centerPoint
     g.setAttribute("transform", `translate(${placeX},${placeY}) rotate(${initialRotation} ${dims.centerPoint.x} ${dims.centerPoint.y})`);
@@ -96,6 +106,7 @@ export function addComponent(type) {
         arrowY: centerPointY + COMPONENT_SPACING * Math.sin(initialRotation * Math.PI / 180),
         selected: false,
         type: type,
+        dimensions: dims,  // Store the actual dimensions used (flipped or normal)
         parentId: null,  // Parent component ID (null for root components)
         children: []     // Array of child component IDs
     };
@@ -168,7 +179,7 @@ export function addComponent(type) {
         const upperAperturePoint = document.createElementNS(ns, "circle");
         upperAperturePoint.setAttribute("cx", dims.aperturePoints.upper.x);
         upperAperturePoint.setAttribute("cy", dims.aperturePoints.upper.y);
-        upperAperturePoint.setAttribute("r", "2");
+        upperAperturePoint.setAttribute("r", "3");
         upperAperturePoint.setAttribute("fill", "blue");
         upperAperturePoint.setAttribute('pointer-events', 'none');
         g.appendChild(upperAperturePoint);
@@ -293,6 +304,11 @@ function _updateComponentHierarchy(compId) {
         componentState[parentId].children.push(compId);
         
         console.log(`Component ${compId} (${componentState[compId].type}) added as child of Component ${parentId} (${componentState[parentId].type})`);
+        
+        // Check if aperture lines cross with parent and log result
+        const linesCross = doApertureLinessCross(compId);
+        console.log(`Component ${compId} aperture lines cross with parent ${parentId}: ${linesCross ? 'CROSS' : 'PARALLEL'}`);
+
         // logComponentInfo(compId);
         
         // Update trace lines if they're enabled

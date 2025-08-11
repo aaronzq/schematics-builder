@@ -18,52 +18,51 @@ export function drawTraceLines() {
     const traceLinesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
     traceLinesGroup.setAttribute("id", "trace-lines");
     
-    // Track which connections we've already drawn to avoid duplicates
-    const drawnConnections = new Set();
+    // Helper function to transform local component coordinates to global canvas coordinates
+    function transformToGlobal(localX, localY, state) {
+        // Apply rotation transformation around centerPoint
+        const rotation = (state.rotation || 0) * Math.PI / 180; // Convert to radians
+        const cos = Math.cos(rotation);
+        const sin = Math.sin(rotation);
+        
+        // Rotate point around centerPoint
+        const rotatedX = localX * cos - localY * sin;
+        const rotatedY = localX * sin + localY * cos;
+        
+        // Translate to world position
+        return {
+            x: state.posX + rotatedX,
+            y: state.posY + rotatedY
+        };
+    }
     
-    // Function to draw a line between parent and child components
-    function drawLine(parentId, childId) {
-        const parentState = componentState[parentId];
-        const childState = componentState[childId];
+    // Simple approach: iterate through all components and connect to parent if exists
+    for (const compId in componentState) {
+        const state = componentState[compId];
         
-        if (!parentState || !childState) return;
+        // Skip if this component has no parent (root component)
+        if (state.parentId === null) continue;
         
-        // Get component dimensions for centerPoint calculations
-        const parentDims = componentDimensions[parentState.type];
-        const childDims = componentDimensions[childState.type];
+        const parentState = componentState[state.parentId];
+        if (!parentState) continue;
         
-        if (!parentDims || !childDims) return;
+        // Get component dimensions for both child and parent (use stored dimensions, not original)
+        const childDims = state.dimensions;  // Use actual dimensions stored (flipped or normal)
+        const parentDims = parentState.dimensions;  // Use actual dimensions stored (flipped or normal)
         
-        // Create a unique connection identifier (sorted to avoid duplicates)
-        const connectionKey = [parentId, childId].sort().join('-');
+        if (!childDims || !parentDims) continue;
         
-        // Skip if we've already drawn this connection
-        if (drawnConnections.has(connectionKey)) return;
-        drawnConnections.add(connectionKey);
+        // Calculate global positions for child
+        const childCenter = transformToGlobal(childDims.centerPoint.x, childDims.centerPoint.y, state);
+        const childUpper = transformToGlobal(childDims.aperturePoints.upper.x, childDims.aperturePoints.upper.y, state);
+        const childLower = transformToGlobal(childDims.aperturePoints.lower.x, childDims.aperturePoints.lower.y, state);
         
-        // Helper function to transform local component coordinates to global canvas coordinates
-        function transformToGlobal(localX, localY, state, dims) {
-            // Apply rotation transformation around centerPoint
-            const rotation = (state.rotation || 0) * Math.PI / 180; // Convert to radians
-            const cos = Math.cos(rotation);
-            const sin = Math.sin(rotation);
-            
-            // Rotate point around centerPoint
-            const rotatedX = localX * cos - localY * sin;
-            const rotatedY = localX * sin + localY * cos;
-            
-            // Translate to world position
-            return {
-                x: state.posX + rotatedX,
-                y: state.posY + rotatedY
-            };
-        }
+        // Calculate global positions for parent
+        const parentCenter = transformToGlobal(parentDims.centerPoint.x, parentDims.centerPoint.y, parentState);
+        const parentUpper = transformToGlobal(parentDims.aperturePoints.upper.x, parentDims.aperturePoints.upper.y, parentState);
+        const parentLower = transformToGlobal(parentDims.aperturePoints.lower.x, parentDims.aperturePoints.lower.y, parentState);
         
-        // Calculate centerPoint positions for both components (transformed to global)
-        const parentCenter = transformToGlobal(parentDims.centerPoint.x, parentDims.centerPoint.y, parentState, parentDims);
-        const childCenter = transformToGlobal(childDims.centerPoint.x, childDims.centerPoint.y, childState, childDims);
-        
-        // Draw dotted line between component centerPoints
+        // Draw black dotted line between centerPoints
         const centerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
         centerLine.setAttribute("x1", parentCenter.x);
         centerLine.setAttribute("y1", parentCenter.y);
@@ -75,14 +74,7 @@ export function drawTraceLines() {
         centerLine.setAttribute("pointer-events", "none");
         traceLinesGroup.appendChild(centerLine);
         
-        // Calculate aperture point positions for both components (transformed to global)
-        const parentUpper = transformToGlobal(parentDims.aperturePoints.upper.x, parentDims.aperturePoints.upper.y, parentState, parentDims);
-        const childUpper = transformToGlobal(childDims.aperturePoints.upper.x, childDims.aperturePoints.upper.y, childState, childDims);
-        
-        const parentLower = transformToGlobal(parentDims.aperturePoints.lower.x, parentDims.aperturePoints.lower.y, parentState, parentDims);
-        const childLower = transformToGlobal(childDims.aperturePoints.lower.x, childDims.aperturePoints.lower.y, childState, childDims);
-        
-        // Draw dotted line between upper aperture points
+        // Connect upper aperture point to upper aperture point (by name, not spatial position)
         const upperLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
         upperLine.setAttribute("x1", parentUpper.x);
         upperLine.setAttribute("y1", parentUpper.y);
@@ -94,7 +86,7 @@ export function drawTraceLines() {
         upperLine.setAttribute("pointer-events", "none");
         traceLinesGroup.appendChild(upperLine);
         
-        // Draw dotted line between lower aperture points
+        // Connect lower aperture point to lower aperture point (by name, not spatial position)
         const lowerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
         lowerLine.setAttribute("x1", parentLower.x);
         lowerLine.setAttribute("y1", parentLower.y);
@@ -105,19 +97,6 @@ export function drawTraceLines() {
         lowerLine.setAttribute("stroke-dasharray", "3,3");
         lowerLine.setAttribute("pointer-events", "none");
         traceLinesGroup.appendChild(lowerLine);
-    }
-    
-    // Draw lines from each parent to all of its children
-    for (const compId in componentState) {
-        const state = componentState[compId];
-        const parentId = parseInt(compId);
-        
-        // Draw lines to all children of this component
-        if (state.children && state.children.length > 0) {
-            state.children.forEach(childId => {
-                drawLine(parentId, childId);
-            });
-        }
     }
     
     // Insert trace lines before components so they appear behind
@@ -146,6 +125,68 @@ export function toggleTraceLines() {
         hideTraceLines();
         traceBtn.textContent = 'Show Trace Line';
     }
+}
+
+// Helper function to check if aperture lines cross between a component and its parent
+export function doApertureLinessCross(componentId) {
+    const state = componentState[componentId];
+    
+    // Return false if component has no parent or invalid state
+    if (!state || state.parentId === null) return false;
+    
+    const parentState = componentState[state.parentId];
+    if (!parentState) return false;
+    
+    // Get component orientations
+    const childDims = state.dimensions;
+    const parentDims = parentState.dimensions;
+    
+    if (!childDims || !parentDims) return false;
+    
+    // Helper function to transform local component coordinates to global canvas coordinates
+    function transformToGlobal(localX, localY, componentState) {
+        const rotation = (componentState.rotation || 0) * Math.PI / 180;
+        const cos = Math.cos(rotation);
+        const sin = Math.sin(rotation);
+        
+        const rotatedX = localX * cos - localY * sin;
+        const rotatedY = localX * sin + localY * cos;
+        
+        return {
+            x: componentState.posX + rotatedX,
+            y: componentState.posY + rotatedY
+        };
+    }
+    
+    // Calculate global positions for child and parent aperture points
+    const childUpper = transformToGlobal(childDims.aperturePoints.upper.x, childDims.aperturePoints.upper.y, state);
+    const childLower = transformToGlobal(childDims.aperturePoints.lower.x, childDims.aperturePoints.lower.y, state);
+    const parentUpper = transformToGlobal(parentDims.aperturePoints.upper.x, parentDims.aperturePoints.upper.y, parentState);
+    const parentLower = transformToGlobal(parentDims.aperturePoints.lower.x, parentDims.aperturePoints.lower.y, parentState);
+    
+    // Check if the aperture lines cross by using line intersection logic
+    // Line 1: parentUpper to childUpper
+    // Line 2: parentLower to childLower
+    // Lines cross if they intersect between their endpoints
+    
+    // Calculate intersection point using parametric line equations
+    const x1 = parentUpper.x, y1 = parentUpper.y;
+    const x2 = childUpper.x, y2 = childUpper.y;
+    const x3 = parentLower.x, y3 = parentLower.y;
+    const x4 = childLower.x, y4 = childLower.y;
+    
+    const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+    
+    // Lines are parallel if denominator is 0
+    if (Math.abs(denom) < 1e-10) return false;
+    
+    const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+    const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denom;
+    
+    // Lines intersect within their segments if both t and u are between 0 and 1
+    const linesIntersect = (t >= 0 && t <= 1 && u >= 0 && u <= 1);
+    
+    return linesIntersect;
 }
 
 // Update trace lines if they are currently visible
