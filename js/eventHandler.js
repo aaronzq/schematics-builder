@@ -13,12 +13,16 @@ import {
 import { startDrag, showHitbox } from './interactionHandler.js';
 import { showArrowForComponent, removeArrowFromComponent } from './arrowDisplay.js';
 import { toggleTraceLines, drawTraceLines, showTraceLines } from './traceLines.js';
-import { toggleApertureRays, toggleSolidRays, showApertureRays, drawApertureRays } from './apertureRays.js';
+import { toggleApertureRays, toggleSolidRays, showApertureRays, drawApertureRays, initRayShapeMenuIntegration } from './apertureRays.js';
+import { showRayShapeMenu, hideRayShapeMenu, shouldShowRayShapeMenu } from './rayShapeMenu.js';
 
 // Initialize the application
 export function initApp() {
     // Initialize canvas
     initCanvas();
+    
+    // Initialize ray shape menu integration
+    initRayShapeMenuIntegration(hideRayShapeMenu, showRayShapeMenu, shouldShowRayShapeMenu, getSelectedComponent);
     
     // Set up global event listeners
     setupGlobalEventListeners();
@@ -40,6 +44,7 @@ function setupGlobalEventListeners() {
                 showHitbox(selectedComponent, false);
                 removeArrowFromComponent(selectedComponent);
                 setSelectedComponent(null);
+                hideRayShapeMenu(); // Hide menu when deselecting
             }
         }
     });
@@ -99,13 +104,16 @@ export function setupComponentEventListeners(component, componentId) {
     // Click to select
     component.addEventListener("click", function(e) {
         e.stopPropagation();
-        selectComponent(component, componentId);
+        selectComponent(component, componentId, true); // showMenu = true for manual clicks
     });
 }
 
 // Select a component
-function selectComponent(component, componentId) {
+function selectComponent(component, componentId, showMenu = true) {
     const selectedComponent = getSelectedComponent();
+    
+    // Hide ray shape menu from previous selection
+    hideRayShapeMenu();
     
     // Deselect previous component
     if (selectedComponent && selectedComponent !== component) {
@@ -121,6 +129,11 @@ function selectComponent(component, componentId) {
     showHitbox(component, true);
     showArrowForComponent(component);
     
+    // Show ray shape menu if appropriate and explicitly requested
+    if (showMenu && shouldShowRayShapeMenu(component)) {
+        showRayShapeMenu(component);
+    }
+    
     // Log the selected component info
     logComponentInfo(componentId);
 }
@@ -131,6 +144,9 @@ function deleteSelectedComponent() {
     if (!selectedComponent) return;
 
     const compId = selectedComponent.getAttribute('data-id');
+    
+    // Hide ray shape menu
+    hideRayShapeMenu();
     
     // Remove component and get previous component for selection fallback
     const prevComponent = removeComponent(selectedComponent);
@@ -172,7 +188,7 @@ window.addComponent = function(type) {
     updateCanvasViewBox();
     
     // Automatically select the newly created component
-    selectComponent(element, id);
+    selectComponent(element, id, false); // showMenu = false for automatic selection
 };
 
 // Initialize when DOM is loaded

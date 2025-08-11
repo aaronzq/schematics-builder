@@ -4,6 +4,20 @@
 import { componentState } from './componentManager.js';
 import { transformToGlobal } from './utils/mathUtils.js';
 
+// Import will be added when the module is loaded to avoid circular dependencies
+let hideRayShapeMenu = null;
+let showRayShapeMenu = null;
+let shouldShowRayShapeMenu = null;
+let getSelectedComponent = null;
+
+// Initialize ray shape menu functions (called from eventHandler after modules load)
+export function initRayShapeMenuIntegration(hideMenu, showMenu, shouldShow, getSelected) {
+    hideRayShapeMenu = hideMenu;
+    showRayShapeMenu = showMenu;
+    shouldShowRayShapeMenu = shouldShow;
+    getSelectedComponent = getSelected;
+}
+
 // Aperture rays settings
 export let showApertureRays = true;
 export let rayDisplayMode = 'both'; // 'both', 'dotted', 'solid'
@@ -139,9 +153,22 @@ export function toggleApertureRays() {
     if (showApertureRays) {
         drawApertureRays();
         raysBtn.textContent = 'Hide Rays';
+        
+        // Show ray shape menu for currently selected component if appropriate
+        if (showRayShapeMenu && shouldShowRayShapeMenu && getSelectedComponent) {
+            const selectedComponent = getSelectedComponent();
+            if (selectedComponent && shouldShowRayShapeMenu(selectedComponent)) {
+                showRayShapeMenu(selectedComponent);
+            }
+        }
     } else {
         hideApertureRays();
         raysBtn.textContent = 'Draw Rays';
+        
+        // Hide ray shape menu when rays are turned off
+        if (hideRayShapeMenu) {
+            hideRayShapeMenu();
+        }
     }
 }
 
