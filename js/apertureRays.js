@@ -6,6 +6,7 @@ import { transformToGlobal } from './utils/mathUtils.js';
 
 // Aperture rays settings
 export let showApertureRays = true;
+export let rayDisplayMode = 'both'; // 'both', 'dotted', 'solid'
 
 // Show aperture ray lines connecting parent-child relationships
 export function drawApertureRays() {
@@ -40,29 +41,44 @@ export function drawApertureRays() {
         const parentUpper = transformToGlobal(parentDims.aperturePoints.upper.x, parentDims.aperturePoints.upper.y, parentState);
         const parentLower = transformToGlobal(parentDims.aperturePoints.lower.x, parentDims.aperturePoints.lower.y, parentState);
         
-        // Connect upper aperture point to upper aperture point (by name, not spatial position)
-        const upperLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        upperLine.setAttribute("x1", parentUpper.x);
-        upperLine.setAttribute("y1", parentUpper.y);
-        upperLine.setAttribute("x2", childUpper.x);
-        upperLine.setAttribute("y2", childUpper.y);
-        upperLine.setAttribute("stroke", "blue");
-        upperLine.setAttribute("stroke-width", "1");
-        upperLine.setAttribute("stroke-dasharray", "3,3");
-        upperLine.setAttribute("pointer-events", "none");
-        rayLinesGroup.appendChild(upperLine);
+        // Draw solid polygon if mode includes solid
+        if (rayDisplayMode === 'solid' || rayDisplayMode === 'both') {
+            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            const points = `${parentUpper.x},${parentUpper.y} ${childUpper.x},${childUpper.y} ${childLower.x},${childLower.y} ${parentLower.x},${parentLower.y}`;
+            polygon.setAttribute("points", points);
+            polygon.setAttribute("fill", "blue");
+            polygon.setAttribute("fill-opacity", "0.2");
+            polygon.setAttribute("stroke", "none");
+            polygon.setAttribute("pointer-events", "none");
+            rayLinesGroup.appendChild(polygon);
+        }
         
-        // Connect lower aperture point to lower aperture point (by name, not spatial position)
-        const lowerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        lowerLine.setAttribute("x1", parentLower.x);
-        lowerLine.setAttribute("y1", parentLower.y);
-        lowerLine.setAttribute("x2", childLower.x);
-        lowerLine.setAttribute("y2", childLower.y);
-        lowerLine.setAttribute("stroke", "blue");
-        lowerLine.setAttribute("stroke-width", "1");
-        lowerLine.setAttribute("stroke-dasharray", "3,3");
-        lowerLine.setAttribute("pointer-events", "none");
-        rayLinesGroup.appendChild(lowerLine);
+        // Draw dotted lines if mode includes dotted
+        if (rayDisplayMode === 'dotted' || rayDisplayMode === 'both') {
+            // Connect upper aperture point to upper aperture point (by name, not spatial position)
+            const upperLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            upperLine.setAttribute("x1", parentUpper.x);
+            upperLine.setAttribute("y1", parentUpper.y);
+            upperLine.setAttribute("x2", childUpper.x);
+            upperLine.setAttribute("y2", childUpper.y);
+            upperLine.setAttribute("stroke", "blue");
+            upperLine.setAttribute("stroke-width", "1");
+            upperLine.setAttribute("stroke-dasharray", "3,3");
+            upperLine.setAttribute("pointer-events", "none");
+            rayLinesGroup.appendChild(upperLine);
+            
+            // Connect lower aperture point to lower aperture point (by name, not spatial position)
+            const lowerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            lowerLine.setAttribute("x1", parentLower.x);
+            lowerLine.setAttribute("y1", parentLower.y);
+            lowerLine.setAttribute("x2", childLower.x);
+            lowerLine.setAttribute("y2", childLower.y);
+            lowerLine.setAttribute("stroke", "blue");
+            lowerLine.setAttribute("stroke-width", "1");
+            lowerLine.setAttribute("stroke-dasharray", "3,3");
+            lowerLine.setAttribute("pointer-events", "none");
+            rayLinesGroup.appendChild(lowerLine);
+        }
     }
     
     // Insert aperture rays before components so they appear behind
@@ -90,6 +106,32 @@ export function toggleApertureRays() {
     } else {
         hideApertureRays();
         raysBtn.textContent = 'Draw Rays';
+    }
+}
+
+// Toggle solid rays
+export function toggleSolidRays() {
+    const solidRaysBtn = document.getElementById('solid-rays-btn');
+    
+    // Cycle through three modes: both -> dotted -> solid -> both
+    switch (rayDisplayMode) {
+        case 'both':
+            rayDisplayMode = 'dotted';
+            solidRaysBtn.textContent = 'Outline Only';
+            break;
+        case 'dotted':
+            rayDisplayMode = 'solid';
+            solidRaysBtn.textContent = 'Solid Only';
+            break;
+        case 'solid':
+            rayDisplayMode = 'both';
+            solidRaysBtn.textContent = 'Both Rays';
+            break;
+    }
+    
+    // Redraw aperture rays if they are currently shown
+    if (showApertureRays) {
+        drawApertureRays();
     }
 }
 
