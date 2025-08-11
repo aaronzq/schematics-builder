@@ -126,10 +126,10 @@ export function addComponent(type) {
     // Get component dimensions
     let dims = componentDimensions[type];
     
-    // Test: Apply random aperture radius (between 5 and 50)
-    const randomApertureRadius = Math.floor(Math.random() * 46) + 5; // Random between 5-50
-    dims = changeComponentApertureRadius(dims, randomApertureRadius);
-    console.log(`Testing: Applied random aperture radius ${randomApertureRadius} to ${type} component`);
+    // Auto-scale aperture radius to match parent's projection (if component has a parent)
+    if (selectedComponent) {
+        dims = _autoScaleApertureToMatchParent(dims, compId, placeX, placeY, initialRotation, selectedComponent);
+    }
     
     let shouldFlipUpVector = false;
     
@@ -261,23 +261,7 @@ export function addComponent(type) {
         g.appendChild(forwardLine);
         
         // Aperture points (pair of blue dots with explicit coordinates)
-        // Upper aperture point (in upVector direction)
-        const upperAperturePoint = document.createElementNS(ns, "circle");
-        upperAperturePoint.setAttribute("cx", dims.aperturePoints.upper.x);
-        upperAperturePoint.setAttribute("cy", dims.aperturePoints.upper.y);
-        upperAperturePoint.setAttribute("r", APERTURE_POINT_RADIUS);
-        upperAperturePoint.setAttribute("fill", "blue");
-        upperAperturePoint.setAttribute('pointer-events', 'none');
-        g.appendChild(upperAperturePoint);
-        
-        // Lower aperture point (opposite to upVector direction)
-        const lowerAperturePoint = document.createElementNS(ns, "circle");
-        lowerAperturePoint.setAttribute("cx", dims.aperturePoints.lower.x);
-        lowerAperturePoint.setAttribute("cy", dims.aperturePoints.lower.y);
-        lowerAperturePoint.setAttribute("r", LOWER_APERTURE_POINT_RADIUS);
-        lowerAperturePoint.setAttribute("fill", "blue");
-        lowerAperturePoint.setAttribute('pointer-events', 'none');
-        g.appendChild(lowerAperturePoint);
+        _drawAperturePoints(g, dims, ns);
         
         // Ensure vector arrow markers exist
         ensureAllMarkers(svg);
@@ -347,9 +331,18 @@ export function updateComponentPosition(component, x, y) {
     state.posX = x;
     state.posY = y;
 
-    // Update transform with correct rotation around centerPoint
+    // Auto-scale aperture to match parent's projection if component has a parent
+    if (state.parentId !== null) {
+        const scaledDims = _autoScaleApertureForExistingComponent(component);
+        if (scaledDims) {
+            state.dimensions = scaledDims;
+        }
+    }
+
+    // Update transform with correct rotation around centerPoint (use possibly updated dimensions)
+    const currentDims = state.dimensions || dims;
     const rotation = state.rotation || 0;
-    component.setAttribute("transform", `translate(${x},${y}) rotate(${rotation} ${dims.centerPoint.x} ${dims.centerPoint.y})`);
+    component.setAttribute("transform", `translate(${x},${y}) rotate(${rotation} ${currentDims.centerPoint.x} ${currentDims.centerPoint.y})`);
 
     // Move arrow endpoint by same delta
     if (typeof state.arrowX === "number" && typeof state.arrowY === "number") {
@@ -373,12 +366,21 @@ export function updateComponentRotation(component, rotation) {
 
     state.rotation = rotation;
     
-    // Calculate rotation center (component position + centerPoint offset)
-    const rotationCenterX = state.posX + dims.centerPoint.x;
-    const rotationCenterY = state.posY + dims.centerPoint.y;
+    // Auto-scale aperture to match parent's projection if component has a parent
+    if (state.parentId !== null) {
+        const scaledDims = _autoScaleApertureForExistingComponent(component);
+        if (scaledDims) {
+            state.dimensions = scaledDims;
+        }
+    }
+    
+    // Calculate rotation center (component position + centerPoint offset) - use possibly updated dimensions
+    const currentDims = state.dimensions || dims;
+    const rotationCenterX = state.posX + currentDims.centerPoint.x;
+    const rotationCenterY = state.posY + currentDims.centerPoint.y;
     
     // Apply rotation around the centerPoint
-    component.setAttribute("transform", `translate(${state.posX},${state.posY}) rotate(${rotation} ${dims.centerPoint.x} ${dims.centerPoint.y})`);
+    component.setAttribute("transform", `translate(${state.posX},${state.posY}) rotate(${rotation} ${currentDims.centerPoint.x} ${currentDims.centerPoint.y})`);
     
     // Update trace lines if they are currently visible
     updateTraceLines();
@@ -490,9 +492,214 @@ export function logComponentInfo(compId) {
         const component = getComponentById(compId);
         const projections = calculateApertureProjections(component);
         if (projections) {
-            console.log(`  Aperture Projections onto perpendicular to center trace line:`);
-            console.log(`    Parent projection: ${projections.parent.apertureProjection.toFixed(2)}`);
-            console.log(`    Child projection: ${projections.child.apertureProjection.toFixed(2)}`);
+            console.log(`  Parent projection: ${projections.parent.apertureProjection.toFixed(2)} ,  Child projection: ${projections.child.apertureProjection.toFixed(2)}`);
+        }
+    }
+}
+
+// Helper function to auto-scale aperture radius to match parent's projection
+function _autoScaleApertureToMatchParent(childDims, compId, placeX, placeY, initialRotation, parentComponent) {
+    const parentId = parseInt(parentComponent.getAttribute('data-id'));
+    const parentState = componentState[parentId];
+    
+    if (!parentState || !parentState.dimensions) {
+        console.warn('Parent state or dimensions not found, using original aperture radius');
+        return childDims;
+    }
+    
+    // Create temporary state for the child component to enable projection calculations
+    const tempChildState = {
+        posX: placeX,
+        posY: placeY,
+        rotation: initialRotation,
+        dimensions: childDims,
+        parentId: parentId,
+        type: childDims.type || 'unknown'
+    };
+    
+    // Temporarily add to componentState
+    componentState[compId] = tempChildState;
+    
+    // Create a temporary component element for calculations
+    const tempComponent = {
+        getAttribute: (attr) => {
+            if (attr === 'data-id') return compId.toString();
+            if (attr === 'data-type') return tempChildState.type;
+            return null;
+        }
+    };
+    
+    try {
+        const scaledDims = _performApertureScaling(tempComponent, childDims, true);
+        return scaledDims || childDims;
+        
+    } catch (error) {
+        console.error('Error during aperture scaling:', error);
+        return childDims;
+    } finally {
+        // Clean up temporary state
+        delete componentState[compId];
+    }
+}
+
+// Helper function to auto-scale aperture radius for existing components during drag/rotation
+function _autoScaleApertureForExistingComponent(component) {
+    if (!component) return null;
+    
+    const compId = parseInt(component.getAttribute('data-id'));
+    const state = componentState[compId];
+    
+    if (!state || state.parentId === null || !state.dimensions) {
+        return null; // No parent or no dimensions to scale
+    }
+    
+    const parentState = componentState[state.parentId];
+    if (!parentState || !parentState.dimensions) {
+        return null; // Parent not found
+    }
+    
+    try {
+        return _performApertureScaling(component, state.dimensions, false);
+        
+    } catch (error) {
+        console.error('Error during dynamic aperture scaling:', error);
+        return null;
+    }
+}
+
+// Core aperture scaling logic - used by both creation and dynamic scaling
+function _performApertureScaling(component, currentDims, isCreationTime) {
+    // Calculate current projections
+    const projections = calculateApertureProjections(component);
+    if (!projections) {
+        if (isCreationTime) {
+            console.warn('Could not calculate initial projections, using original aperture radius');
+        }
+        return null;
+    }
+    
+    const targetProjection = projections.parent.apertureProjection;
+    const currentChildProjection = projections.child.apertureProjection;
+    
+    // Handle edge cases
+    if (currentChildProjection === 0) {
+        if (isCreationTime) {
+            console.warn('Initial child projection is zero, cannot scale aperture effectively');
+        }
+        return null;
+    }
+    
+    // Calculate scaling ratio
+    const scalingRatio = targetProjection / currentChildProjection;
+    const currentApertureRadius = currentDims.apertureRadius;
+    const newApertureRadius = currentApertureRadius * scalingRatio;
+    
+    // Ensure the new radius is reasonable
+    if (newApertureRadius <= 0 || newApertureRadius > 200) {
+        if (isCreationTime) {
+            console.warn(`Calculated aperture radius ${newApertureRadius.toFixed(2)} is unreasonable, using original`);
+        }
+        return null;
+    }
+    
+    // Apply the new aperture radius
+    const scaledDims = changeComponentApertureRadius(currentDims, newApertureRadius);
+    
+    // Logging based on context
+    if (isCreationTime) {
+        console.log(`Auto-scaling aperture: Target projection=${targetProjection.toFixed(2)}, Initial child projection=${currentChildProjection.toFixed(2)}`);
+        console.log(`Aperture scaling complete:`);
+        console.log(`  Original radius: ${currentApertureRadius.toFixed(2)} → New radius: ${newApertureRadius.toFixed(2)} (ratio: ${scalingRatio.toFixed(3)})`);
+        console.log(`  Target projection: ${targetProjection.toFixed(2)}, Expected child projection: ${targetProjection.toFixed(2)}`);
+    } else {
+        console.log(`Dynamic aperture scaling: ${currentApertureRadius.toFixed(1)} → ${newApertureRadius.toFixed(1)} (ratio: ${scalingRatio.toFixed(2)})`);
+        // Update aperture point drawings for existing components
+        _updateAperturePointDrawings(component, scaledDims);
+    }
+    
+    return scaledDims;
+}
+
+// Helper function to update aperture point drawings when dimensions change
+function _updateAperturePointDrawings(component, newDimensions) {
+    if (!SHOW_DEBUG_DRAWING || !component || !newDimensions) return;
+    
+    // Update existing aperture points
+    _drawAperturePoints(component, newDimensions);
+    
+    console.log(`Updated aperture points: Upper (${newDimensions.aperturePoints.upper.x.toFixed(1)}, ${newDimensions.aperturePoints.upper.y.toFixed(1)}), Lower (${newDimensions.aperturePoints.lower.x.toFixed(1)}, ${newDimensions.aperturePoints.lower.y.toFixed(1)})`);
+}
+
+// Unified function to draw or update aperture points
+function _drawAperturePoints(parentElement, dimensions, ns = null) {
+    if (!dimensions || !dimensions.aperturePoints) return;
+    
+    const isCreation = ns !== null; // If ns is provided, we're creating new elements
+    
+    if (isCreation) {
+        // Creating new aperture points during component creation
+        
+        // Upper aperture point (in upVector direction)
+        const upperAperturePoint = document.createElementNS(ns, "circle");
+        upperAperturePoint.setAttribute("cx", dimensions.aperturePoints.upper.x);
+        upperAperturePoint.setAttribute("cy", dimensions.aperturePoints.upper.y);
+        upperAperturePoint.setAttribute("r", APERTURE_POINT_RADIUS);
+        upperAperturePoint.setAttribute("fill", "blue");
+        upperAperturePoint.setAttribute('pointer-events', 'none');
+        upperAperturePoint.setAttribute('data-aperture-type', 'upper'); // Add identifier
+        parentElement.appendChild(upperAperturePoint);
+        
+        // Lower aperture point (opposite to upVector direction)
+        const lowerAperturePoint = document.createElementNS(ns, "circle");
+        lowerAperturePoint.setAttribute("cx", dimensions.aperturePoints.lower.x);
+        lowerAperturePoint.setAttribute("cy", dimensions.aperturePoints.lower.y);
+        lowerAperturePoint.setAttribute("r", LOWER_APERTURE_POINT_RADIUS);
+        lowerAperturePoint.setAttribute("fill", "blue");
+        lowerAperturePoint.setAttribute('pointer-events', 'none');
+        lowerAperturePoint.setAttribute('data-aperture-type', 'lower'); // Add identifier
+        parentElement.appendChild(lowerAperturePoint);
+        
+    } else {
+        // Updating existing aperture points during dynamic scaling
+        
+        // Find existing aperture points by their data attributes (more reliable than radius matching)
+        const upperAperturePoint = parentElement.querySelector('circle[data-aperture-type="upper"]');
+        const lowerAperturePoint = parentElement.querySelector('circle[data-aperture-type="lower"]');
+        
+        // Fallback: find by radius if data attributes not found (for backward compatibility)
+        let fallbackUpper = null, fallbackLower = null;
+        if (!upperAperturePoint || !lowerAperturePoint) {
+            const allCircles = parentElement.querySelectorAll('circle[fill="blue"]');
+            for (const circle of allCircles) {
+                const radius = parseFloat(circle.getAttribute('r'));
+                if (radius === APERTURE_POINT_RADIUS && !fallbackUpper) {
+                    fallbackUpper = circle;
+                } else if (radius === LOWER_APERTURE_POINT_RADIUS && !fallbackLower) {
+                    fallbackLower = circle;
+                }
+            }
+        }
+        
+        // Update upper aperture point position
+        const finalUpperPoint = upperAperturePoint || fallbackUpper;
+        if (finalUpperPoint && dimensions.aperturePoints.upper) {
+            finalUpperPoint.setAttribute("cx", dimensions.aperturePoints.upper.x);
+            finalUpperPoint.setAttribute("cy", dimensions.aperturePoints.upper.y);
+            // Add data attribute if it was found via fallback
+            if (!finalUpperPoint.hasAttribute('data-aperture-type')) {
+                finalUpperPoint.setAttribute('data-aperture-type', 'upper');
+            }
+        }
+        
+        // Update lower aperture point position
+        const finalLowerPoint = lowerAperturePoint || fallbackLower;
+        if (finalLowerPoint && dimensions.aperturePoints.lower) {
+            finalLowerPoint.setAttribute("cx", dimensions.aperturePoints.lower.x);
+            finalLowerPoint.setAttribute("cy", dimensions.aperturePoints.lower.y);
+            // Add data attribute if it was found via fallback
+            if (!finalLowerPoint.hasAttribute('data-aperture-type')) {
+                finalLowerPoint.setAttribute('data-aperture-type', 'lower');
+            }
         }
     }
 }
