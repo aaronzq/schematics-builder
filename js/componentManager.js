@@ -80,15 +80,52 @@ export function addComponent(type) {
     
     // Get component dimensions
     let dims = componentDimensions[type];
+    let shouldFlipUpVector = false;
     
-    // Randomly decide whether to flip the upVector (50% chance)
-    const shouldFlipUpVector = Math.random() < 0.5;
-    
-    if (shouldFlipUpVector) {
-        dims = flipComponentUpVector(dims);
-        console.log(`Component ${compId} (${type}) created with FLIPPED upVector - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
+    // If there's a selected component (parent), check if we need to flip to avoid crossing lines
+    if (selectedComponent) {
+        const parentId = parseInt(selectedComponent.getAttribute('data-id'));
+        
+        // Create temporary state to test intersection with normal orientation
+        const tempState = {
+            posX: placeX,
+            posY: placeY,
+            rotation: initialRotation,
+            dimensions: dims,
+            parentId: parentId,
+            type: type
+        };
+        
+        // Temporarily add to componentState for intersection test
+        componentState[compId] = tempState;
+        
+        // Check if aperture lines would cross with normal orientation
+        const linesCrossNormal = doApertureLinessCross(compId);
+        
+        if (linesCrossNormal) {
+            // Test with flipped orientation
+            const flippedDims = flipComponentUpVector(dims);
+            tempState.dimensions = flippedDims;
+            
+            const linesCrossFlipped = doApertureLinessCross(compId);
+            
+            // Choose the orientation that doesn't create crossing lines
+            if (!linesCrossFlipped) {
+                shouldFlipUpVector = true;
+                dims = flippedDims;
+                console.log(`Component ${compId} (${type}) FLIPPED to avoid crossing aperture lines - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
+            } else {
+                // Both orientations create crossing lines, keep normal
+                console.log(`Component ${compId} (${type}) kept NORMAL orientation (both would cross) - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
+            }
+        } else {
+            console.log(`Component ${compId} (${type}) created with NORMAL upVector (no crossing) - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
+        }
+        
+        // Remove temporary state entry (will be recreated properly below)
+        delete componentState[compId];
     } else {
-        console.log(`Component ${compId} (${type}) created with NORMAL upVector - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
+        console.log(`Component ${compId} (${type}) created with NORMAL upVector (root component) - upVector: (${dims.upVector.x}, ${dims.upVector.y})`);
     }
     
     // Apply rotation around centerPoint
@@ -305,10 +342,6 @@ function _updateComponentHierarchy(compId) {
         
         console.log(`Component ${compId} (${componentState[compId].type}) added as child of Component ${parentId} (${componentState[parentId].type})`);
         
-        // Check if aperture lines cross with parent and log result
-        const linesCross = doApertureLinessCross(compId);
-        console.log(`Component ${compId} aperture lines cross with parent ${parentId}: ${linesCross ? 'CROSS' : 'PARALLEL'}`);
-
         // logComponentInfo(compId);
         
         // Update trace lines if they're enabled
