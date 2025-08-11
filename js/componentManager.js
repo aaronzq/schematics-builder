@@ -338,6 +338,9 @@ export function updateComponentPosition(component, x, y) {
             state.dimensions = scaledDims;
         }
     }
+    
+    // Recursively update aperture scaling for all children and descendants
+    _recursivelyUpdateChildrenApertures(component);
 
     // Update transform with correct rotation around centerPoint (use possibly updated dimensions)
     const currentDims = state.dimensions || dims;
@@ -373,6 +376,9 @@ export function updateComponentRotation(component, rotation) {
             state.dimensions = scaledDims;
         }
     }
+    
+    // Recursively update aperture scaling for all children and descendants
+    _recursivelyUpdateChildrenApertures(component);
     
     // Calculate rotation center (component position + centerPoint offset) - use possibly updated dimensions
     const currentDims = state.dimensions || dims;
@@ -701,5 +707,38 @@ function _drawAperturePoints(parentElement, dimensions, ns = null) {
                 finalLowerPoint.setAttribute('data-aperture-type', 'lower');
             }
         }
+    }
+}
+
+// Helper function to recursively update aperture scaling for all children and descendants
+function _recursivelyUpdateChildrenApertures(parentComponent) {
+    if (!parentComponent) return;
+    
+    const parentId = parseInt(parentComponent.getAttribute('data-id'));
+    const parentState = componentState[parentId];
+    
+    if (!parentState || !parentState.children || parentState.children.length === 0) {
+        return; // No children to update
+    }
+    
+    // Process all direct children
+    for (const childId of parentState.children) {
+        const childComponent = getComponentById(childId);
+        const childState = componentState[childId];
+        
+        if (!childComponent || !childState) {
+            console.warn(`Child component ${childId} not found during recursive aperture update`);
+            continue;
+        }
+        
+        // Update this child's aperture to match its parent (the component being dragged/rotated)
+        const scaledDims = _autoScaleApertureForExistingComponent(childComponent);
+        if (scaledDims) {
+            childState.dimensions = scaledDims;
+            console.log(`Recursively updated aperture for child component ${childId} (${childState.type})`);
+        }
+        
+        // Recursively update this child's descendants
+        _recursivelyUpdateChildrenApertures(childComponent);
     }
 }
