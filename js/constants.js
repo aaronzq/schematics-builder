@@ -1,0 +1,37 @@
+// Application constants
+// Centralized configuration values used across multiple modules
+
+// Component spacing and positioning
+export const COMPONENT_SPACING = 150;
+
+// Angle and grid snapping
+export const ANGLE_SNAP_INCREMENT = 5;
+export const ROTATION_SNAP_INCREMENT = 5;
+export const GRID_SIZE = 10;
+
+// Debug and visualization
+export const SHOW_DEBUG_DRAWING = true;
+
+// UI measurements
+export const ROTATION_HANDLE_DISTANCE = 40;
+export const ROTATION_HANDLE_RADIUS = 12;
+export const ARROW_HANDLE_RADIUS = 10;
+
+// Visual styling
+export const ARROW_COLOR = "#2196F3";
+export const ARROW_STROKE_WIDTH = 3;
+export const ROTATION_HANDLE_COLOR = "#ffe082";
+export const ROTATION_HANDLE_STROKE = "#fbc02d";
+
+// Vector visualization
+export const UP_VECTOR_LENGTH = 60;
+export const FORWARD_VECTOR_LENGTH = 60;
+export const CENTER_MARKER_RADIUS = 2;
+export const APERTURE_POINT_RADIUS = 3;
+export const LOWER_APERTURE_POINT_RADIUS = 2;
+
+// Canvas and viewport
+export const MIN_CANVAS_WIDTH = 400;
+export const MIN_CANVAS_HEIGHT = 300;
+export const CANVAS_PADDING_PERCENT = 0.1;
+export const MIN_CANVAS_PADDING = 50;

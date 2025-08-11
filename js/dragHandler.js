@@ -3,6 +3,8 @@
 
 import { screenToSVG, snapToGrid, updateCanvasViewBox } from './canvasManager.js';
 import { componentState, updateComponentPosition, updateComponentRotation, getSelectedComponent, setSelectedComponent } from './componentManager.js';
+import { ANGLE_SNAP_INCREMENT, ROTATION_SNAP_INCREMENT } from './constants.js';
+import { snapAngle } from './utils/mathUtils.js';
 
 // Component drag state
 let draggingElement = null;
@@ -97,8 +99,8 @@ export function makeArrowHandleDraggable(handle, line, state) {
         const dy = cursorpt.y - startY;
         let angle = Math.atan2(dy, dx) * 180 / Math.PI;
         
-        // Snap angle to 5-degree increments (0, 5, 10, 15, ..., 355)
-        const snappedAngle = Math.round(angle / 5) * 5;
+        // Snap angle to configured increments
+        const snappedAngle = snapAngle(angle, ANGLE_SNAP_INCREMENT);
         
         // Log the absolute angle
         console.log(`Arrow angle: ${snappedAngle}°`);
@@ -153,8 +155,8 @@ export function makeRotationHandleDraggable(rotationHandle, component, centerX, 
         const dy = cursorpt.y - centerY;
         let angle = Math.atan2(dy, dx) * 180 / Math.PI + 90;
         
-        // Snap to 5 degree increments
-        angle = Math.round(angle / 5) * 5;
+        // Snap to configured degree increments
+        angle = snapAngle(angle, ROTATION_SNAP_INCREMENT);
         
         updateComponentRotation(component, angle);
         

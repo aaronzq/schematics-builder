@@ -3,6 +3,7 @@
 
 import { componentState } from './componentManager.js';
 import { componentDimensions } from './components.js';
+import { transformToGlobal } from './utils/mathUtils.js';
 
 // Trace line settings
 export let showTraceLines = true;
@@ -17,33 +18,6 @@ export function drawTraceLines() {
     // Create trace lines group
     const traceLinesGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
     traceLinesGroup.setAttribute("id", "trace-lines");
-    
-    // Helper function to transform local component coordinates to global canvas coordinates
-    function transformToGlobal(localX, localY, state) {
-        // Apply rotation transformation around centerPoint
-        const rotation = (state.rotation || 0) * Math.PI / 180; // Convert to radians
-        const cos = Math.cos(rotation);
-        const sin = Math.sin(rotation);
-        
-        // Get the component's center point
-        const dims = state.dimensions;
-        const centerX = dims.centerPoint.x;
-        const centerY = dims.centerPoint.y;
-        
-        // First, translate point relative to center point
-        const relativeX = localX - centerX;
-        const relativeY = localY - centerY;
-        
-        // Apply rotation around center point
-        const rotatedX = relativeX * cos - relativeY * sin;
-        const rotatedY = relativeX * sin + relativeY * cos;
-        
-        // Translate back and add world position
-        return {
-            x: state.posX + centerX + rotatedX,
-            y: state.posY + centerY + rotatedY
-        };
-    }
     
     // Simple approach: iterate through all components and connect to parent if exists
     for (const compId in componentState) {
@@ -151,21 +125,6 @@ export function doApertureLinessCross(componentId) {
     const parentDims = parentState.dimensions;
     
     if (!childDims || !parentDims) return false;
-    
-    // Helper function to transform local component coordinates to global canvas coordinates
-    function transformToGlobal(localX, localY, componentState) {
-        const rotation = (componentState.rotation || 0) * Math.PI / 180;
-        const cos = Math.cos(rotation);
-        const sin = Math.sin(rotation);
-        
-        const rotatedX = localX * cos - localY * sin;
-        const rotatedY = localX * sin + localY * cos;
-        
-        return {
-            x: componentState.posX + rotatedX,
-            y: componentState.posY + rotatedY
-        };
-    }
     
     // Calculate global positions for child and parent aperture points
     const childUpper = transformToGlobal(childDims.aperturePoints.upper.x, childDims.aperturePoints.upper.y, state);

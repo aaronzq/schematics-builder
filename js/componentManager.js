@@ -3,16 +3,23 @@
 
 import { components, componentDimensions, flipComponentUpVector } from './components.js';
 import { showTraceLines, drawTraceLines, updateTraceLines, doApertureLinessCross } from './traceLines.js';
+import { 
+    COMPONENT_SPACING, 
+    SHOW_DEBUG_DRAWING, 
+    UP_VECTOR_LENGTH, 
+    FORWARD_VECTOR_LENGTH,
+    CENTER_MARKER_RADIUS,
+    APERTURE_POINT_RADIUS,
+    LOWER_APERTURE_POINT_RADIUS
+} from './constants.js';
+import { ensureAllMarkers } from './utils/svgUtils.js';
+import { validateComponentType } from './utils/validators.js';
 
 // Global state
 let idCounter = 0;
 let selectedComponent = null;
 let nextX = 0;
 let nextY = 0;
-
-// Constants
-const COMPONENT_SPACING = 150;
-const SHOW_DEBUG_DRAWING = true;
 
 // Component state management
 export const componentState = {};
@@ -39,8 +46,9 @@ export function setNextPosition(x, y) {
 
 // Add a new component to the canvas
 export function addComponent(type) {
-    if (!components[type]) {
-        console.error(`Unknown component type: ${type}`);
+    const validation = validateComponentType(type);
+    if (!validation.valid) {
+        console.error(validation.error);
         return;
     }
 
@@ -217,18 +225,17 @@ export function addComponent(type) {
         const centerMarker = document.createElementNS(ns, "circle");
         centerMarker.setAttribute("cx", dims.centerPoint.x);
         centerMarker.setAttribute("cy", dims.centerPoint.y);
-        centerMarker.setAttribute("r", "2");
+        centerMarker.setAttribute("r", CENTER_MARKER_RADIUS);
         centerMarker.setAttribute("fill", "red");
         centerMarker.setAttribute('pointer-events', 'none');
         g.appendChild(centerMarker);
         
         // Up vector (green arrow)
-        const upVectorLength = 60;
         const upLine = document.createElementNS(ns, "line");
         upLine.setAttribute("x1", dims.centerPoint.x);
         upLine.setAttribute("y1", dims.centerPoint.y);
-        upLine.setAttribute("x2", dims.centerPoint.x + dims.upVector.x * upVectorLength);
-        upLine.setAttribute("y2", dims.centerPoint.y + dims.upVector.y * upVectorLength);
+        upLine.setAttribute("x2", dims.centerPoint.x + dims.upVector.x * UP_VECTOR_LENGTH);
+        upLine.setAttribute("y2", dims.centerPoint.y + dims.upVector.y * UP_VECTOR_LENGTH);
         upLine.setAttribute("stroke", "green");
         upLine.setAttribute("stroke-width", "1");
         upLine.setAttribute("marker-end", "url(#upVectorArrow)");
@@ -236,12 +243,11 @@ export function addComponent(type) {
         g.appendChild(upLine);
         
         // Forward vector (blue arrow)
-        const forwardVectorLength = 60;
         const forwardLine = document.createElementNS(ns, "line");
         forwardLine.setAttribute("x1", dims.centerPoint.x);
         forwardLine.setAttribute("y1", dims.centerPoint.y);
-        forwardLine.setAttribute("x2", dims.centerPoint.x + dims.forwardVector.x * forwardVectorLength);
-        forwardLine.setAttribute("y2", dims.centerPoint.y + dims.forwardVector.y * forwardVectorLength);
+        forwardLine.setAttribute("x2", dims.centerPoint.x + dims.forwardVector.x * FORWARD_VECTOR_LENGTH);
+        forwardLine.setAttribute("y2", dims.centerPoint.y + dims.forwardVector.y * FORWARD_VECTOR_LENGTH);
         forwardLine.setAttribute("stroke", "blue");
         forwardLine.setAttribute("stroke-width", "1");
         forwardLine.setAttribute("marker-end", "url(#forwardVectorArrow)");
@@ -253,7 +259,7 @@ export function addComponent(type) {
         const upperAperturePoint = document.createElementNS(ns, "circle");
         upperAperturePoint.setAttribute("cx", dims.aperturePoints.upper.x);
         upperAperturePoint.setAttribute("cy", dims.aperturePoints.upper.y);
-        upperAperturePoint.setAttribute("r", "3");
+        upperAperturePoint.setAttribute("r", APERTURE_POINT_RADIUS);
         upperAperturePoint.setAttribute("fill", "blue");
         upperAperturePoint.setAttribute('pointer-events', 'none');
         g.appendChild(upperAperturePoint);
@@ -262,13 +268,13 @@ export function addComponent(type) {
         const lowerAperturePoint = document.createElementNS(ns, "circle");
         lowerAperturePoint.setAttribute("cx", dims.aperturePoints.lower.x);
         lowerAperturePoint.setAttribute("cy", dims.aperturePoints.lower.y);
-        lowerAperturePoint.setAttribute("r", "2");
+        lowerAperturePoint.setAttribute("r", LOWER_APERTURE_POINT_RADIUS);
         lowerAperturePoint.setAttribute("fill", "blue");
         lowerAperturePoint.setAttribute('pointer-events', 'none');
         g.appendChild(lowerAperturePoint);
         
         // Ensure vector arrow markers exist
-        _ensureVectorArrowMarkers(svg);
+        ensureAllMarkers(svg);
     }
 
     // Add to components group
@@ -461,47 +467,4 @@ export function logComponentInfo(compId) {
     console.log(`  Hierarchy: ${parentInfo}, ${childrenInfo}`);
     console.log(`  Coordinates: ${coordinateInfo}`);
     console.log(`  Arrow: ${arrowInfo}`);
-}
-
-// Private helper function to ensure vector arrow markers exist
-function _ensureVectorArrowMarkers(svg) {
-    let defs = svg.querySelector("defs");
-    if (!defs) {
-        defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-        svg.insertBefore(defs, svg.firstChild);
-    }
-    
-    // Up vector arrow marker (green)
-    if (!svg.querySelector("#upVectorArrow")) {
-        const upMarker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-        upMarker.setAttribute("id", "upVectorArrow");
-        upMarker.setAttribute("markerWidth", "8");
-        upMarker.setAttribute("markerHeight", "6");
-        upMarker.setAttribute("refX", "8");
-        upMarker.setAttribute("refY", "3");
-        upMarker.setAttribute("orient", "auto");
-        upMarker.setAttribute("markerUnits", "strokeWidth");
-        const upPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        upPath.setAttribute("d", "M0,0 L8,3 L0,6 Z");
-        upPath.setAttribute("fill", "green");
-        upMarker.appendChild(upPath);
-        defs.appendChild(upMarker);
-    }
-    
-    // Forward vector arrow marker (blue)
-    if (!svg.querySelector("#forwardVectorArrow")) {
-        const forwardMarker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-        forwardMarker.setAttribute("id", "forwardVectorArrow");
-        forwardMarker.setAttribute("markerWidth", "8");
-        forwardMarker.setAttribute("markerHeight", "6");
-        forwardMarker.setAttribute("refX", "8");
-        forwardMarker.setAttribute("refY", "3");
-        forwardMarker.setAttribute("orient", "auto");
-        forwardMarker.setAttribute("markerUnits", "strokeWidth");
-        const forwardPath = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        forwardPath.setAttribute("d", "M0,0 L8,3 L0,6 Z");
-        forwardPath.setAttribute("fill", "blue");
-        forwardMarker.appendChild(forwardPath);
-        defs.appendChild(forwardMarker);
-    }
 }

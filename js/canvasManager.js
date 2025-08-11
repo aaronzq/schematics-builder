@@ -1,4 +1,11 @@
 import { componentDimensions } from './components.js';
+import { 
+    MIN_CANVAS_WIDTH, 
+    MIN_CANVAS_HEIGHT, 
+    CANVAS_PADDING_PERCENT, 
+    MIN_CANVAS_PADDING, 
+    GRID_SIZE 
+} from './constants.js';
 
 // Initialize the SVG viewBox
 export function initCanvas() {
@@ -72,12 +79,12 @@ export function updateCanvasViewBox() {
             }
         }
 
-        // Add padding (10% on each side and ensure minimum size)
-        const width = Math.max(maxX - minX, 400);  // Minimum width
-        const height = Math.max(maxY - minY, 300);  // Minimum height
+        // Add padding (configurable percentage on each side and ensure minimum size)
+        const width = Math.max(maxX - minX, MIN_CANVAS_WIDTH);
+        const height = Math.max(maxY - minY, MIN_CANVAS_HEIGHT);
         const padding = {
-            x: Math.max(width * 0.1, 50),   // 10% padding with 50px minimum
-            y: Math.max(height * 0.1, 50)    // 10% padding with 50px minimum
+            x: Math.max(width * CANVAS_PADDING_PERCENT, MIN_CANVAS_PADDING),
+            y: Math.max(height * CANVAS_PADDING_PERCENT, MIN_CANVAS_PADDING)
         };
 
         // Center the viewBox on the bounding box of all components and arrows
@@ -102,7 +109,7 @@ export function screenToSVG(clientX, clientY) {
 }
 
 // Snap coordinates to grid
-export function snapToGrid(x, y, gridSize = 10) {
+export function snapToGrid(x, y, gridSize = GRID_SIZE) {
     return {
         x: Math.round(x / gridSize) * gridSize,
         y: Math.round(y / gridSize) * gridSize

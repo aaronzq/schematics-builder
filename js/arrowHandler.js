@@ -4,8 +4,17 @@
 import { componentState } from './componentManager.js';
 import { componentDimensions } from './components.js';
 import { makeArrowHandleDraggable, makeRotationHandleDraggable } from './dragHandler.js';
-
-const COMPONENT_SPACING = 150;
+import { 
+    COMPONENT_SPACING, 
+    ARROW_COLOR, 
+    ARROW_STROKE_WIDTH,
+    ARROW_HANDLE_RADIUS,
+    ROTATION_HANDLE_DISTANCE,
+    ROTATION_HANDLE_RADIUS,
+    ROTATION_HANDLE_COLOR,
+    ROTATION_HANDLE_STROKE
+} from './constants.js';
+import { ensureAllMarkers } from './utils/svgUtils.js';
 
 // Show arrow for component with draggable handle and rotation control
 export function showArrowForComponent(component) {
@@ -47,8 +56,8 @@ export function showArrowForComponent(component) {
     line.setAttribute("y1", centerY);
     line.setAttribute("x2", targetX);
     line.setAttribute("y2", targetY);
-    line.setAttribute("stroke", "#2196F3");
-    line.setAttribute("stroke-width", "3");
+    line.setAttribute("stroke", ARROW_COLOR);
+    line.setAttribute("stroke-width", ARROW_STROKE_WIDTH);
     line.setAttribute("marker-end", "url(#arrowhead)");
     arrow.appendChild(line);
     
@@ -56,9 +65,9 @@ export function showArrowForComponent(component) {
     const handle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     handle.setAttribute("cx", targetX);
     handle.setAttribute("cy", targetY);
-    handle.setAttribute("r", "10");
+    handle.setAttribute("r", ARROW_HANDLE_RADIUS);
     handle.setAttribute("fill", "#fff");
-    handle.setAttribute("stroke", "#2196F3");
+    handle.setAttribute("stroke", ARROW_COLOR);
     handle.setAttribute("stroke-width", "2");
     handle.setAttribute("cursor", "pointer");
     handle.setAttribute("id", `arrow-handle-${compId}`);
@@ -67,18 +76,16 @@ export function showArrowForComponent(component) {
     // Rotation handle (only if selected)
     if (state.selected) {
         const rotationHandle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        // Place handle 40px above center (relative to rotation)
-        const handleRadius = 12;
-        const handleDistance = 40;
+        // Place handle at specified distance from center (relative to rotation)
         // Calculate rotated position relative to centerPoint
         const angleRad = rotation * Math.PI / 180;
-        const rx = centerX + handleDistance * Math.cos(angleRad - Math.PI/2);
-        const ry = centerY + handleDistance * Math.sin(angleRad - Math.PI/2);
+        const rx = centerX + ROTATION_HANDLE_DISTANCE * Math.cos(angleRad - Math.PI/2);
+        const ry = centerY + ROTATION_HANDLE_DISTANCE * Math.sin(angleRad - Math.PI/2);
         rotationHandle.setAttribute("cx", rx);
         rotationHandle.setAttribute("cy", ry);
-        rotationHandle.setAttribute("r", handleRadius);
-        rotationHandle.setAttribute("fill", "#ffe082");
-        rotationHandle.setAttribute("stroke", "#fbc02d");
+        rotationHandle.setAttribute("r", ROTATION_HANDLE_RADIUS);
+        rotationHandle.setAttribute("fill", ROTATION_HANDLE_COLOR);
+        rotationHandle.setAttribute("stroke", ROTATION_HANDLE_STROKE);
         rotationHandle.setAttribute("stroke-width", "2");
         rotationHandle.setAttribute("cursor", "grab");
         rotationHandle.setAttribute("id", `rotation-handle-${compId}`);
@@ -89,7 +96,7 @@ export function showArrowForComponent(component) {
     }
 
     // Ensure arrowhead marker exists
-    _ensureArrowheadMarker(svg);
+    ensureAllMarkers(svg);
     
     svg.appendChild(arrow);
     
@@ -104,28 +111,4 @@ export function removeArrowFromComponent(component) {
     const svg = document.getElementById("canvas");
     const arrow = svg.querySelector(`#arrow-preview-${component.getAttribute('data-id')}`);
     if (arrow) arrow.remove();
-}
-
-// Private helper functions
-function _ensureArrowheadMarker(svg) {
-    let defs = svg.querySelector("defs");
-    if (!defs) {
-        defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
-        svg.insertBefore(defs, svg.firstChild);
-    }
-    if (!svg.querySelector("#arrowhead")) {
-        const marker = document.createElementNS("http://www.w3.org/2000/svg", "marker");
-        marker.setAttribute("id", "arrowhead");
-        marker.setAttribute("markerWidth", "10");
-        marker.setAttribute("markerHeight", "7");
-        marker.setAttribute("refX", "10");
-        marker.setAttribute("refY", "3.5");
-        marker.setAttribute("orient", "auto");
-        marker.setAttribute("markerUnits", "strokeWidth");
-        const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        path.setAttribute("d", "M0,0 L10,3.5 L0,7 Z");
-        path.setAttribute("fill", "#2196F3");
-        marker.appendChild(path);
-        defs.appendChild(marker);
-    }
 }
