@@ -35,16 +35,52 @@ export function drawApertureRays() {
         
         if (!childDims || !parentDims) continue;
         
-        // Calculate global positions for aperture points
+        // Calculate global positions for aperture points and center points
         const childUpper = transformToGlobal(childDims.aperturePoints.upper.x, childDims.aperturePoints.upper.y, state);
         const childLower = transformToGlobal(childDims.aperturePoints.lower.x, childDims.aperturePoints.lower.y, state);
+        const childCenter = transformToGlobal(childDims.centerPoint.x, childDims.centerPoint.y, state);
         const parentUpper = transformToGlobal(parentDims.aperturePoints.upper.x, parentDims.aperturePoints.upper.y, parentState);
         const parentLower = transformToGlobal(parentDims.aperturePoints.lower.x, parentDims.aperturePoints.lower.y, parentState);
+        const parentCenter = transformToGlobal(parentDims.centerPoint.x, parentDims.centerPoint.y, parentState);
+        
+        // Determine connection points based on child component's ray shape
+        let upperRayStart, upperRayEnd, lowerRayStart, lowerRayEnd;
+        
+        switch (childDims.rayShape) {
+            case 'collimated':
+                // Parent upper to child upper, parent lower to child lower
+                upperRayStart = parentUpper;
+                upperRayEnd = childUpper;
+                lowerRayStart = parentLower;
+                lowerRayEnd = childLower;
+                break;
+            case 'divergent':
+                // Parent center to child upper, parent center to child lower
+                upperRayStart = parentCenter;
+                upperRayEnd = childUpper;
+                lowerRayStart = parentCenter;
+                lowerRayEnd = childLower;
+                break;
+            case 'convergent':
+                // Parent upper to child center, parent lower to child center
+                upperRayStart = parentUpper;
+                upperRayEnd = childCenter;
+                lowerRayStart = parentLower;
+                lowerRayEnd = childCenter;
+                break;
+            default:
+                // Fallback to collimated behavior
+                upperRayStart = parentUpper;
+                upperRayEnd = childUpper;
+                lowerRayStart = parentLower;
+                lowerRayEnd = childLower;
+                break;
+        }
         
         // Draw solid polygon if mode includes solid
         if (rayDisplayMode === 'solid' || rayDisplayMode === 'both') {
             const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-            const points = `${parentUpper.x},${parentUpper.y} ${childUpper.x},${childUpper.y} ${childLower.x},${childLower.y} ${parentLower.x},${parentLower.y}`;
+            const points = `${upperRayStart.x},${upperRayStart.y} ${upperRayEnd.x},${upperRayEnd.y} ${lowerRayEnd.x},${lowerRayEnd.y} ${lowerRayStart.x},${lowerRayStart.y}`;
             polygon.setAttribute("points", points);
             polygon.setAttribute("fill", "blue");
             polygon.setAttribute("fill-opacity", "0.2");
@@ -55,24 +91,24 @@ export function drawApertureRays() {
         
         // Draw dotted lines if mode includes dotted
         if (rayDisplayMode === 'dotted' || rayDisplayMode === 'both') {
-            // Connect upper aperture point to upper aperture point (by name, not spatial position)
+            // Draw upper ray line
             const upperLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            upperLine.setAttribute("x1", parentUpper.x);
-            upperLine.setAttribute("y1", parentUpper.y);
-            upperLine.setAttribute("x2", childUpper.x);
-            upperLine.setAttribute("y2", childUpper.y);
+            upperLine.setAttribute("x1", upperRayStart.x);
+            upperLine.setAttribute("y1", upperRayStart.y);
+            upperLine.setAttribute("x2", upperRayEnd.x);
+            upperLine.setAttribute("y2", upperRayEnd.y);
             upperLine.setAttribute("stroke", "blue");
             upperLine.setAttribute("stroke-width", "1");
             upperLine.setAttribute("stroke-dasharray", "3,3");
             upperLine.setAttribute("pointer-events", "none");
             rayLinesGroup.appendChild(upperLine);
             
-            // Connect lower aperture point to lower aperture point (by name, not spatial position)
+            // Draw lower ray line
             const lowerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            lowerLine.setAttribute("x1", parentLower.x);
-            lowerLine.setAttribute("y1", parentLower.y);
-            lowerLine.setAttribute("x2", childLower.x);
-            lowerLine.setAttribute("y2", childLower.y);
+            lowerLine.setAttribute("x1", lowerRayStart.x);
+            lowerLine.setAttribute("y1", lowerRayStart.y);
+            lowerLine.setAttribute("x2", lowerRayEnd.x);
+            lowerLine.setAttribute("y2", lowerRayEnd.y);
             lowerLine.setAttribute("stroke", "blue");
             lowerLine.setAttribute("stroke-width", "1");
             lowerLine.setAttribute("stroke-dasharray", "3,3");
@@ -151,22 +187,56 @@ export function doApertureLinessCross(componentId) {
     
     if (!childDims || !parentDims) return false;
     
-    // Calculate global positions for child and parent aperture points
+    // Calculate global positions for child and parent aperture points and center points
     const childUpper = transformToGlobal(childDims.aperturePoints.upper.x, childDims.aperturePoints.upper.y, state);
     const childLower = transformToGlobal(childDims.aperturePoints.lower.x, childDims.aperturePoints.lower.y, state);
+    const childCenter = transformToGlobal(childDims.centerPoint.x, childDims.centerPoint.y, state);
     const parentUpper = transformToGlobal(parentDims.aperturePoints.upper.x, parentDims.aperturePoints.upper.y, parentState);
     const parentLower = transformToGlobal(parentDims.aperturePoints.lower.x, parentDims.aperturePoints.lower.y, parentState);
+    const parentCenter = transformToGlobal(parentDims.centerPoint.x, parentDims.centerPoint.y, parentState);
+    
+    // Determine connection points based on child component's ray shape
+    let upperRayStart, upperRayEnd, lowerRayStart, lowerRayEnd;
+    
+    switch (childDims.rayShape) {
+        case 'collimated':
+            // Parent upper to child upper, parent lower to child lower
+            upperRayStart = parentUpper;
+            upperRayEnd = childUpper;
+            lowerRayStart = parentLower;
+            lowerRayEnd = childLower;
+            break;
+        case 'divergent':
+            // Parent center to child upper, parent center to child lower
+            upperRayStart = parentCenter;
+            upperRayEnd = childUpper;
+            lowerRayStart = parentCenter;
+            lowerRayEnd = childLower;
+            break;
+        case 'convergent':
+            // Parent upper to child center, parent lower to child center
+            upperRayStart = parentUpper;
+            upperRayEnd = childCenter;
+            lowerRayStart = parentLower;
+            lowerRayEnd = childCenter;
+            break;
+        default:
+            // Fallback to collimated behavior
+            upperRayStart = parentUpper;
+            upperRayEnd = childUpper;
+            lowerRayStart = parentLower;
+            lowerRayEnd = childLower;
+            break;
+    }
     
     // Check if the aperture lines cross by using line intersection logic
-    // Line 1: parentUpper to childUpper
-    // Line 2: parentLower to childLower
     // Lines cross if they intersect between their endpoints
     
     // Calculate intersection point using parametric line equations
-    const x1 = parentUpper.x, y1 = parentUpper.y;
-    const x2 = childUpper.x, y2 = childUpper.y;
-    const x3 = parentLower.x, y3 = parentLower.y;
-    const x4 = childLower.x, y4 = childLower.y;
+    const x1 = upperRayStart.x, y1 = upperRayStart.y;
+    const x2 = upperRayEnd.x, y2 = upperRayEnd.y;
+    const x3 = lowerRayStart.x, y3 = lowerRayStart.y;
+    const x4 = lowerRayEnd.x, y4 = lowerRayEnd.y;
     
     const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
     

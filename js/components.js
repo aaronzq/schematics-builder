@@ -67,6 +67,31 @@ export function changeComponentApertureRadius(componentDims, newApertureRadius) 
     return modifiedDims;
 }
 
+// Helper function to change ray shape
+export function changeComponentRayShape(componentDims, newRayShape) {
+    // Valid ray shape values
+    const validRayShapes = ['collimated', 'divergent', 'convergent'];
+    
+    // Validate the new ray shape
+    if (!validRayShapes.includes(newRayShape)) {
+        console.warn('Invalid ray shape. Must be one of: collimated, divergent, convergent');
+        return componentDims; // Return original if invalid
+    }
+    
+    // Create a copy of the component dimensions
+    const modifiedDims = { ...componentDims };
+    
+    // Update the ray shape
+    modifiedDims.rayShape = newRayShape;
+    
+    // Keep all other properties unchanged
+    modifiedDims.upVector = { ...componentDims.upVector };
+    modifiedDims.forwardVector = { ...componentDims.forwardVector };
+    modifiedDims.aperturePoints = { ...componentDims.aperturePoints };
+    
+    return modifiedDims;
+}
+
 // Component dimensions definition
 export const componentDimensions = {
     objective: { 
@@ -77,6 +102,7 @@ export const componentDimensions = {
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
         forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
         apertureRadius: 15,           // Scalar radius for aperture points
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     lens: { 
@@ -87,6 +113,7 @@ export const componentDimensions = {
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
         forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
         apertureRadius: 15,           // Scalar radius for aperture points
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     mirror: { 
@@ -97,6 +124,7 @@ export const componentDimensions = {
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
         forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
         apertureRadius: 15,           // Scalar radius for aperture points
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     detector: { 
@@ -107,6 +135,7 @@ export const componentDimensions = {
         upVector: { x: 0, y: -1 },     // Up direction (negative Y)
         forwardVector: { x: 1, y: 0 },  // Forward direction (positive X)
         apertureRadius: 15,            // Scalar radius for aperture points
+        rayShape: 'collimated',        // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     'lenslet-array': { 
@@ -117,6 +146,7 @@ export const componentDimensions = {
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
         forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
         apertureRadius: 15,           // Scalar radius for aperture points
+        rayShape: 'collimated',        // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     plane: { 
@@ -127,6 +157,7 @@ export const componentDimensions = {
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
         forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
         apertureRadius: 15,           // Scalar radius for aperture points
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     }
 };
@@ -352,7 +383,17 @@ export function getAvailableComponentTypes() {
     return Object.keys(components);
 }
 
+// Utility function to get valid ray shapes
+export function getValidRayShapes() {
+    return ['collimated', 'divergent', 'convergent'];
+}
+
 // Utility function to check if a component type exists
 export function isValidComponentType(type) {
     return components.hasOwnProperty(type);
+}
+
+// Utility function to check if a ray shape is valid
+export function isValidRayShape(rayShape) {
+    return getValidRayShapes().includes(rayShape);
 }
