@@ -13,6 +13,7 @@ import {
 import { startDrag, showHitbox } from './interactionHandler.js';
 import { showArrowForComponent, removeArrowFromComponent } from './arrowDisplay.js';
 import { toggleTraceLines, drawTraceLines, showTraceLines } from './traceLines.js';
+import { toggleApertureRays, showApertureRays } from './apertureRays.js';
 
 // Initialize the application
 export function initApp() {
@@ -63,6 +64,12 @@ function setupUIEventListeners() {
     const traceBtn = document.getElementById('trace-btn');
     if (traceBtn) {
         traceBtn.addEventListener('click', toggleTraceLines);
+    }
+
+    // Aperture rays button
+    const raysBtn = document.getElementById('rays-btn');
+    if (raysBtn) {
+        raysBtn.addEventListener('click', toggleApertureRays);
     }
 }
 
@@ -136,8 +143,8 @@ function deleteSelectedComponent() {
     
     updateCanvasViewBox();
     
-    // Update trace lines if they're shown
-    if (showTraceLines) {
+    // Update trace lines and rays if they're shown
+    if (showTraceLines || showApertureRays) {
         drawTraceLines();
     }
 }

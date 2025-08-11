@@ -2,7 +2,8 @@
 // Handles adding, removing, and state management of components using focused modules
 
 import { componentDimensions, flipComponentUpVector } from './components.js';
-import { updateTraceLines, doApertureLinessCross } from './traceLines.js';
+import { updateTraceLines } from './traceLines.js';
+import { doApertureLinessCross } from './apertureRays.js';
 import { validateComponentType } from './utils/validators.js';
 
 // Import focused modules

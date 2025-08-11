@@ -74,9 +74,12 @@ export function drag(e) {
     });
     
     // Update trace lines if they're shown (dynamic import to avoid circular dependencies)
-    import('./traceLines.js').then(({ showTraceLines, drawTraceLines }) => {
-        if (showTraceLines) {
-            drawTraceLines();
+    Promise.all([
+        import('./traceLines.js'),
+        import('./apertureRays.js')
+    ]).then(([traceLines, apertureRays]) => {
+        if (traceLines.showTraceLines || apertureRays.showApertureRays) {
+            traceLines.drawTraceLines();
         }
     });
 }
