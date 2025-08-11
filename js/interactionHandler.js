@@ -3,7 +3,7 @@
 
 import { screenToSVG, snapToGrid, updateCanvasViewBox } from './viewportManager.js';
 import { componentState, updateComponentPosition, updateComponentRotation, getSelectedComponent, setSelectedComponent } from './componentManager.js';
-import { ANGLE_SNAP_INCREMENT, ROTATION_SNAP_INCREMENT } from './constants.js';
+import { ANGLE_SNAP_INCREMENT, ROTATION_SNAP_INCREMENT, ARROW_TIP_SNAP_SIZE } from './constants.js';
 import { snapAngle } from './utils/mathUtils.js';
 
 // Component drag state
@@ -90,36 +90,22 @@ export function makeArrowHandleDraggable(handle, line, state) {
         if (!draggingArrow) return;
         const cursorpt = screenToSVG(e.clientX, e.clientY);
         
-        // Get arrow start position (center of component)
+        // Snap cursor position to grid instead of snapping angle
+        const snappedPosition = snapToGrid(cursorpt.x, cursorpt.y, ARROW_TIP_SNAP_SIZE);
+        
+        // Update arrow line and handle to snapped position
+        line.setAttribute("x2", snappedPosition.x);
+        line.setAttribute("y2", snappedPosition.y);
+        handle.setAttribute("cx", snappedPosition.x);
+        handle.setAttribute("cy", snappedPosition.y);
+        
+        // Calculate and log the resulting angle for debugging
         const startX = parseFloat(line.getAttribute("x1"));
         const startY = parseFloat(line.getAttribute("y1"));
-        
-        // Calculate angle from start point to cursor
-        const dx = cursorpt.x - startX;
-        const dy = cursorpt.y - startY;
-        let angle = Math.atan2(dy, dx) * 180 / Math.PI;
-        
-        // Snap angle to configured increments
-        const snappedAngle = snapAngle(angle, ANGLE_SNAP_INCREMENT);
-        
-        // Log the absolute angle
-        console.log(`Arrow angle: ${snappedAngle}°`);
-        
-        // Convert back to radians
-        const angleRad = snappedAngle * Math.PI / 180;
-        
-        // Calculate distance from start to cursor for arrow length
-        const distance = Math.sqrt(dx * dx + dy * dy);
-        
-        // Calculate snapped position based on angle and distance
-        const snappedX = startX + distance * Math.cos(angleRad);
-        const snappedY = startY + distance * Math.sin(angleRad);
-        
-        // Update arrow line and handle
-        line.setAttribute("x2", snappedX);
-        line.setAttribute("y2", snappedY);
-        handle.setAttribute("cx", snappedX);
-        handle.setAttribute("cy", snappedY);
+        const dx = snappedPosition.x - startX;
+        const dy = snappedPosition.y - startY;
+        const resultingAngle = Math.atan2(dy, dx) * 180 / Math.PI;
+        console.log(`Arrow tip snapped to: (${snappedPosition.x}, ${snappedPosition.y}), resulting angle: ${resultingAngle.toFixed(1)}°`);
     }
     
     function stopDragArrowHandle() {

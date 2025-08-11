@@ -223,9 +223,19 @@ export function logComponentInfo(compId) {
     const state = componentState[compId];
     if (!state) return;
     
-    // Calculate global center coordinates
-    const centerX = state.posX + state.dimensions.centerPoint.x;
-    const centerY = state.posY + state.dimensions.centerPoint.y;
+    // Calculate global center coordinates considering rotation
+    const rotation = state.rotation || 0;
+    const rotationRad = rotation * Math.PI / 180;
+    const localCenterX = state.dimensions.centerPoint.x;
+    const localCenterY = state.dimensions.centerPoint.y;
+    
+    // Apply rotation transformation to the center point
+    const rotatedCenterX = localCenterX * Math.cos(rotationRad) - localCenterY * Math.sin(rotationRad);
+    const rotatedCenterY = localCenterX * Math.sin(rotationRad) + localCenterY * Math.cos(rotationRad);
+    
+    // Add component position to get global coordinates
+    const centerX = state.posX + rotatedCenterX;
+    const centerY = state.posY + rotatedCenterY;
     
     // Build info strings
     const parentInfo = state.parentId !== null ? 
