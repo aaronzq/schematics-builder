@@ -3,7 +3,8 @@
 
 import { screenToSVG, snapToGrid, updateCanvasViewBox } from './viewportManager.js';
 import { componentState, updateComponentPosition, updateComponentRotation, getSelectedComponent, setSelectedComponent } from './componentManager.js';
-import { ANGLE_SNAP_INCREMENT, ROTATION_SNAP_INCREMENT, ARROW_TIP_SNAP_SIZE } from './constants.js';
+import { componentDimensions } from './components.js';
+import { ANGLE_SNAP_INCREMENT, ROTATION_SNAP_INCREMENT, ARROW_TIP_SNAP_SIZE, GRID_SIZE } from './constants.js';
 import { snapAngle } from './utils/mathUtils.js';
 
 // Component drag state
@@ -42,9 +43,30 @@ export function drag(e) {
     if (!draggingElement) return;
     
     const cursorpt = screenToSVG(e.clientX, e.clientY);
-    const snapped = snapToGrid(cursorpt.x - offsetX, cursorpt.y - offsetY);
     
-    updateComponentPosition(draggingElement, snapped.x, snapped.y);
+    // Get component type and dimensions to find center point
+    const componentType = draggingElement.getAttribute('data-type');
+    const componentId = draggingElement.getAttribute('data-id');
+    const dims = componentState[componentId]?.dimensions || componentDimensions[componentType];
+    
+    if (!dims) return;
+    
+    // Calculate the raw SVG position (where the cursor wants to place the component origin)
+    const rawSvgX = cursorpt.x - offsetX;
+    const rawSvgY = cursorpt.y - offsetY;
+    
+    // Calculate where the center point would be with this SVG position
+    const centerX = rawSvgX + dims.centerPoint.x;
+    const centerY = rawSvgY + dims.centerPoint.y;
+    
+    // Snap the center point to the grid
+    const snappedCenter = snapToGrid(centerX, centerY, GRID_SIZE);
+    
+    // Calculate the SVG position that would place the center at the snapped location
+    const snappedSvgX = snappedCenter.x - dims.centerPoint.x;
+    const snappedSvgY = snappedCenter.y - dims.centerPoint.y;
+    
+    updateComponentPosition(draggingElement, snappedSvgX, snappedSvgY);
     
     // Update arrow for the dragged component (dynamic import to avoid circular dependency)
     import('./arrowDisplay.js').then(({ showArrowForComponent }) => {
