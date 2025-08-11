@@ -163,3 +163,124 @@ export function updateTraceLines() {
         drawTraceLines();
     }
 }
+
+/**
+ * Calculate aperture radius projections onto the vertical direction of center trace line
+ * @param {HTMLElement} component - The component element
+ * @returns {Object|null} - Object containing projections for both component and parent, or null if no parent
+ */
+export function calculateApertureProjections(component) {
+    if (!component) return null;
+    
+    const compId = component.getAttribute('data-id');
+    const state = componentState[compId];
+    
+    if (!state || state.parentId === null) {
+        console.warn('Component has no parent - cannot calculate aperture projections');
+        return null;
+    }
+    
+    const parentState = componentState[state.parentId];
+    if (!parentState) {
+        console.warn('Parent state not found');
+        return null;
+    }
+    
+    // Get component dimensions (use stored dimensions, not original)
+    const childDims = state.dimensions;
+    const parentDims = parentState.dimensions;
+    
+    if (!childDims || !parentDims) {
+        console.warn('Component dimensions not found');
+        return null;
+    }
+    
+    // Calculate global center positions
+    const childCenter = transformToGlobal(childDims.centerPoint.x, childDims.centerPoint.y, state);
+    const parentCenter = transformToGlobal(parentDims.centerPoint.x, parentDims.centerPoint.y, parentState);
+    
+    // Calculate center trace line direction vector
+    const traceDx = childCenter.x - parentCenter.x;
+    const traceDy = childCenter.y - parentCenter.y;
+    const traceLength = Math.sqrt(traceDx * traceDx + traceDy * traceDy);
+    
+    if (traceLength === 0) {
+        console.warn('Components are at the same position - cannot calculate projections');
+        return null;
+    }
+    
+    // Normalize the trace line direction vector
+    const traceUnitX = traceDx / traceLength;
+    const traceUnitY = traceDy / traceLength;
+    
+    // Calculate perpendicular (vertical) direction to the trace line
+    // Perpendicular vector is (-dy, dx) normalized
+    const perpUnitX = -traceUnitY;
+    const perpUnitY = traceUnitX;
+    
+    // For each component, calculate the projection of aperture radius onto perpendicular direction
+    // This means: how much of the aperture radius extends in the direction perpendicular to the center line
+    
+    // Get aperture radius values
+    const childApertureRadius = childDims.apertureRadius || 0;
+    const parentApertureRadius = parentDims.apertureRadius || 0;
+    
+    // Calculate aperture vector directions for both components
+    // The aperture extends in the upVector direction, so we need to project upVector onto perpendicular
+    const childUpVector = childDims.upVector;
+    const parentUpVector = parentDims.upVector;
+    
+    // Transform upVectors to global coordinates (accounting for rotation)
+    const childGlobalUpX = childUpVector.x * Math.cos(state.rotation * Math.PI / 180) - 
+                          childUpVector.y * Math.sin(state.rotation * Math.PI / 180);
+    const childGlobalUpY = childUpVector.x * Math.sin(state.rotation * Math.PI / 180) + 
+                          childUpVector.y * Math.cos(state.rotation * Math.PI / 180);
+    
+    const parentGlobalUpX = parentUpVector.x * Math.cos(parentState.rotation * Math.PI / 180) - 
+                           parentUpVector.y * Math.sin(parentState.rotation * Math.PI / 180);
+    const parentGlobalUpY = parentUpVector.x * Math.sin(parentState.rotation * Math.PI / 180) + 
+                           parentUpVector.y * Math.cos(parentState.rotation * Math.PI / 180);
+    
+    // Calculate projections: dot product of normalized upVector with perpendicular direction
+    const childUpProjection = Math.abs(childGlobalUpX * perpUnitX + childGlobalUpY * perpUnitY);
+    const parentUpProjection = Math.abs(parentGlobalUpX * perpUnitX + parentGlobalUpY * perpUnitY);
+    
+    // Calculate final aperture projections (aperture radius * projection factor)
+    const childApertureProjection = childApertureRadius * childUpProjection;
+    const parentApertureProjection = parentApertureRadius * parentUpProjection;
+    
+    const result = {
+        centerTraceInfo: {
+            parentCenter: { x: parentCenter.x, y: parentCenter.y },
+            childCenter: { x: childCenter.x, y: childCenter.y },
+            direction: { x: traceUnitX, y: traceUnitY },
+            perpendicular: { x: perpUnitX, y: perpUnitY },
+            length: traceLength
+        },
+        child: {
+            componentId: parseInt(compId),
+            componentType: state.type,
+            apertureRadius: childApertureRadius,
+            upVectorGlobal: { x: childGlobalUpX, y: childGlobalUpY },
+            upProjectionFactor: childUpProjection,
+            apertureProjection: childApertureProjection
+        },
+        parent: {
+            componentId: state.parentId,
+            componentType: parentState.type,
+            apertureRadius: parentApertureRadius,
+            upVectorGlobal: { x: parentGlobalUpX, y: parentGlobalUpY },
+            upProjectionFactor: parentUpProjection,
+            apertureProjection: parentApertureProjection
+        }
+    };
+    
+    // console.log('Aperture Projections Calculation:');
+    // console.log(`  Center trace line: (${parentCenter.x.toFixed(1)}, ${parentCenter.y.toFixed(1)}) → (${childCenter.x.toFixed(1)}, ${childCenter.y.toFixed(1)})`);
+    // console.log(`  Trace direction: (${traceUnitX.toFixed(3)}, ${traceUnitY.toFixed(3)}), Length: ${traceLength.toFixed(1)}`);
+    // console.log(`  Perpendicular direction: (${perpUnitX.toFixed(3)}, ${perpUnitY.toFixed(3)})`);
+    // console.log(`  Child (${state.type}): Radius=${childApertureRadius}, Projection=${childApertureProjection.toFixed(2)}`);
+    // console.log(`  Parent (${parentState.type}): Radius=${parentApertureRadius}, Projection=${parentApertureProjection.toFixed(2)}`);
+    
+    return result;
+}

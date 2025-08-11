@@ -39,6 +39,34 @@ export function flipComponentUpVector(componentDims) {
     return flippedDims;
 }
 
+// Helper function to change aperture radius and recalculate aperture points
+export function changeComponentApertureRadius(componentDims, newApertureRadius) {
+    // Create a copy of the component dimensions
+    const modifiedDims = { ...componentDims };
+    
+    // Validate the new aperture radius
+    if (typeof newApertureRadius !== 'number' || newApertureRadius < 0) {
+        console.warn('Invalid aperture radius. Must be a non-negative number.');
+        return componentDims; // Return original if invalid
+    }
+    
+    // Update the aperture radius
+    modifiedDims.apertureRadius = newApertureRadius;
+    
+    // Keep vectors unchanged
+    modifiedDims.upVector = { ...componentDims.upVector };
+    modifiedDims.forwardVector = { ...componentDims.forwardVector };
+    
+    // Recalculate aperture points with the new radius
+    modifiedDims.aperturePoints = calculateAperturePoints(
+        componentDims.centerPoint, 
+        componentDims.upVector, 
+        newApertureRadius
+    );
+    
+    return modifiedDims;
+}
+
 // Component dimensions definition
 export const componentDimensions = {
     objective: { 

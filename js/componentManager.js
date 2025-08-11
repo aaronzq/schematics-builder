@@ -1,8 +1,8 @@
 // Component lifecycle management
 // Handles adding, removing, and state management of components
 
-import { components, componentDimensions, flipComponentUpVector } from './components.js';
-import { showTraceLines, drawTraceLines, updateTraceLines, doApertureLinessCross } from './traceLines.js';
+import { components, componentDimensions, flipComponentUpVector, changeComponentApertureRadius } from './components.js';
+import { showTraceLines, drawTraceLines, updateTraceLines, doApertureLinessCross, calculateApertureProjections } from './traceLines.js';
 import { 
     COMPONENT_SPACING, 
     SHOW_DEBUG_DRAWING, 
@@ -125,6 +125,12 @@ export function addComponent(type) {
     
     // Get component dimensions
     let dims = componentDimensions[type];
+    
+    // Test: Apply random aperture radius (between 5 and 50)
+    const randomApertureRadius = Math.floor(Math.random() * 46) + 5; // Random between 5-50
+    dims = changeComponentApertureRadius(dims, randomApertureRadius);
+    console.log(`Testing: Applied random aperture radius ${randomApertureRadius} to ${type} component`);
+    
     let shouldFlipUpVector = false;
     
     // If there's a selected component (parent), check if we need to flip to avoid crossing lines
@@ -463,8 +469,30 @@ export function logComponentInfo(compId) {
     const coordinateInfo = `SVG Position: (${state.posX.toFixed(1)}, ${state.posY.toFixed(1)}) | Center: (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) | Rotation: ${(state.rotation || 0).toFixed(1)}°`;
     const arrowInfo = `Arrow Endpoint: (${state.arrowX.toFixed(1)}, ${state.arrowY.toFixed(1)})`;
     
+    // Aperture information
+    const apertureRadius = state.dimensions.apertureRadius || 'undefined';
+    const upperAperture = state.dimensions.aperturePoints ? 
+        `(${state.dimensions.aperturePoints.upper.x.toFixed(1)}, ${state.dimensions.aperturePoints.upper.y.toFixed(1)})` : 
+        'undefined';
+    const lowerAperture = state.dimensions.aperturePoints ? 
+        `(${state.dimensions.aperturePoints.lower.x.toFixed(1)}, ${state.dimensions.aperturePoints.lower.y.toFixed(1)})` : 
+        'undefined';
+    const apertureInfo = `Aperture Radius: ${apertureRadius} | Upper: ${upperAperture} | Lower: ${lowerAperture}`;
+    
     console.log(`=== Selected Component ${compId} (${state.type}) ===`);
     console.log(`  Hierarchy: ${parentInfo}, ${childrenInfo}`);
     console.log(`  Coordinates: ${coordinateInfo}`);
     console.log(`  Arrow: ${arrowInfo}`);
+    console.log(`  Aperture: ${apertureInfo}`);
+    
+    // Calculate and log aperture projections if component has a parent
+    if (state.parentId !== null) {
+        const component = getComponentById(compId);
+        const projections = calculateApertureProjections(component);
+        if (projections) {
+            console.log(`  Aperture Projections onto perpendicular to center trace line:`);
+            console.log(`    Parent projection: ${projections.parent.apertureProjection.toFixed(2)}`);
+            console.log(`    Child projection: ${projections.child.apertureProjection.toFixed(2)}`);
+        }
+    }
 }
