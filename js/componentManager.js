@@ -1,7 +1,8 @@
 // Simplified Component Manager - Core lifecycle management
 // Handles adding, removing, and state management of components using focused modules
 
-import { componentDimensions, flipComponentUpVector } from './components.js';
+import { componentDimensions } from './components.js';
+import { flipComponentUpVector } from './componentUtils.js';
 import { updateTraceLines } from './traceLines.js';
 import { doApertureLinessCross } from './apertureRays.js';
 import { validateComponentType } from './utils/validators.js';

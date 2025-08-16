@@ -11,7 +11,7 @@ export const GRID_SIZE = 5;
 export const ARROW_TIP_SNAP_SIZE = 5;
 
 // Debug and visualization
-export const SHOW_DEBUG_DRAWING = false;
+export const SHOW_DEBUG_DRAWING = true;
 
 // UI measurements
 export const ROTATION_HANDLE_DISTANCE = 40;
@@ -36,3 +36,7 @@ export const MIN_CANVAS_WIDTH = 400;
 export const MIN_CANVAS_HEIGHT = 300;
 export const CANVAS_PADDING_PERCENT = 0.1;
 export const MIN_CANVAS_PADDING = 50;
+
+// Component properties defaults and modifiers
+export const DEFAULT_APERTURE_RADIUS = 15;  // Default aperture radius for components
+export const DEFAULT_CONE_ANGLE = 0;        // Default cone angle in degrees (0 = collimated)

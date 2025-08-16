@@ -1,7 +1,7 @@
 // Component aperture scaling functionality
 // Handles automatic scaling of aperture radius to match parent projections
 
-import { changeComponentApertureRadius } from '../components.js';
+import { changeComponentApertureRadius } from '../componentUtils.js';
 import { calculateApertureProjections } from '../apertureRays.js';
 import { SHOW_DEBUG_DRAWING } from '../constants.js';
 
