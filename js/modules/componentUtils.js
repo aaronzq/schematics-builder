@@ -16,7 +16,7 @@ export function calculateAperturePoints(centerPoint, upVector, apertureRadius) {
 }
 
 // Helper function to flip upVector and recalculate aperture points
-export function flipComponentUpVector(componentDims) {
+export function flipUpVector(componentDims) {
     // Create a copy of the component dimensions
     const flippedDims = { ...componentDims };
     
@@ -39,8 +39,8 @@ export function flipComponentUpVector(componentDims) {
     return flippedDims;
 }
 
-// Helper function to change aperture radius and recalculate aperture points
-export function changeComponentApertureRadius(componentDims, newApertureRadius) {
+// Helper function to set aperture radius and recalculate aperture points
+export function setApertureRadius(componentDims, newApertureRadius) {
     // Create a copy of the component dimensions
     const modifiedDims = { ...componentDims };
     

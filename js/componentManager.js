@@ -2,18 +2,19 @@
 // Handles adding, removing, and state management of components using focused modules
 
 import { componentDimensions } from './components.js';
-import { flipComponentUpVector } from './modules/componentUtils.js';
+import { flipUpVector } from './modules/componentUtils.js';
 import { updateTraceLines } from './traceLines.js';
-import { doApertureLinessCross } from './rays.js';
 import { validateComponentType } from './utils/validators.js';
 
 // Import focused modules
 import { calculateComponentPlacement, calculateArrowEndpoint } from './modules/componentPlacement.js';
 import { updateComponentHierarchy, cleanupComponentHierarchy } from './modules/componentHierarchy.js';
 import { 
-    autoScaleApertureToMatchParent, 
-    autoScaleApertureForExistingComponent,
-    recursivelyUpdateChildrenApertures 
+    autoScaleToMatchParent, 
+    autoScaleForExistingComponent,
+    recursivelyUpdateChildrenApertures,
+    checkLinesCross,
+    handleCrossing
 } from './modules/componentAperture.js';
 import { 
     createComponentGroup, 
@@ -72,11 +73,11 @@ export function addComponent(type) {
     
     // Auto-scale aperture radius to match parent's projection (if component has a parent)
     if (selectedComponent) {
-        dims = autoScaleApertureToMatchParent(dims, compId, placement.centerX, placement.centerY, placement.rotation, selectedComponent, componentState);
+        dims = autoScaleToMatchParent(dims, compId, placement.centerX, placement.centerY, placement.rotation, selectedComponent, componentState);
     }
     
     // Handle upVector flipping to avoid crossing aperture lines
-    dims = handleApertureCrossing(dims, compId, placement, type);
+    dims = handleCrossing(dims, compId, placement, type, selectedComponent, componentState);
     
     // Create component group and visual elements
     const group = createComponentGroup(compId, type, placement.centerX, placement.centerY, placement.rotation, dims);
@@ -176,7 +177,7 @@ export function updateComponentPosition(component, centerX, centerY) {
     state.posY = centerY;
 
     // Handle aperture scaling
-    updateComponentAperture(component, state);
+    handleApertureScaling(component, state);
     recursivelyUpdateChildrenApertures(component, componentState, getComponentById, updateAperturePointDrawings);
 
     // Update transform - convert center position to top-left corner for SVG transform
@@ -209,7 +210,7 @@ export function updateComponentRotation(component, rotation) {
     state.rotation = rotation;
     
     // Handle aperture scaling
-    updateComponentAperture(component, state);
+    handleApertureScaling(component, state);
     recursivelyUpdateChildrenApertures(component, componentState, getComponentById, updateAperturePointDrawings);
     
     // Update transform - convert center position to top-left corner for SVG transform
@@ -256,56 +257,13 @@ export function logComponentInfo(compId) {
 // Private helper functions
 
 /**
- * Handle upVector flipping to avoid crossing aperture lines
- * @param {object} dims - Component dimensions
- * @param {number} compId - Component ID
- * @param {object} placement - Placement info
- * @param {string} type - Component type
- * @returns {object} Final dimensions (possibly flipped)
- */
-function handleApertureCrossing(dims, compId, placement, type) {
-    if (!selectedComponent) return dims;
-
-    const parentId = parseInt(selectedComponent.getAttribute('data-id'));
-    
-    // Test with normal orientation
-    const tempState = {
-        posX: placement.centerX,
-        posY: placement.centerY,
-        rotation: placement.rotation,
-        dimensions: dims,
-        parentId: parentId,
-        type: type
-    };
-    
-    componentState[compId] = tempState;
-    const linesCrossNormal = doApertureLinessCross(compId);
-    
-    if (linesCrossNormal) {
-        // Test with flipped orientation
-        const flippedDims = flipComponentUpVector(dims);
-        tempState.dimensions = flippedDims;
-        const linesCrossFlipped = doApertureLinessCross(compId);
-        
-        if (!linesCrossFlipped) {
-            console.log(`Component ${compId} (${type}) FLIPPED to avoid crossing aperture lines`);
-            delete componentState[compId];
-            return flippedDims;
-        }
-    }
-    
-    delete componentState[compId];
-    return dims;
-}
-
-/**
- * Update component aperture scaling if it has a parent
+ * Handle component aperture scaling if it has a parent
  * @param {HTMLElement} component - Component element
  * @param {object} state - Component state
  */
-function updateComponentAperture(component, state) {
+function handleApertureScaling(component, state) {
     if (state.parentId !== null) {
-        const scaledDims = autoScaleApertureForExistingComponent(component, componentState);
+        const scaledDims = autoScaleForExistingComponent(component, componentState);
         if (scaledDims) {
             state.dimensions = scaledDims;
             updateAperturePointDrawings(component, scaledDims);
