@@ -11,7 +11,7 @@ export const GRID_SIZE = 5;
 export const ARROW_TIP_SNAP_SIZE = 5;
 
 // Debug and visualization
-export const SHOW_DEBUG_DRAWING = true;
+export const SHOW_DEBUG_DRAWING = false;
 
 // UI measurements
 export const ROTATION_HANDLE_DISTANCE = 40;
