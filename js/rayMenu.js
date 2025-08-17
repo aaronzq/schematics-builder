@@ -2,7 +2,8 @@
 // Displays a dropdown menu to change the rayShape property of selected components
 
 import { componentState } from './componentManager.js';
-import { changeComponentRayShape, getValidRayShapes } from './modules/componentUtils.js';
+import { changeComponentRayShape, getValidRayShapes, setConeAngle } from './modules/componentUtils.js';
+import { calculateOptimalAperture } from './modules/componentAperture.js';
 import { drawApertureRays, showApertureRays } from './rays.js';
 
 let currentMenu = null;
@@ -136,16 +137,60 @@ function selectRayShape(componentId, newRayShape) {
     const state = componentState[componentId];
     if (!state) return;
     
+    const oldRayShape = state.dimensions.rayShape || 'collimated';
+    
     // Update the component's dimensions with the new ray shape
     const newDimensions = changeComponentRayShape(state.dimensions, newRayShape);
     state.dimensions = newDimensions;
+    
+    // If changing from collimated to divergent/convergent, immediately update cone angle
+    if (oldRayShape === 'collimated' && (newRayShape === 'divergent' || newRayShape === 'convergent')) {
+        updateConeAngleForRayShapeChange(state);
+    }
+    // If changing to collimated, reset cone angle to 0
+    else if (newRayShape === 'collimated') {
+        state.dimensions = setConeAngle(state.dimensions, 0);
+        console.log(`Component ${componentId} cone angle reset to 0° (collimated)`);
+    }
     
     // Redraw aperture rays if they are currently shown
     if (showApertureRays) {
         drawApertureRays();
     }
     
-    console.log(`Component ${componentId} ray shape changed to: ${newRayShape}`);
+    console.log(`Component ${componentId} ray shape changed from ${oldRayShape} to ${newRayShape}`);
+}
+
+// Helper function to update cone angle when ray shape changes from collimated to divergent/convergent
+function updateConeAngleForRayShapeChange(childState) {
+    // Only proceed if the component has a parent
+    if (childState.parentId === null) {
+        console.log(`Component ${childState.componentId || 'temp'} has no parent, cannot calculate cone angle`);
+        return;
+    }
+    
+    const parentState = componentState[childState.parentId];
+    if (!parentState) {
+        console.log(`Parent state not found for component ${childState.componentId || 'temp'}`);
+        return;
+    }
+    
+    try {
+        // Use the aperture calculation system to determine the proper cone angle
+        const optimizedDimensions = calculateOptimalAperture(childState, parentState, true);
+        
+        if (optimizedDimensions) {
+            // Update the component's dimensions with the calculated cone angle and aperture
+            childState.dimensions = optimizedDimensions;
+            
+            const newConeAngle = optimizedDimensions.coneAngle || 0;
+            console.log(`Component ${childState.componentId || 'temp'} cone angle immediately updated to ${newConeAngle.toFixed(2)}° due to ray shape change`);
+        } else {
+            console.warn(`Could not calculate optimal aperture/cone angle for component ${childState.componentId || 'temp'}`);
+        }
+    } catch (error) {
+        console.error('Error updating cone angle for ray shape change:', error);
+    }
 }
 
 // Check if a component should show the ray shape menu when selected

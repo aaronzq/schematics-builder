@@ -67,6 +67,28 @@ export function setApertureRadius(componentDims, newApertureRadius) {
     return modifiedDims;
 }
 
+// Helper function to set cone angle
+export function setConeAngle(componentDims, newConeAngle) {
+    // Create a copy of the component dimensions
+    const modifiedDims = { ...componentDims };
+    
+    // Validate the new cone angle
+    if (typeof newConeAngle !== 'number' || newConeAngle < 0 || newConeAngle > 90) {
+        console.warn('Invalid cone angle. Must be a number between 0 and 90 degrees.');
+        return componentDims; // Return original if invalid
+    }
+    
+    // Update the cone angle
+    modifiedDims.coneAngle = newConeAngle;
+    
+    // Keep other properties unchanged
+    modifiedDims.upVector = { ...componentDims.upVector };
+    modifiedDims.forwardVector = { ...componentDims.forwardVector };
+    modifiedDims.aperturePoints = { ...componentDims.aperturePoints };
+    
+    return modifiedDims;
+}
+
 // Helper function to change ray shape
 export function changeComponentRayShape(componentDims, newRayShape) {
     // Valid ray shape values

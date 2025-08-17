@@ -73,7 +73,7 @@ export function addComponent(type) {
     
     // Auto-scale aperture radius to match parent's projection (if component has a parent)
     if (selectedComponent) {
-        dims = autoScaleForNewComponentPlacement(dims, compId, placement.centerX, placement.centerY, placement.rotation, selectedComponent, componentState);
+        dims = autoScaleForNewComponentPlacement(dims, type, compId, placement.centerX, placement.centerY, placement.rotation, selectedComponent, componentState);
     }
     
     // Handle upVector flipping to avoid crossing aperture lines
@@ -245,12 +245,17 @@ export function logComponentInfo(compId) {
     console.log(`=== Selected Component ${compId} (${state.type}) ===`);
     console.log(`  Hierarchy: ${parentInfo}, ${childrenInfo}`);
     console.log(`  Center: (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) | Rotation: ${(state.rotation || 0).toFixed(1)}°`);
-    console.log(`  Arrow: (${state.arrowX.toFixed(1)}, ${state.arrowY.toFixed(1)})`);    // Log aperture info if available
+    console.log(`  Arrow: (${state.arrowX.toFixed(1)}, ${state.arrowY.toFixed(1)})`);
+    
+    // Log aperture info if available
     if (state.dimensions.apertureRadius) {
         const aperturePoints = state.dimensions.aperturePoints;
         const upperPos = aperturePoints ? `(${aperturePoints.upper.x.toFixed(1)}, ${aperturePoints.upper.y.toFixed(1)})` : 'undefined';
         const lowerPos = aperturePoints ? `(${aperturePoints.lower.x.toFixed(1)}, ${aperturePoints.lower.y.toFixed(1)})` : 'undefined';
-        console.log(`  Aperture: Radius=${state.dimensions.apertureRadius} | Upper=${upperPos} | Lower=${lowerPos}`);
+        const rayShape = state.dimensions.rayShape || 'unknown';
+        const coneAngle = state.dimensions.coneAngle !== undefined ? `${state.dimensions.coneAngle.toFixed(1)}°` : 'undefined';
+        console.log(`  Aperture: Radius=${state.dimensions.apertureRadius.toFixed(2)} | Upper=${upperPos} | Lower=${lowerPos}`);
+        console.log(`  Ray Shape: ${rayShape} | Cone Angle: ${coneAngle}`);
     }
 }
 

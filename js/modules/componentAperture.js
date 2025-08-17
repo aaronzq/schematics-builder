@@ -1,17 +1,21 @@
 // Component aperture scaling functionality
 // Handles automatic scaling of aperture radius to match parent projections
 
-import { setApertureRadius, flipUpVector } from './componentUtils.js';
+import { setApertureRadius, flipUpVector, setConeAngle } from './componentUtils.js';
 import { transformToGlobal } from '../utils/mathUtils.js';
 import { SHOW_DEBUG_DRAWING } from '../constants.js';
 
 /**
  * CORE APERTURE POLICY: Calculate optimal aperture radius for a component based on its parent
  * This is the single source of truth for all aperture scaling decisions
+ * Ray shape behaviors:
+ * - collimated: projection-based scaling, cone angle = 0
+ * - divergent: cone-based scaling with inheritance/calculation, cone angle stored once
+ * - convergent: always calculates cone angle from current geometry, dynamic aperture scaling
  * @param {object} childState - Child component state
  * @param {object} parentState - Parent component state  
  * @param {boolean} logDetails - Whether to log calculation details
- * @returns {object|null} - New dimensions with scaled aperture, or null if scaling not possible
+ * @returns {object|null} - New dimensions with scaled aperture and updated cone angle, or null if scaling not possible
  */
 export function calculateOptimalAperture(childState, parentState, logDetails = false) {
     // Validate inputs
@@ -28,7 +32,69 @@ export function calculateOptimalAperture(childState, parentState, logDetails = f
     const childDims = childState.dimensions;
     const parentDims = parentState.dimensions;
     
-    // Calculate projections using the established logic
+    // Get ray shape from child component (determines the policy to use)
+    const childRayShape = childDims.rayShape || 'collimated';
+    const parentRayShape = parentDims.rayShape || 'collimated';
+    const parentConeAngle = parentDims.coneAngle || 0;
+    
+    // Calculate center line length for non-collimated cases
+    const childCenter = transformToGlobal(childDims.centerPoint.x, childDims.centerPoint.y, childState);
+    const parentCenter = transformToGlobal(parentDims.centerPoint.x, parentDims.centerPoint.y, parentState);
+    const centerLineDx = childCenter.x - parentCenter.x;
+    const centerLineDy = childCenter.y - parentCenter.y;
+    const centerLineLength = Math.sqrt(centerLineDx * centerLineDx + centerLineDy * centerLineDy);
+    
+    let optimizedDimensions = null;
+    
+    if (logDetails) {
+        console.log(`APERTURE CALCULATION: Component ${childState.type} (ID: ${childState.componentId || 'temp'})`);
+        console.log(`  Ray Shape: ${childRayShape}, Parent Ray Shape: ${parentRayShape}`);
+        console.log(`  Center Line Length: ${centerLineLength.toFixed(2)}`);
+        console.log(`  Parent Cone Angle: ${parentConeAngle}°`);
+    }
+    
+    switch (childRayShape) {
+        case 'collimated':
+            // Use current projection-based policy
+            optimizedDimensions = handleCollimatedRays(childState, parentState, logDetails);
+            // Set cone angle to 0 for collimated rays
+            if (optimizedDimensions) {
+                optimizedDimensions = setConeAngle(optimizedDimensions, 0);
+                if (logDetails) console.log(`  Set cone angle to 0° (collimated)`);
+            }
+            break;
+            
+        case 'divergent':
+            // Handle divergent rays with cone angle inheritance/calculation logic
+            optimizedDimensions = handleDivergentRays(childState, parentState, parentRayShape, centerLineLength, logDetails);
+            break;
+            
+        case 'convergent':
+            // Handle convergent rays with dynamic cone angle calculation from current geometry
+            optimizedDimensions = handleConvergentRays(childState, parentState, parentRayShape, centerLineLength, logDetails);
+            break;
+            
+        default:
+            if (logDetails) console.warn(`Unknown ray shape: ${childRayShape}, falling back to collimated`);
+            optimizedDimensions = handleCollimatedRays(childState, parentState, logDetails);
+            if (optimizedDimensions) {
+                optimizedDimensions = setConeAngle(optimizedDimensions, 0);
+            }
+            break;
+    }
+    
+    return optimizedDimensions;
+}
+
+/**
+ * Handle collimated ray scaling using projection-based policy
+ * @param {object} childState - Child component state
+ * @param {object} parentState - Parent component state
+ * @param {boolean} logDetails - Whether to log calculation details
+ * @returns {object|null} Scaled dimensions or null
+ */
+function handleCollimatedRays(childState, parentState, logDetails) {
+    // Use the existing projection-based logic
     const projections = calculateProjections_internal(childState, parentState);
     if (!projections) {
         if (logDetails) console.warn('Could not calculate aperture projections');
@@ -46,7 +112,7 @@ export function calculateOptimalAperture(childState, parentState, logDetails = f
     
     // Calculate optimal aperture radius
     const scalingRatio = targetProjection / currentChildProjection;
-    const currentRadius = childDims.apertureRadius || 0;
+    const currentRadius = childState.dimensions.apertureRadius || 0;
     const optimalRadius = currentRadius * scalingRatio;
     
     // Validate the calculated radius
@@ -56,16 +122,265 @@ export function calculateOptimalAperture(childState, parentState, logDetails = f
     }
     
     // Apply the optimal radius to create new dimensions
-    const optimizedDimensions = setApertureRadius(childDims, optimalRadius);
+    const optimizedDimensions = setApertureRadius(childState.dimensions, optimalRadius);
     
-    // Logging if requested
     if (logDetails) {
-        console.log(`APERTURE CALCULATION: Component ${childState.type} (ID: ${childState.componentId || 'temp'})`);
         console.log(`  Target projection: ${targetProjection.toFixed(2)}, Current: ${currentChildProjection.toFixed(2)}`);
         console.log(`  Radius: ${currentRadius.toFixed(2)} → ${optimalRadius.toFixed(2)} (ratio: ${scalingRatio.toFixed(3)})`);
     }
     
     return optimizedDimensions;
+}
+
+/**
+ * Handle divergent ray scaling using cone-based policy
+ * @param {object} childState - Child component state
+ * @param {object} parentState - Parent component state
+ * @param {string} parentRayShape - Parent component's ray shape
+ * @param {number} centerLineLength - Distance between parent and child centers
+ * @param {boolean} logDetails - Whether to log calculation details
+ * @returns {object|null} Scaled dimensions or null
+ */
+function handleDivergentRays(childState, parentState, parentRayShape, centerLineLength, logDetails) {
+    const parentConeAngle = parentState.dimensions.coneAngle || 0;
+    const currentChildConeAngle = childState.dimensions.coneAngle || 0;
+    
+    if (centerLineLength === 0) {
+        if (logDetails) console.warn('Center line length is zero, cannot calculate divergent aperture');
+        return null;
+    }
+    
+    let finalConeAngle = 0;
+    let optimizedDimensions = null;
+    
+    // Determine cone angle based on parent's ray shape and whether child already has a calculated cone angle
+    if (parentRayShape === 'collimated' || parentConeAngle === 0) {
+        // Parent is collimated: use stored cone angle if available, otherwise calculate once
+        if (currentChildConeAngle > 0) {
+            // Child already has a calculated cone angle - use it to calculate new aperture radius
+            finalConeAngle = currentChildConeAngle;
+            
+            // Calculate new aperture radius based on stored cone angle and current center line length
+            const projections = calculateProjections_internal(childState, parentState);
+            if (!projections) {
+                if (logDetails) console.warn('Could not calculate projections for stored cone angle aperture scaling');
+                return null;
+            }
+            
+            const childUpProjectionFactor = projections.child.upProjectionFactor;
+            if (childUpProjectionFactor === 0) {
+                if (logDetails) console.warn('Child up projection factor is zero, cannot scale aperture');
+                return null;
+            }
+            
+            // Convert cone angle to radians and calculate target aperture projection
+            const coneAngleRad = finalConeAngle * Math.PI / 180;
+            const targetApertureProjection = centerLineLength * Math.tan(coneAngleRad);
+            
+            // Calculate required aperture radius: targetProjection / projectionFactor
+            const requiredApertureRadius = targetApertureProjection / childUpProjectionFactor;
+            
+            // Validate the calculated radius
+            if (requiredApertureRadius <= 0 || requiredApertureRadius > 200) {
+                if (logDetails) console.warn(`Calculated aperture radius ${requiredApertureRadius.toFixed(2)} is unreasonable`);
+                return null;
+            }
+            
+            // Apply the calculated radius and stored cone angle
+            optimizedDimensions = setApertureRadius(childState.dimensions, requiredApertureRadius);
+            optimizedDimensions = setConeAngle(optimizedDimensions, finalConeAngle);
+            
+            if (logDetails) {
+                console.log(`  Parent is collimated: using stored cone angle to calculate new aperture`);
+                console.log(`  Stored cone angle: ${finalConeAngle.toFixed(2)}°`);
+                console.log(`  Target aperture projection: ${targetApertureProjection.toFixed(2)}`);
+                console.log(`  Up projection factor: ${childUpProjectionFactor.toFixed(3)}`);
+                console.log(`  Calculated radius: ${requiredApertureRadius.toFixed(2)}`);
+            }
+        } else {
+            // Child doesn't have a cone angle yet - calculate it once from current geometry
+            finalConeAngle = calculateConeAngleFromGeometry(childState, parentState, centerLineLength, logDetails);
+            if (finalConeAngle === null) return null;
+            
+            // Store the calculated cone angle for future use
+            optimizedDimensions = setConeAngle(childState.dimensions, finalConeAngle);
+            
+            if (logDetails) {
+                console.log(`  Parent is collimated: calculated cone angle from geometry (first time)`);
+                console.log(`  Calculated cone angle: ${finalConeAngle.toFixed(2)}° (will be stored for future use)`);
+                console.log(`  Keeping current aperture radius: ${childState.dimensions.apertureRadius.toFixed(2)}`);
+            }
+        }
+    } else {
+        // Parent is divergent/convergent: inherit cone angle and scale aperture
+        finalConeAngle = parentConeAngle;
+        
+        // Convert cone angle from degrees to radians
+        const parentConeAngleRad = parentConeAngle * Math.PI / 180;
+        
+        // Calculate target aperture projection: centerLineLength × tan(parentConeAngle)
+        const targetApertureProjection = centerLineLength * Math.tan(parentConeAngleRad);
+        
+        // Calculate current child projection factor
+        const projections = calculateProjections_internal(childState, parentState);
+        if (!projections) {
+            if (logDetails) console.warn('Could not calculate projection factors for divergent rays');
+            return null;
+        }
+        
+        const childUpProjectionFactor = projections.child.upProjectionFactor;
+        if (childUpProjectionFactor === 0) {
+            if (logDetails) console.warn('Child up projection factor is zero, cannot scale aperture');
+            return null;
+        }
+        
+        // Calculate required aperture radius: targetProjection / projectionFactor
+        const requiredApertureRadius = targetApertureProjection / childUpProjectionFactor;
+        
+        // Validate the calculated radius
+        if (requiredApertureRadius <= 0 || requiredApertureRadius > 200) {
+            if (logDetails) console.warn(`Calculated aperture radius ${requiredApertureRadius.toFixed(2)} is unreasonable`);
+            return null;
+        }
+        
+        // Apply the calculated radius and inherited cone angle
+        optimizedDimensions = setApertureRadius(childState.dimensions, requiredApertureRadius);
+        optimizedDimensions = setConeAngle(optimizedDimensions, finalConeAngle);
+        
+        if (logDetails) {
+            console.log(`  Parent has cone angle: inheriting and scaling aperture`);
+            console.log(`  Target aperture projection: ${targetApertureProjection.toFixed(2)}`);
+            console.log(`  Up projection factor: ${childUpProjectionFactor.toFixed(3)}`);
+            console.log(`  Required radius: ${requiredApertureRadius.toFixed(2)}`);
+            console.log(`  Inherited cone angle: ${finalConeAngle}°`);
+        }
+    }
+    
+    return optimizedDimensions;
+}
+
+/**
+ * Handle convergent ray policy (always calculates cone angle from current geometry)
+ * For convergent rays, the cone angle is always calculated based on the current
+ * aperture and center line distance to reflect the actual convergence geometry
+ * @param {object} childState - Child component state
+ * @param {object} parentState - Parent component state
+ * @param {string} parentRayShape - Parent component's ray shape
+ * @param {number} centerLineLength - Distance between parent and child centers
+ * @param {boolean} logDetails - Whether to log calculation details
+ * @returns {object|null} Dimensions with updated cone angle and scaled aperture
+ */
+function handleConvergentRays(childState, parentState, parentRayShape, centerLineLength, logDetails) {
+    const parentConeAngle = parentState.dimensions.coneAngle || 0;
+    let finalConeAngle = 0;
+    
+    // For convergent rays, ALWAYS calculate cone angle from current geometry
+    // This ensures the cone angle reflects the actual convergence based on current aperture and distance
+    if (centerLineLength === 0) {
+        if (logDetails) console.warn('Center line length is zero, cannot calculate convergent cone angle');
+        return null;
+    }
+    
+    finalConeAngle = calculateConeAngleFromGeometry(childState, parentState, centerLineLength, logDetails);
+    if (finalConeAngle === null) return null;
+    
+    // Calculate aperture radius based on the calculated cone angle and current distance
+    const projections = calculateProjections_internal(childState, parentState);
+    if (!projections) {
+        if (logDetails) console.warn('Could not calculate projections for convergent aperture scaling');
+        return null;
+    }
+    
+    const childUpProjectionFactor = projections.child.upProjectionFactor;
+    if (childUpProjectionFactor === 0) {
+        if (logDetails) console.warn('Child up projection factor is zero, cannot scale aperture');
+        return null;
+    }
+    
+    // Convert cone angle to radians and calculate target aperture projection
+    const coneAngleRad = finalConeAngle * Math.PI / 180;
+    const targetApertureProjection = centerLineLength * Math.tan(coneAngleRad);
+    
+    // Calculate required aperture radius: targetProjection / projectionFactor
+    const requiredApertureRadius = targetApertureProjection / childUpProjectionFactor;
+    
+    // Validate the calculated radius
+    if (requiredApertureRadius <= 0 || requiredApertureRadius > 200) {
+        if (logDetails) console.warn(`Calculated aperture radius ${requiredApertureRadius.toFixed(2)} is unreasonable`);
+        return null;
+    }
+    
+    // Apply the calculated radius and cone angle
+    const optimizedDimensions = setApertureRadius(childState.dimensions, requiredApertureRadius);
+    const finalDimensions = setConeAngle(optimizedDimensions, finalConeAngle);
+    
+    if (logDetails) {
+        console.log(`  Convergent rays: calculated cone angle from current geometry`);
+        console.log(`  Calculated cone angle: ${finalConeAngle.toFixed(2)}°`);
+        console.log(`  Target aperture projection: ${targetApertureProjection.toFixed(2)}`);
+        console.log(`  Up projection factor: ${childUpProjectionFactor.toFixed(3)}`);
+        console.log(`  Calculated radius: ${requiredApertureRadius.toFixed(2)}`);
+    }
+    
+    return finalDimensions;
+}
+
+/**
+ * Calculate cone angle from current component geometry
+ * Uses the angle between center line and aperture rays to determine cone angle
+ * @param {object} childState - Child component state
+ * @param {object} parentState - Parent component state
+ * @param {number} centerLineLength - Distance between parent and child centers
+ * @param {boolean} logDetails - Whether to log calculation details
+ * @returns {number|null} Calculated cone angle in degrees, or null if calculation failed
+ */
+function calculateConeAngleFromGeometry(childState, parentState, centerLineLength, logDetails) {
+    if (centerLineLength === 0) {
+        if (logDetails) console.warn('Cannot calculate cone angle: center line length is zero');
+        return null;
+    }
+    
+    const childDims = childState.dimensions;
+    const currentApertureRadius = childDims.apertureRadius || 0;
+    
+    if (currentApertureRadius === 0) {
+        if (logDetails) console.warn('Cannot calculate cone angle: aperture radius is zero');
+        return null;
+    }
+    
+    // Get projection factor to account for component orientation
+    const projections = calculateProjections_internal(childState, parentState);
+    if (!projections) {
+        if (logDetails) console.warn('Could not calculate projections for cone angle calculation');
+        return null;
+    }
+    
+    const childUpProjectionFactor = projections.child.upProjectionFactor;
+    if (childUpProjectionFactor === 0) {
+        if (logDetails) console.warn('Cannot calculate cone angle: up projection factor is zero');
+        return null;
+    }
+    
+    // Calculate effective aperture projection
+    const effectiveApertureProjection = currentApertureRadius * childUpProjectionFactor;
+    
+    // Calculate cone angle: arctan(apertureProjection / centerLineLength)
+    const coneAngleRad = Math.atan(effectiveApertureProjection / centerLineLength);
+    const coneAngleDeg = coneAngleRad * 180 / Math.PI;
+    
+    // Validate calculated cone angle
+    if (coneAngleDeg < 0 || coneAngleDeg > 90) {
+        if (logDetails) console.warn(`Calculated cone angle ${coneAngleDeg.toFixed(2)}° is out of valid range (0-90°)`);
+        return null;
+    }
+    
+    if (logDetails) {
+        console.log(`  Geometry calculation: aperture=${currentApertureRadius.toFixed(2)}, projection=${effectiveApertureProjection.toFixed(2)}`);
+        console.log(`  Center line length: ${centerLineLength.toFixed(2)}`);
+        console.log(`  Calculated cone angle: arctan(${effectiveApertureProjection.toFixed(2)}/${centerLineLength.toFixed(2)}) = ${coneAngleDeg.toFixed(2)}°`);
+    }
+    
+    return coneAngleDeg;
 }
 
 /**
@@ -138,6 +453,7 @@ function calculateProjections_internal(childState, parentState) {
 /**
  * Auto-scale aperture radius to match parent's projection during component creation
  * @param {object} childDims - Child component dimensions
+ * @param {string} componentType - Component type
  * @param {number} compId - Component ID
  * @param {number} centerX - Center X position
  * @param {number} centerY - Center Y position
@@ -146,7 +462,7 @@ function calculateProjections_internal(childState, parentState) {
  * @param {object} componentState - Global component state
  * @returns {object} Scaled dimensions or original dimensions
  */
-export function autoScaleForNewComponentPlacement(childDims, compId, centerX, centerY, initialRotation, parentComponent, componentState) {
+export function autoScaleForNewComponentPlacement(childDims, componentType, compId, centerX, centerY, initialRotation, parentComponent, componentState) {
     const parentId = parseInt(parentComponent.getAttribute('data-id'));
     const parentState = componentState[parentId];
     
@@ -162,7 +478,7 @@ export function autoScaleForNewComponentPlacement(childDims, compId, centerX, ce
         rotation: initialRotation,
         dimensions: childDims,
         parentId: parentId,
-        type: childDims.type || 'unknown',
+        type: componentType,
         componentId: compId
     };
     
