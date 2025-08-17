@@ -1,3 +1,59 @@
+/**
+ * Flip the SVG of the selected component horizontally (left-right).
+ * Only affects the SVG appearance, not the logical properties.
+ */
+/**
+ * Flip the SVG of the selected component horizontally or vertically.
+ * @param {'horizontal'|'vertical'} direction - Flip direction
+ */
+export function flipSelectedComponentSVG(direction = 'horizontal') {
+    const component = getSelectedComponent();
+    if (!component) {
+        console.log('No component selected to flip');
+        return;
+    }
+    if (direction === 'horizontal') {
+        // Toggle data-flipped-h
+        const isFlippedH = component.getAttribute('data-flipped-h') === 'true';
+        component.setAttribute('data-flipped-h', isFlippedH ? 'false' : 'true');
+    } else if (direction === 'vertical') {
+        // Toggle data-flipped-v
+        const isFlippedV = component.getAttribute('data-flipped-v') === 'true';
+        component.setAttribute('data-flipped-v', isFlippedV ? 'false' : 'true');
+    }
+    // Reapply transform to update flip
+    reapplyComponentTransform(component);
+    console.log(`Flipped SVG for selected component (${direction}).`);
+}
+
+function getFlipTransform(component) {
+    const compId = component.getAttribute('data-id');
+    const state = componentState[compId];
+    const dims = (state && state.dimensions) ? state.dimensions : componentDimensions[component.getAttribute('data-type')];
+    const cx = dims.centerPoint.x;
+    const cy = dims.centerPoint.y;
+    let transform = '';
+    if (component.getAttribute('data-flipped-h') === 'true') {
+        transform += ` translate(${cx},${cy}) scale(-1,1) translate(${-cx},${-cy})`;
+    }
+    if (component.getAttribute('data-flipped-v') === 'true') {
+        transform += ` translate(${cx},${cy}) scale(1,-1) translate(${-cx},${-cy})`;
+    }
+    return transform;
+}
+
+function reapplyComponentTransform(component) {
+    const compId = component.getAttribute('data-id');
+    const state = componentState[compId];
+    if (!state) return;
+    const currentDims = state.dimensions || componentDimensions[component.getAttribute('data-type')];
+    const rotation = state.rotation || 0;
+    const svgX = state.posX - currentDims.centerPoint.x;
+    const svgY = state.posY - currentDims.centerPoint.y;
+    let baseTransform = `translate(${svgX},${svgY}) rotate(${rotation} ${currentDims.centerPoint.x} ${currentDims.centerPoint.y})`;
+    baseTransform += getFlipTransform(component);
+    component.setAttribute('transform', baseTransform.trim());
+}
 // Simplified Component Manager - Core lifecycle management
 // Handles adding, removing, and state management of components using focused modules
 
@@ -182,12 +238,8 @@ export function updateComponentPosition(component, centerX, centerY) {
     handleApertureScaling(component, state);
     recursivelyUpdateChildrenApertures(component, componentState, getComponentById, updateAperturePointDrawings);
 
-    // Update transform - convert center position to top-left corner for SVG transform
-    const currentDims = state.dimensions || componentDimensions[component.getAttribute('data-type')];
-    const rotation = state.rotation || 0;
-    const svgX = centerX - currentDims.centerPoint.x;
-    const svgY = centerY - currentDims.centerPoint.y;
-    component.setAttribute("transform", `translate(${svgX},${svgY}) rotate(${rotation} ${currentDims.centerPoint.x} ${currentDims.centerPoint.y})`);
+    // Update transform and preserve flip
+    reapplyComponentTransform(component);
 
     if (typeof state.arrowX === "number" && typeof state.arrowY === "number") {
         state.arrowX += dx;
@@ -214,12 +266,9 @@ export function updateComponentRotation(component, rotation) {
     // Handle aperture scaling
     handleApertureScaling(component, state);
     recursivelyUpdateChildrenApertures(component, componentState, getComponentById, updateAperturePointDrawings);
-    
-    // Update transform - convert center position to top-left corner for SVG transform
-    const currentDims = state.dimensions || componentDimensions[component.getAttribute('data-type')];
-    const svgX = state.posX - currentDims.centerPoint.x;
-    const svgY = state.posY - currentDims.centerPoint.y;
-    component.setAttribute("transform", `translate(${svgX},${svgY}) rotate(${rotation} ${currentDims.centerPoint.x} ${currentDims.centerPoint.y})`);
+
+    // Update transform and preserve flip
+    reapplyComponentTransform(component);
     
     updateTraceLines();
 }
@@ -250,6 +299,17 @@ export function logComponentInfo(compId) {
     console.log(`  Arrow: (${state.arrowX.toFixed(1)}, ${state.arrowY.toFixed(1)})`);
     console.log(`  Visibility: ${state.visible ? 'Visible' : 'Hidden'}`);
     
+    // Log upVector and forwardVector
+    if (state.dimensions) {
+        const up = state.dimensions.upVector;
+        const fwd = state.dimensions.forwardVector;
+        if (up) {
+            console.log(`  upVector:   (${up.x.toFixed(3)}, ${up.y.toFixed(3)})`);
+        }
+        if (fwd) {
+            console.log(`  forwardVector: (${fwd.x.toFixed(3)}, ${fwd.y.toFixed(3)})`);
+        }
+    }
     // Log aperture info if available
     if (state.dimensions.apertureRadius) {
         const aperturePoints = state.dimensions.aperturePoints;

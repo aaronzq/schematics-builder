@@ -62,6 +62,29 @@ function setupGlobalEventListeners() {
 
 // Set up UI button event listeners
 function setupUIEventListeners() {
+    // Flip Horizontal button
+    const flipHBtn = document.getElementById('flip-horizontal-btn');
+    if (flipHBtn) {
+        flipHBtn.addEventListener('click', () => {
+            import('./componentManager.js').then(mod => {
+                if (mod.flipSelectedComponentSVG) {
+                    mod.flipSelectedComponentSVG('horizontal');
+                }
+            });
+        });
+    }
+
+    // Flip Vertical button
+    const flipVBtn = document.getElementById('flip-vertical-btn');
+    if (flipVBtn) {
+        flipVBtn.addEventListener('click', () => {
+            import('./componentManager.js').then(mod => {
+                if (mod.flipSelectedComponentSVG) {
+                    mod.flipSelectedComponentSVG('vertical');
+                }
+            });
+        });
+    }
     // Delete button
     const deleteBtn = document.getElementById('delete-btn');
     if (deleteBtn) {
