@@ -6,57 +6,174 @@ import { transformToGlobal } from '../utils/mathUtils.js';
 import { SHOW_DEBUG_DRAWING } from '../constants.js';
 
 /**
+ * CORE APERTURE POLICY: Calculate optimal aperture radius for a component based on its parent
+ * This is the single source of truth for all aperture scaling decisions
+ * @param {object} childState - Child component state
+ * @param {object} parentState - Parent component state  
+ * @param {boolean} logDetails - Whether to log calculation details
+ * @returns {object|null} - New dimensions with scaled aperture, or null if scaling not possible
+ */
+export function calculateOptimalAperture(childState, parentState, logDetails = false) {
+    // Validate inputs
+    if (!childState || !parentState) {
+        if (logDetails) console.warn('Invalid child or parent state provided');
+        return null;
+    }
+    
+    if (!childState.dimensions || !parentState.dimensions) {
+        if (logDetails) console.warn('Missing dimensions in child or parent state');
+        return null;
+    }
+    
+    const childDims = childState.dimensions;
+    const parentDims = parentState.dimensions;
+    
+    // Calculate projections using the established logic
+    const projections = calculateProjections_internal(childState, parentState);
+    if (!projections) {
+        if (logDetails) console.warn('Could not calculate aperture projections');
+        return null;
+    }
+    
+    const targetProjection = projections.parent.apertureProjection;
+    const currentChildProjection = projections.child.apertureProjection;
+    
+    // Handle edge cases
+    if (currentChildProjection === 0) {
+        if (logDetails) console.warn('Child projection is zero, cannot scale aperture');
+        return null;
+    }
+    
+    // Calculate optimal aperture radius
+    const scalingRatio = targetProjection / currentChildProjection;
+    const currentRadius = childDims.apertureRadius || 0;
+    const optimalRadius = currentRadius * scalingRatio;
+    
+    // Validate the calculated radius
+    if (optimalRadius <= 0 || optimalRadius > 200) {
+        if (logDetails) console.warn(`Calculated aperture radius ${optimalRadius.toFixed(2)} is unreasonable`);
+        return null;
+    }
+    
+    // Apply the optimal radius to create new dimensions
+    const optimizedDimensions = setApertureRadius(childDims, optimalRadius);
+    
+    // Logging if requested
+    if (logDetails) {
+        console.log(`APERTURE CALCULATION: Component ${childState.type} (ID: ${childState.componentId || 'temp'})`);
+        console.log(`  Target projection: ${targetProjection.toFixed(2)}, Current: ${currentChildProjection.toFixed(2)}`);
+        console.log(`  Radius: ${currentRadius.toFixed(2)} → ${optimalRadius.toFixed(2)} (ratio: ${scalingRatio.toFixed(3)})`);
+    }
+    
+    return optimizedDimensions;
+}
+
+/**
+ * Internal helper: Calculate projections using component states directly
+ * @param {object} childState - Child component state
+ * @param {object} parentState - Parent component state
+ * @returns {object|null} Projection data or null
+ */
+function calculateProjections_internal(childState, parentState) {
+    const childDims = childState.dimensions;
+    const parentDims = parentState.dimensions;
+    
+    // Calculate global center positions
+    const childCenter = transformToGlobal(childDims.centerPoint.x, childDims.centerPoint.y, childState);
+    const parentCenter = transformToGlobal(parentDims.centerPoint.x, parentDims.centerPoint.y, parentState);
+    
+    // Calculate center trace line direction vector
+    const traceDx = childCenter.x - parentCenter.x;
+    const traceDy = childCenter.y - parentCenter.y;
+    const traceLength = Math.sqrt(traceDx * traceDx + traceDy * traceDy);
+    
+    if (traceLength === 0) return null;
+    
+    // Calculate perpendicular direction to the trace line
+    const traceUnitX = traceDx / traceLength;
+    const traceUnitY = traceDy / traceLength;
+    const perpUnitX = -traceUnitY;
+    const perpUnitY = traceUnitX;
+    
+    // Get aperture radius values
+    const childApertureRadius = childDims.apertureRadius || 0;
+    const parentApertureRadius = parentDims.apertureRadius || 0;
+    
+    // Transform upVectors to global coordinates
+    const childUpVector = childDims.upVector;
+    const parentUpVector = parentDims.upVector;
+    
+    const childGlobalUpX = childUpVector.x * Math.cos(childState.rotation * Math.PI / 180) - 
+                          childUpVector.y * Math.sin(childState.rotation * Math.PI / 180);
+    const childGlobalUpY = childUpVector.x * Math.sin(childState.rotation * Math.PI / 180) + 
+                          childUpVector.y * Math.cos(childState.rotation * Math.PI / 180);
+    
+    const parentGlobalUpX = parentUpVector.x * Math.cos(parentState.rotation * Math.PI / 180) - 
+                           parentUpVector.y * Math.sin(parentState.rotation * Math.PI / 180);
+    const parentGlobalUpY = parentUpVector.x * Math.sin(parentState.rotation * Math.PI / 180) + 
+                           parentUpVector.y * Math.cos(parentState.rotation * Math.PI / 180);
+    
+    // Calculate projections: dot product with perpendicular direction
+    const childUpProjection = Math.abs(childGlobalUpX * perpUnitX + childGlobalUpY * perpUnitY);
+    const parentUpProjection = Math.abs(parentGlobalUpX * perpUnitX + parentGlobalUpY * perpUnitY);
+    
+    // Calculate final aperture projections
+    const childApertureProjection = childApertureRadius * childUpProjection;
+    const parentApertureProjection = parentApertureRadius * parentUpProjection;
+    
+    return {
+        child: {
+            apertureRadius: childApertureRadius,
+            apertureProjection: childApertureProjection,
+            upProjectionFactor: childUpProjection
+        },
+        parent: {
+            apertureRadius: parentApertureRadius,
+            apertureProjection: parentApertureProjection,
+            upProjectionFactor: parentUpProjection
+        }
+    };
+}
+
+/**
  * Auto-scale aperture radius to match parent's projection during component creation
  * @param {object} childDims - Child component dimensions
  * @param {number} compId - Component ID
- * @param {number} placeX - X position
- * @param {number} placeY - Y position
+ * @param {number} centerX - Center X position
+ * @param {number} centerY - Center Y position
  * @param {number} initialRotation - Initial rotation
  * @param {HTMLElement} parentComponent - Parent component element
  * @param {object} componentState - Global component state
  * @returns {object} Scaled dimensions or original dimensions
  */
-export function autoScaleToMatchParent(childDims, compId, centerX, centerY, initialRotation, parentComponent, componentState) {
+export function autoScaleForNewComponentPlacement(childDims, compId, centerX, centerY, initialRotation, parentComponent, componentState) {
     const parentId = parseInt(parentComponent.getAttribute('data-id'));
     const parentState = componentState[parentId];
     
-    if (!parentState || !parentState.dimensions) {
-        console.warn('Parent state or dimensions not found, using original aperture radius');
+    if (!parentState) {
+        console.warn('Parent state not found, using original aperture radius');
         return childDims;
     }
     
-    // Create temporary state for the child component to enable projection calculations
+    // Create temporary child state for calculation
     const tempChildState = {
         posX: centerX,
         posY: centerY,
         rotation: initialRotation,
         dimensions: childDims,
         parentId: parentId,
-        type: childDims.type || 'unknown'
-    };
-    
-    // Temporarily add to componentState
-    componentState[compId] = tempChildState;
-    
-    // Create a temporary component element for calculations
-    const tempComponent = {
-        getAttribute: (attr) => {
-            if (attr === 'data-id') return compId.toString();
-            if (attr === 'data-type') return tempChildState.type;
-            return null;
-        }
+        type: childDims.type || 'unknown',
+        componentId: compId
     };
     
     try {
-        const scaledDims = performApertureScaling(tempComponent, childDims, true, componentState);
-        return scaledDims || childDims;
+        // Use core aperture policy to calculate optimal dimensions
+        const optimizedDimensions = calculateOptimalAperture(tempChildState, parentState, true);
+        return optimizedDimensions || childDims;
         
     } catch (error) {
-        console.error('Error during aperture scaling:', error);
+        console.error('Error during component creation aperture scaling:', error);
         return childDims;
-    } finally {
-        // Clean up temporary state
-        delete componentState[compId];
     }
 }
 
@@ -66,86 +183,29 @@ export function autoScaleToMatchParent(childDims, compId, centerX, centerY, init
  * @param {object} componentState - Global component state
  * @returns {object|null} Scaled dimensions or null
  */
-export function autoScaleForExistingComponent(component, componentState) {
+export function autoScaleForComponentDragRotation(component, componentState) {
     if (!component) return null;
     
     const compId = parseInt(component.getAttribute('data-id'));
-    const state = componentState[compId];
+    const childState = componentState[compId];
     
-    if (!state || state.parentId === null || !state.dimensions) {
-        return null; // No parent or no dimensions to scale
+    if (!childState || childState.parentId === null) {
+        return null; // No parent to scale against
     }
     
-    const parentState = componentState[state.parentId];
-    if (!parentState || !parentState.dimensions) {
+    const parentState = componentState[childState.parentId];
+    if (!parentState) {
         return null; // Parent not found
     }
     
     try {
-        return performApertureScaling(component, state.dimensions, false, componentState);
+        // Use core aperture policy to calculate optimal dimensions
+        return calculateOptimalAperture(childState, parentState, false);
         
     } catch (error) {
         console.error('Error during dynamic aperture scaling:', error);
         return null;
     }
-}
-
-/**
- * Core aperture scaling logic - used by both creation and dynamic scaling
- * @param {HTMLElement|object} component - Component element or mock object
- * @param {object} currentDims - Current dimensions
- * @param {boolean} isCreationTime - Whether this is during component creation
- * @param {object} componentState - Global component state
- * @returns {object|null} Scaled dimensions or null
- */
-export function performApertureScaling(component, currentDims, isCreationTime, componentState) {
-    // Calculate current projections
-    const projections = calculateProjections(component, componentState);
-    if (!projections) {
-        if (isCreationTime) {
-            console.warn('Could not calculate initial projections, using original aperture radius');
-        }
-        return null;
-    }
-    
-    const targetProjection = projections.parent.apertureProjection;
-    const currentChildProjection = projections.child.apertureProjection;
-    
-    // Handle edge cases
-    if (currentChildProjection === 0) {
-        if (isCreationTime) {
-            console.warn('Initial child projection is zero, cannot scale aperture effectively');
-        }
-        return null;
-    }
-    
-    // Calculate scaling ratio
-    const scalingRatio = targetProjection / currentChildProjection;
-    const currentApertureRadius = currentDims.apertureRadius;
-    const newApertureRadius = currentApertureRadius * scalingRatio;
-    
-    // Ensure the new radius is reasonable
-    if (newApertureRadius <= 0 || newApertureRadius > 200) {
-        if (isCreationTime) {
-            console.warn(`Calculated aperture radius ${newApertureRadius.toFixed(2)} is unreasonable, using original`);
-        }
-        return null;
-    }
-    
-    // Apply the new aperture radius
-    const scaledDims = setApertureRadius(currentDims, newApertureRadius);
-    
-    // Logging based on context
-    if (isCreationTime) {
-        console.log(`Auto-scaling aperture: Target projection=${targetProjection.toFixed(2)}, Initial child projection=${currentChildProjection.toFixed(2)}`);
-        console.log(`Aperture scaling complete:`);
-        console.log(`  Original radius: ${currentApertureRadius.toFixed(2)} → New radius: ${newApertureRadius.toFixed(2)} (ratio: ${scalingRatio.toFixed(3)})`);
-        console.log(`  Target projection: ${targetProjection.toFixed(2)}, Expected child projection: ${targetProjection.toFixed(2)}`);
-    } else {
-        console.log(`Dynamic aperture scaling: ${currentApertureRadius.toFixed(1)} → ${newApertureRadius.toFixed(1)} (ratio: ${scalingRatio.toFixed(2)})`);
-    }
-    
-    return scaledDims;
 }
 
 /**
@@ -176,7 +236,7 @@ export function recursivelyUpdateChildrenApertures(parentComponent, componentSta
         }
         
         // Update this child's aperture to match its parent (the component being dragged/rotated)
-        const scaledDims = autoScaleForExistingComponent(childComponent, componentState);
+        const scaledDims = autoScaleForComponentDragRotation(childComponent, componentState);
         if (scaledDims) {
             childState.dimensions = scaledDims;
             console.log(`Recursively updated aperture for child component ${childId} (${childState.type})`);
@@ -321,126 +381,4 @@ export function checkLinesCross(componentId, componentState) {
     const linesIntersect = (t >= 0 && t <= 1 && u >= 0 && u <= 1);
     
     return linesIntersect;
-}
-
-/**
- * Calculate aperture radius projections onto the vertical direction of center trace line
- * @param {HTMLElement} component - The component element
- * @param {object} componentState - Global component state
- * @returns {Object|null} - Object containing projections for both component and parent, or null if no parent
- */
-export function calculateProjections(component, componentState) {
-    if (!component) return null;
-    
-    const compId = component.getAttribute('data-id');
-    const state = componentState[compId];
-    
-    if (!state || state.parentId === null) {
-        console.warn('Component has no parent - cannot calculate aperture projections');
-        return null;
-    }
-    
-    const parentState = componentState[state.parentId];
-    if (!parentState) {
-        console.warn('Parent state not found');
-        return null;
-    }
-    
-    // Get component dimensions (use stored dimensions, not original)
-    const childDims = state.dimensions;
-    const parentDims = parentState.dimensions;
-    
-    if (!childDims || !parentDims) {
-        console.warn('Component dimensions not found');
-        return null;
-    }
-    
-    // Calculate global center positions
-    const childCenter = transformToGlobal(childDims.centerPoint.x, childDims.centerPoint.y, state);
-    const parentCenter = transformToGlobal(parentDims.centerPoint.x, parentDims.centerPoint.y, parentState);
-    
-    // Calculate center trace line direction vector
-    const traceDx = childCenter.x - parentCenter.x;
-    const traceDy = childCenter.y - parentCenter.y;
-    const traceLength = Math.sqrt(traceDx * traceDx + traceDy * traceDy);
-    
-    if (traceLength === 0) {
-        console.warn('Components are at the same position - cannot calculate projections');
-        return null;
-    }
-    
-    // Normalize the trace line direction vector
-    const traceUnitX = traceDx / traceLength;
-    const traceUnitY = traceDy / traceLength;
-    
-    // Calculate perpendicular (vertical) direction to the trace line
-    // Perpendicular vector is (-dy, dx) normalized
-    const perpUnitX = -traceUnitY;
-    const perpUnitY = traceUnitX;
-    
-    // For each component, calculate the projection of aperture radius onto perpendicular direction
-    // This means: how much of the aperture radius extends in the direction perpendicular to the center line
-    
-    // Get aperture radius values
-    const childApertureRadius = childDims.apertureRadius || 0;
-    const parentApertureRadius = parentDims.apertureRadius || 0;
-    
-    // Calculate aperture vector directions for both components
-    // The aperture extends in the upVector direction, so we need to project upVector onto perpendicular
-    const childUpVector = childDims.upVector;
-    const parentUpVector = parentDims.upVector;
-    
-    // Transform upVectors to global coordinates (accounting for rotation)
-    const childGlobalUpX = childUpVector.x * Math.cos(state.rotation * Math.PI / 180) - 
-                          childUpVector.y * Math.sin(state.rotation * Math.PI / 180);
-    const childGlobalUpY = childUpVector.x * Math.sin(state.rotation * Math.PI / 180) + 
-                          childUpVector.y * Math.cos(state.rotation * Math.PI / 180);
-    
-    const parentGlobalUpX = parentUpVector.x * Math.cos(parentState.rotation * Math.PI / 180) - 
-                           parentUpVector.y * Math.sin(parentState.rotation * Math.PI / 180);
-    const parentGlobalUpY = parentUpVector.x * Math.sin(parentState.rotation * Math.PI / 180) + 
-                           parentUpVector.y * Math.cos(parentState.rotation * Math.PI / 180);
-    
-    // Calculate projections: dot product of normalized upVector with perpendicular direction
-    const childUpProjection = Math.abs(childGlobalUpX * perpUnitX + childGlobalUpY * perpUnitY);
-    const parentUpProjection = Math.abs(parentGlobalUpX * perpUnitX + parentGlobalUpY * perpUnitY);
-    
-    // Calculate final aperture projections (aperture radius * projection factor)
-    const childApertureProjection = childApertureRadius * childUpProjection;
-    const parentApertureProjection = parentApertureRadius * parentUpProjection;
-    
-    const result = {
-        centerTraceInfo: {
-            parentCenter: { x: parentCenter.x, y: parentCenter.y },
-            childCenter: { x: childCenter.x, y: childCenter.y },
-            direction: { x: traceUnitX, y: traceUnitY },
-            perpendicular: { x: perpUnitX, y: perpUnitY },
-            length: traceLength
-        },
-        child: {
-            componentId: parseInt(compId),
-            componentType: state.type,
-            apertureRadius: childApertureRadius,
-            upVectorGlobal: { x: childGlobalUpX, y: childGlobalUpY },
-            upProjectionFactor: childUpProjection,
-            apertureProjection: childApertureProjection
-        },
-        parent: {
-            componentId: state.parentId,
-            componentType: parentState.type,
-            apertureRadius: parentApertureRadius,
-            upVectorGlobal: { x: parentGlobalUpX, y: parentGlobalUpY },
-            upProjectionFactor: parentUpProjection,
-            apertureProjection: parentApertureProjection
-        }
-    };
-    
-    // console.log('Aperture Projections Calculation:');
-    // console.log(`  Center trace line: (${parentCenter.x.toFixed(1)}, ${parentCenter.y.toFixed(1)}) → (${childCenter.x.toFixed(1)}, ${childCenter.y.toFixed(1)})`);
-    // console.log(`  Trace direction: (${traceUnitX.toFixed(3)}, ${traceUnitY.toFixed(3)}), Length: ${traceLength.toFixed(1)}`);
-    // console.log(`  Perpendicular direction: (${perpUnitX.toFixed(3)}, ${perpUnitY.toFixed(3)})`);
-    // console.log(`  Child (${state.type}): Radius=${childApertureRadius}, Projection=${childApertureProjection.toFixed(2)}`);
-    // console.log(`  Parent (${parentState.type}): Radius=${parentApertureRadius}, Projection=${parentApertureProjection.toFixed(2)}`);
-    
-    return result;
 }

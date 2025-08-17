@@ -10,8 +10,8 @@ import { validateComponentType } from './utils/validators.js';
 import { calculateComponentPlacement, calculateArrowEndpoint } from './modules/componentPlacement.js';
 import { updateComponentHierarchy, cleanupComponentHierarchy } from './modules/componentHierarchy.js';
 import { 
-    autoScaleToMatchParent, 
-    autoScaleForExistingComponent,
+    autoScaleForNewComponentPlacement, 
+    autoScaleForComponentDragRotation,
     recursivelyUpdateChildrenApertures,
     checkLinesCross,
     handleCrossing
@@ -73,7 +73,7 @@ export function addComponent(type) {
     
     // Auto-scale aperture radius to match parent's projection (if component has a parent)
     if (selectedComponent) {
-        dims = autoScaleToMatchParent(dims, compId, placement.centerX, placement.centerY, placement.rotation, selectedComponent, componentState);
+        dims = autoScaleForNewComponentPlacement(dims, compId, placement.centerX, placement.centerY, placement.rotation, selectedComponent, componentState);
     }
     
     // Handle upVector flipping to avoid crossing aperture lines
@@ -263,7 +263,7 @@ export function logComponentInfo(compId) {
  */
 function handleApertureScaling(component, state) {
     if (state.parentId !== null) {
-        const scaledDims = autoScaleForExistingComponent(component, componentState);
+        const scaledDims = autoScaleForComponentDragRotation(component, componentState);
         if (scaledDims) {
             state.dimensions = scaledDims;
             updateAperturePointDrawings(component, scaledDims);

@@ -58,7 +58,7 @@ export function ensureAllMarkers(svg) {
             refX: "8",
             refY: "3",
             orient: "auto",
-            markerUnits: "strokeWidth"
+            markerUnits: "userSpaceOnUse"
         });
         
         const path = createSVGElement("path", {
@@ -79,7 +79,7 @@ export function ensureAllMarkers(svg) {
             refX: "8",
             refY: "3",
             orient: "auto",
-            markerUnits: "strokeWidth"
+            markerUnits: "userSpaceOnUse"
         });
         
         const path = createSVGElement("path", {
