@@ -40,3 +40,7 @@ export const MIN_CANVAS_PADDING = 50;
 // Component properties defaults and modifiers
 export const DEFAULT_APERTURE_RADIUS = 15;  // Default aperture radius for components
 export const DEFAULT_CONE_ANGLE = 0;        // Default cone angle in degrees (0 = collimated)
+
+// Component visibility
+export const HIDDEN_COMPONENT_OPACITY = 0;    // Opacity for hidden components (completely invisible)
+export const VISIBLE_COMPONENT_OPACITY = 1.0;  // Opacity for visible components

@@ -8,7 +8,10 @@ import {
     getSelectedComponent, 
     setSelectedComponent,
     componentState,
-    logComponentInfo
+    logComponentInfo,
+    hideSelectedComponent,
+    showSelectedComponent,
+    showAllComponents
 } from './componentManager.js';
 import { startDrag, showHitbox } from './interactionHandler.js';
 import { showArrowForComponent, removeArrowFromComponent } from './arrows.js';
@@ -81,6 +84,24 @@ function setupUIEventListeners() {
     const solidRaysBtn = document.getElementById('solid-rays-btn');
     if (solidRaysBtn) {
         solidRaysBtn.addEventListener('click', toggleSolidRays);
+    }
+
+    // Hide component button
+    const hideComponentBtn = document.getElementById('hide-component-btn');
+    if (hideComponentBtn) {
+        hideComponentBtn.addEventListener('click', hideSelectedComponent);
+    }
+
+    // Show component button
+    const showComponentBtn = document.getElementById('show-component-btn');
+    if (showComponentBtn) {
+        showComponentBtn.addEventListener('click', showSelectedComponent);
+    }
+
+    // Show all components button
+    const showAllComponentsBtn = document.getElementById('show-all-components-btn');
+    if (showAllComponentsBtn) {
+        showAllComponentsBtn.addEventListener('click', showAllComponents);
     }
 }
 

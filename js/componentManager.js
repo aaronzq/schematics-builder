@@ -5,6 +5,7 @@ import { componentDimensions } from './components.js';
 import { flipUpVector } from './modules/componentUtils.js';
 import { updateTraceLines } from './traceLines.js';
 import { validateComponentType } from './utils/validators.js';
+import { HIDDEN_COMPONENT_OPACITY, VISIBLE_COMPONENT_OPACITY } from './constants.js';
 
 // Import focused modules
 import { calculateComponentPlacement, calculateArrowEndpoint } from './modules/componentPlacement.js';
@@ -99,6 +100,7 @@ export function addComponent(type) {
         arrowX: arrowEndpoint.x,
         arrowY: arrowEndpoint.y,
         selected: false,
+        visible: true,  // Track visibility state
         type: type,
         dimensions: dims,
         parentId: null,
@@ -246,6 +248,7 @@ export function logComponentInfo(compId) {
     console.log(`  Hierarchy: ${parentInfo}, ${childrenInfo}`);
     console.log(`  Center: (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) | Rotation: ${(state.rotation || 0).toFixed(1)}°`);
     console.log(`  Arrow: (${state.arrowX.toFixed(1)}, ${state.arrowY.toFixed(1)})`);
+    console.log(`  Visibility: ${state.visible ? 'Visible' : 'Hidden'}`);
     
     // Log aperture info if available
     if (state.dimensions.apertureRadius) {
@@ -257,6 +260,103 @@ export function logComponentInfo(compId) {
         console.log(`  Aperture: Radius=${state.dimensions.apertureRadius.toFixed(2)} | Upper=${upperPos} | Lower=${lowerPos}`);
         console.log(`  Ray Shape: ${rayShape} | Cone Angle: ${coneAngle}`);
     }
+}
+
+/**
+ * Hide a component by making only its drawing elements transparent while keeping functionality
+ * @param {HTMLElement} component - Component to hide
+ */
+export function hideComponent(component) {
+    if (!component) return;
+
+    const compId = component.getAttribute('data-id');
+    const state = componentState[compId];
+    if (!state) return;
+
+    // Update state
+    state.visible = false;
+
+    // Make only the component drawing elements transparent
+    // This affects paths, rects, circles, ellipses, etc. from the component's draw function
+    // but excludes debug elements, hitboxes, and other non-drawing elements
+    const drawingElements = component.querySelectorAll('path, rect:not(.component-hit-area), circle:not([data-aperture-type]):not([fill="red"]), ellipse, line:not([stroke="green"]):not([stroke="blue"])');
+    drawingElements.forEach(element => {
+        element.style.opacity = HIDDEN_COMPONENT_OPACITY;
+    });
+    
+    console.log(`Hidden component ${compId} (${state.type}) - only drawing elements are transparent`);
+}
+
+/**
+ * Show a previously hidden component by restoring drawing elements opacity
+ * @param {HTMLElement} component - Component to show
+ */
+export function showComponent(component) {
+    if (!component) return;
+
+    const compId = component.getAttribute('data-id');
+    const state = componentState[compId];
+    if (!state) return;
+
+    // Update state
+    state.visible = true;
+
+    // Restore opacity for drawing elements only
+    const drawingElements = component.querySelectorAll('path, rect:not(.component-hit-area), circle:not([data-aperture-type]):not([fill="red"]), ellipse, line:not([stroke="green"]):not([stroke="blue"])');
+    drawingElements.forEach(element => {
+        element.style.opacity = VISIBLE_COMPONENT_OPACITY;
+    });
+    
+    console.log(`Showed component ${compId} (${state.type}) - drawing elements restored to full opacity`);
+}
+
+/**
+ * Hide the currently selected component
+ */
+export function hideSelectedComponent() {
+    const component = getSelectedComponent();
+    if (!component) {
+        console.log('No component selected to hide');
+        return;
+    }
+    
+    hideComponent(component);
+}
+
+/**
+ * Show the currently selected component
+ */
+export function showSelectedComponent() {
+    const component = getSelectedComponent();
+    if (!component) {
+        console.log('No component selected to show');
+        return;
+    }
+    
+    showComponent(component);
+}
+
+/**
+ * Show all hidden components
+ */
+export function showAllComponents() {
+    const componentsGroup = document.getElementById('components');
+    if (!componentsGroup) return;
+
+    let hiddenCount = 0;
+    
+    // Iterate through all components
+    for (const component of componentsGroup.children) {
+        const compId = component.getAttribute('data-id');
+        const state = componentState[compId];
+        
+        if (state && !state.visible) {
+            showComponent(component);
+            hiddenCount++;
+        }
+    }
+    
+    console.log(`Showed ${hiddenCount} hidden components`);
 }
 
 // Private helper functions
