@@ -2,9 +2,9 @@
 // Handles adding, removing, and state management of components using focused modules
 
 import { componentDimensions } from './components.js';
-import { flipComponentUpVector } from './componentUtils.js';
+import { flipComponentUpVector } from './modules/componentUtils.js';
 import { updateTraceLines } from './traceLines.js';
-import { doApertureLinessCross } from './apertureRays.js';
+import { doApertureLinessCross } from './rays.js';
 import { validateComponentType } from './utils/validators.js';
 
 // Import focused modules
@@ -72,28 +72,28 @@ export function addComponent(type) {
     
     // Auto-scale aperture radius to match parent's projection (if component has a parent)
     if (selectedComponent) {
-        dims = autoScaleApertureToMatchParent(dims, compId, placement.x, placement.y, placement.rotation, selectedComponent, componentState);
+        dims = autoScaleApertureToMatchParent(dims, compId, placement.centerX, placement.centerY, placement.rotation, selectedComponent, componentState);
     }
     
     // Handle upVector flipping to avoid crossing aperture lines
     dims = handleApertureCrossing(dims, compId, placement, type);
     
     // Create component group and visual elements
-    const group = createComponentGroup(compId, type, placement.x, placement.y, placement.rotation, dims);
+    const group = createComponentGroup(compId, type, placement.centerX, placement.centerY, placement.rotation, dims);
     addHitArea(group, dims);
     addComponentSVG(group, type);
     addDebugElements(group, dims, svg);
     
-    // Create and store component state
+    // Create and store component state (posX/posY now store center coordinates)
     const arrowEndpoint = calculateArrowEndpoint({ 
-        posX: placement.x, 
-        posY: placement.y, 
+        posX: placement.centerX, 
+        posY: placement.centerY, 
         rotation: placement.rotation 
     }, dims);
     
     componentState[compId] = {
-        posX: placement.x,
-        posY: placement.y,
+        posX: placement.centerX,
+        posY: placement.centerY,
         rotation: placement.rotation,
         arrowX: arrowEndpoint.x,
         arrowY: arrowEndpoint.y,
@@ -159,30 +159,32 @@ export function getComponentById(id) {
 /**
  * Update component position and state
  * @param {HTMLElement} component - Component to update
- * @param {number} x - New X position
- * @param {number} y - New Y position
+ * @param {number} centerX - New center X position
+ * @param {number} centerY - New center Y position
  */
-export function updateComponentPosition(component, x, y) {
+export function updateComponentPosition(component, centerX, centerY) {
     if (!component) return;
 
     const compId = component.getAttribute('data-id');
     const state = componentState[compId];
     if (!state) return;
 
-    // Calculate delta and update state
-    const dx = x - state.posX;
-    const dy = y - state.posY;
-    state.posX = x;
-    state.posY = y;
+    // Calculate delta from previous center position and update state
+    const dx = centerX - state.posX;
+    const dy = centerY - state.posY;
+    state.posX = centerX;
+    state.posY = centerY;
 
     // Handle aperture scaling
     updateComponentAperture(component, state);
     recursivelyUpdateChildrenApertures(component, componentState, getComponentById, updateAperturePointDrawings);
 
-    // Update transform and arrow position
+    // Update transform - convert center position to top-left corner for SVG transform
     const currentDims = state.dimensions || componentDimensions[component.getAttribute('data-type')];
     const rotation = state.rotation || 0;
-    component.setAttribute("transform", `translate(${x},${y}) rotate(${rotation} ${currentDims.centerPoint.x} ${currentDims.centerPoint.y})`);
+    const svgX = centerX - currentDims.centerPoint.x;
+    const svgY = centerY - currentDims.centerPoint.y;
+    component.setAttribute("transform", `translate(${svgX},${svgY}) rotate(${rotation} ${currentDims.centerPoint.x} ${currentDims.centerPoint.y})`);
 
     if (typeof state.arrowX === "number" && typeof state.arrowY === "number") {
         state.arrowX += dx;
@@ -210,9 +212,11 @@ export function updateComponentRotation(component, rotation) {
     updateComponentAperture(component, state);
     recursivelyUpdateChildrenApertures(component, componentState, getComponentById, updateAperturePointDrawings);
     
-    // Update transform
+    // Update transform - convert center position to top-left corner for SVG transform
     const currentDims = state.dimensions || componentDimensions[component.getAttribute('data-type')];
-    component.setAttribute("transform", `translate(${state.posX},${state.posY}) rotate(${rotation} ${currentDims.centerPoint.x} ${currentDims.centerPoint.y})`);
+    const svgX = state.posX - currentDims.centerPoint.x;
+    const svgY = state.posY - currentDims.centerPoint.y;
+    component.setAttribute("transform", `translate(${svgX},${svgY}) rotate(${rotation} ${currentDims.centerPoint.x} ${currentDims.centerPoint.y})`);
     
     updateTraceLines();
 }
@@ -225,19 +229,9 @@ export function logComponentInfo(compId) {
     const state = componentState[compId];
     if (!state) return;
     
-    // Calculate global center coordinates considering rotation
-    const rotation = state.rotation || 0;
-    const rotationRad = rotation * Math.PI / 180;
-    const localCenterX = state.dimensions.centerPoint.x;
-    const localCenterY = state.dimensions.centerPoint.y;
-    
-    // Apply rotation transformation to the center point
-    const rotatedCenterX = localCenterX * Math.cos(rotationRad) - localCenterY * Math.sin(rotationRad);
-    const rotatedCenterY = localCenterX * Math.sin(rotationRad) + localCenterY * Math.cos(rotationRad);
-    
-    // Add component position to get global coordinates
-    const centerX = state.posX + rotatedCenterX;
-    const centerY = state.posY + rotatedCenterY;
+    // posX/posY now store center coordinates directly
+    const centerX = state.posX;
+    const centerY = state.posY;
     
     // Build info strings
     const parentInfo = state.parentId !== null ? 
@@ -246,13 +240,11 @@ export function logComponentInfo(compId) {
     const childrenInfo = state.children.length > 0 ? 
         `Children: [${state.children.map(childId => `${childId} (${componentState[childId].type})`).join(', ')}]` : 
         'No Children';
-    
+
     console.log(`=== Selected Component ${compId} (${state.type}) ===`);
     console.log(`  Hierarchy: ${parentInfo}, ${childrenInfo}`);
-    console.log(`  Position: (${state.posX.toFixed(1)}, ${state.posY.toFixed(1)}) | Center: (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) | Rotation: ${(state.rotation || 0).toFixed(1)}°`);
-    console.log(`  Arrow: (${state.arrowX.toFixed(1)}, ${state.arrowY.toFixed(1)})`);
-    
-    // Log aperture info if available
+    console.log(`  Center: (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) | Rotation: ${(state.rotation || 0).toFixed(1)}°`);
+    console.log(`  Arrow: (${state.arrowX.toFixed(1)}, ${state.arrowY.toFixed(1)})`);    // Log aperture info if available
     if (state.dimensions.apertureRadius) {
         const aperturePoints = state.dimensions.aperturePoints;
         const upperPos = aperturePoints ? `(${aperturePoints.upper.x.toFixed(1)}, ${aperturePoints.upper.y.toFixed(1)})` : 'undefined';
@@ -278,8 +270,8 @@ function handleApertureCrossing(dims, compId, placement, type) {
     
     // Test with normal orientation
     const tempState = {
-        posX: placement.x,
-        posY: placement.y,
+        posX: placement.centerX,
+        posY: placement.centerY,
         rotation: placement.rotation,
         dimensions: dims,
         parentId: parentId,

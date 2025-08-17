@@ -8,7 +8,7 @@ export const COMPONENT_SPACING = 150;
 export const ANGLE_SNAP_INCREMENT = 5;
 export const ROTATION_SNAP_INCREMENT = 5;
 export const GRID_SIZE = 5;
-export const ARROW_TIP_SNAP_SIZE = 5;
+export const ARROW_TIP_SNAP_SIZE = 1;
 
 // Debug and visualization
 export const SHOW_DEBUG_DRAWING = true;

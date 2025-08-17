@@ -1,8 +1,8 @@
 // Component aperture scaling functionality
 // Handles automatic scaling of aperture radius to match parent projections
 
-import { changeComponentApertureRadius } from '../componentUtils.js';
-import { calculateApertureProjections } from '../apertureRays.js';
+import { changeComponentApertureRadius } from './componentUtils.js';
+import { calculateApertureProjections } from '../rays.js';
 import { SHOW_DEBUG_DRAWING } from '../constants.js';
 
 /**
@@ -16,7 +16,7 @@ import { SHOW_DEBUG_DRAWING } from '../constants.js';
  * @param {object} componentState - Global component state
  * @returns {object} Scaled dimensions or original dimensions
  */
-export function autoScaleApertureToMatchParent(childDims, compId, placeX, placeY, initialRotation, parentComponent, componentState) {
+export function autoScaleApertureToMatchParent(childDims, compId, centerX, centerY, initialRotation, parentComponent, componentState) {
     const parentId = parseInt(parentComponent.getAttribute('data-id'));
     const parentState = componentState[parentId];
     
@@ -27,8 +27,8 @@ export function autoScaleApertureToMatchParent(childDims, compId, placeX, placeY
     
     // Create temporary state for the child component to enable projection calculations
     const tempChildState = {
-        posX: placeX,
-        posY: placeY,
+        posX: centerX,
+        posY: centerY,
         rotation: initialRotation,
         dimensions: childDims,
         parentId: parentId,

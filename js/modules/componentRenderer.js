@@ -16,19 +16,23 @@ import { components } from '../components.js';
  * Create component group with basic structure
  * @param {number} compId - Component ID
  * @param {string} type - Component type
- * @param {number} x - X position
- * @param {number} y - Y position
+ * @param {number} centerX - Center X position
+ * @param {number} centerY - Center Y position
  * @param {number} rotation - Rotation angle
  * @param {object} dims - Component dimensions
  * @returns {HTMLElement} Component group element
  */
-export function createComponentGroup(compId, type, x, y, rotation, dims) {
+export function createComponentGroup(compId, type, centerX, centerY, rotation, dims) {
     const ns = "http://www.w3.org/2000/svg";
     const g = document.createElementNS(ns, "g");
     g.setAttribute("class", "component");
     g.setAttribute("data-id", compId);
     g.setAttribute("data-type", type);
-    g.setAttribute("transform", `translate(${x},${y}) rotate(${rotation} ${dims.centerPoint.x} ${dims.centerPoint.y})`);
+    
+    // Convert center position to top-left corner for SVG transform
+    const svgX = centerX - dims.centerPoint.x;
+    const svgY = centerY - dims.centerPoint.y;
+    g.setAttribute("transform", `translate(${svgX},${svgY}) rotate(${rotation} ${dims.centerPoint.x} ${dims.centerPoint.y})`);
     
     return g;
 }

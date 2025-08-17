@@ -2,7 +2,7 @@
 // Handles parent-child relationships and hierarchy operations
 
 import { showTraceLines, drawTraceLines } from '../traceLines.js';
-import { showApertureRays } from '../apertureRays.js';
+import { showApertureRays } from '../rays.js';
 
 /**
  * Update component hierarchy when adding a new component

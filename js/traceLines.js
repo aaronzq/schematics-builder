@@ -4,7 +4,7 @@
 import { componentState } from './componentManager.js';
 import { componentDimensions } from './components.js';
 import { transformToGlobal } from './utils/mathUtils.js';
-import { showApertureRays, drawApertureRays, hideApertureRays } from './apertureRays.js';
+import { showApertureRays, drawApertureRays, hideApertureRays } from './rays.js';
 
 // Trace line settings
 export let showTraceLines = true;

@@ -15,14 +15,21 @@ let offsetY = 0;
 // Start dragging a component
 export function startDrag(e) {
     draggingElement = e.currentTarget;
-    const transform = draggingElement.getAttribute("transform");
-    const match = transform.match(/translate\(([^,]+),([^)]+)\)/);
-    const [x, y] = [parseFloat(match[1]), parseFloat(match[2])];
+    const componentId = draggingElement.getAttribute('data-id');
+    const componentType = draggingElement.getAttribute('data-type');
+    const dims = componentState[componentId]?.dimensions || componentDimensions[componentType];
+    
+    if (!dims) return;
     
     const cursorpt = screenToSVG(e.clientX, e.clientY);
+    const state = componentState[componentId];
     
-    offsetX = cursorpt.x - x;
-    offsetY = cursorpt.y - y;
+    // Calculate center position from current state (center-based coordinates)
+    const centerX = state.posX;
+    const centerY = state.posY;
+    
+    offsetX = cursorpt.x - centerX;
+    offsetY = cursorpt.y - centerY;
     
     document.addEventListener("mousemove", drag);
     document.addEventListener("mouseup", stopDrag);
@@ -44,39 +51,24 @@ export function drag(e) {
     
     const cursorpt = screenToSVG(e.clientX, e.clientY);
     
-    // Get component type and dimensions to find center point
-    const componentType = draggingElement.getAttribute('data-type');
-    const componentId = draggingElement.getAttribute('data-id');
-    const dims = componentState[componentId]?.dimensions || componentDimensions[componentType];
-    
-    if (!dims) return;
-    
-    // Calculate the raw SVG position (where the cursor wants to place the component origin)
-    const rawSvgX = cursorpt.x - offsetX;
-    const rawSvgY = cursorpt.y - offsetY;
-    
-    // Calculate where the center point would be with this SVG position
-    const centerX = rawSvgX + dims.centerPoint.x;
-    const centerY = rawSvgY + dims.centerPoint.y;
+    // Calculate desired center position
+    const desiredCenterX = cursorpt.x - offsetX;
+    const desiredCenterY = cursorpt.y - offsetY;
     
     // Snap the center point to the grid
-    const snappedCenter = snapToGrid(centerX, centerY, GRID_SIZE);
+    const snappedCenter = snapToGrid(desiredCenterX, desiredCenterY, GRID_SIZE);
     
-    // Calculate the SVG position that would place the center at the snapped location
-    const snappedSvgX = snappedCenter.x - dims.centerPoint.x;
-    const snappedSvgY = snappedCenter.y - dims.centerPoint.y;
-    
-    updateComponentPosition(draggingElement, snappedSvgX, snappedSvgY);
+    updateComponentPosition(draggingElement, snappedCenter.x, snappedCenter.y);
     
     // Update arrow for the dragged component (dynamic import to avoid circular dependency)
-    import('./arrowDisplay.js').then(({ showArrowForComponent }) => {
+    import('./arrows.js').then(({ showArrowForComponent }) => {
         showArrowForComponent(draggingElement);
     });
     
     // Update trace lines if they're shown (dynamic import to avoid circular dependencies)
     Promise.all([
         import('./traceLines.js'),
-        import('./apertureRays.js')
+        import('./rays.js')
     ]).then(([traceLines, apertureRays]) => {
         if (traceLines.showTraceLines || apertureRays.showApertureRays) {
             traceLines.drawTraceLines();
@@ -175,7 +167,7 @@ export function makeRotationHandleDraggable(rotationHandle, component, centerX, 
         showAngleDisplay(centerX, centerY, angle);
         
         // Update arrow and hitbox
-        import('./arrowDisplay.js').then(({ showArrowForComponent }) => {
+        import('./arrows.js').then(({ showArrowForComponent }) => {
             showArrowForComponent(component);
         });
         showHitbox(component, true);

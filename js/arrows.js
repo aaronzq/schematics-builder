@@ -34,8 +34,8 @@ export function showArrowForComponent(component) {
     if (!dims) return;
 
     // Calculate arrow start position from centerPoint (in world coordinates)
-    const centerX = state.posX + dims.centerPoint.x;
-    const centerY = state.posY + dims.centerPoint.y;
+    const centerX = state.posX; // posX now stores center X coordinate directly
+    const centerY = state.posY; // posY now stores center Y coordinate directly
     const rotation = state.rotation;
 
     // Always use the latest stored arrow endpoint for initial arrow position

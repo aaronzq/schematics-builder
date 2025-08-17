@@ -20,10 +20,10 @@ export function transformToGlobal(localX, localY, componentState) {
     const rotatedX = relativeX * cos - relativeY * sin;
     const rotatedY = relativeX * sin + relativeY * cos;
     
-    // Translate back and add world position
+    // Add to world center position (posX/posY now store center coordinates)
     return {
-        x: componentState.posX + centerX + rotatedX,
-        y: componentState.posY + centerY + rotatedY
+        x: componentState.posX + rotatedX,
+        y: componentState.posY + rotatedY
     };
 }
 

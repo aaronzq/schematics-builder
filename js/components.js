@@ -4,10 +4,10 @@
 // =============================================================================
 // This file is designed for adding/removing/modifying 
 // user-defined components. Only modify the componentDimensions and components 
-// objects below. For utility functions, see componentUtils.js
+// objects below. For utility functions, see modules/componentUtils.js
 // =============================================================================
 
-import { calculateAperturePoints } from './componentUtils.js';
+import { calculateAperturePoints } from './modules/componentUtils.js';
 import { DEFAULT_APERTURE_RADIUS, DEFAULT_CONE_ANGLE } from './constants.js';
 
 // Component dimensions definition

@@ -2,8 +2,8 @@
 // Displays a dropdown menu to change the rayShape property of selected components
 
 import { componentState } from './componentManager.js';
-import { changeComponentRayShape, getValidRayShapes } from './componentUtils.js';
-import { drawApertureRays, showApertureRays } from './apertureRays.js';
+import { changeComponentRayShape, getValidRayShapes } from './modules/componentUtils.js';
+import { drawApertureRays, showApertureRays } from './rays.js';
 
 let currentMenu = null;
 

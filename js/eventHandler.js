@@ -11,10 +11,10 @@ import {
     logComponentInfo
 } from './componentManager.js';
 import { startDrag, showHitbox } from './interactionHandler.js';
-import { showArrowForComponent, removeArrowFromComponent } from './arrowDisplay.js';
+import { showArrowForComponent, removeArrowFromComponent } from './arrows.js';
 import { toggleTraceLines, drawTraceLines, showTraceLines } from './traceLines.js';
-import { toggleApertureRays, toggleSolidRays, showApertureRays, drawApertureRays, initRayShapeMenuIntegration } from './apertureRays.js';
-import { showRayShapeMenu, hideRayShapeMenu, shouldShowRayShapeMenu } from './rayShapeMenu.js';
+import { toggleApertureRays, toggleSolidRays, showApertureRays, drawApertureRays, initRayShapeMenuIntegration } from './rays.js';
+import { showRayShapeMenu, hideRayShapeMenu, shouldShowRayShapeMenu } from './rayMenu.js';
 
 // Initialize the application
 export function initApp() {
