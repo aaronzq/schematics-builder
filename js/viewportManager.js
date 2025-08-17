@@ -14,7 +14,7 @@ export function initCanvas() {
 
     // Get the container size and set SVG size
     function resizeSVG() {
-        const workspace = document.querySelector('.workspace');
+    const workspace = document.querySelector('.workspace-area');
         const rect = workspace.getBoundingClientRect();
         svg.setAttribute('width', rect.width);
         svg.setAttribute('height', rect.height);

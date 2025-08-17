@@ -6,36 +6,59 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>Optical Schematic Builder</h2>
 
-  <div class="container">
-    <div class="sidebar">
-      <div class="toolbar">
-        <button onclick="addComponent('plane')">Plane</button>
-        <button onclick="addComponent('objective')">Objective</button>
-        <button onclick="addComponent('lens')">Lens</button>
-        <button onclick="addComponent('mirror')">Mirror</button>
-        <button onclick="addComponent('lenslet-array')">Lenslet Array</button>
-        <button onclick="addComponent('detector')">Detector</button>
-      </div>
+  <div class="main-layout">
+    <header class="title-row">
+      <h1>Optical Schematic Builder</h1>
+    </header>
+    <div class="content-row">
+      <aside class="sidebar">
+        <div class="toolbar">
+          <button onclick="addComponent('plane')">Plane</button>
+          <button onclick="addComponent('objective')">Objective</button>
+          <button onclick="addComponent('lens')">Lens</button>
+          <button onclick="addComponent('mirror')">Mirror</button>
+          <button onclick="addComponent('lenslet-array')">Lenslet Array</button>
+          <button onclick="addComponent('detector')">Detector</button>
+        </div>
+      </aside>
+      <main class="workspace-area">
+        <div class="canvas-toolbar">
+          <div class="toolbar-left">
+            <button id="trace-btn">Hide Trace Line</button>
+            <button id="rays-btn">Hide Rays</button>
+            <button id="solid-rays-btn">Both Rays</button>
+          </div>
+          <div class="toolbar-right">
+            <button id="delete-btn">Delete Selected</button>
+            <button id="hide-component-btn">Hide Component</button>
+            <button id="show-component-btn">Show Component</button>
+            <button id="show-all-components-btn">Show All Components</button>
+          </div>
+        </div>
+        <div class="canvas-container">
+          <svg id="canvas">
+            <defs>
+              <!-- Component definitions will go here -->
+            </defs>
+            <g id="grid"></g>
+            <g id="components"></g>
+          </svg>
+        </div>
+      </main>
     </div>
-    <div class="workspace">
-      <svg id="canvas">
-        <defs>
-          <!-- Component definitions will go here -->
-        </defs>
-        <g id="grid"></g>
-        <g id="components"></g>
-      </svg>
-    </div>
+    <section class="instructions-row">
+      <h2>How to Use</h2>
+      <ol>
+        <li>Select a component from the left sidebar to add it to the canvas.</li>
+        <li>Arrow indicates the position to spawn next component. Adjust arrow if needed.</li>
+        <li>You can drag, rotate and change ray shape for each component. Just click on the component to reveal interaction handles. </li>
+        <li>Use the buttons above the canvas to delete, hide, or show components and rays.</li>
+        <li>Refresh webpage to start over.</li>
+        <li>Tips: use Plane and Hide Component to achieve 4F system layout.</li>
+      </ol>
+    </section>
   </div>
-  <button id="delete-btn" style="position: absolute; top: 10px; right: 10px; z-index: 10;">Delete Selected</button>
-  <button id="trace-btn" style="position: absolute; top: 10px; right: 140px; z-index: 10;">Hide Trace Line</button>
-  <button id="rays-btn" style="position: absolute; top: 10px; right: 270px; z-index: 10;">Hide Rays</button>
-  <button id="solid-rays-btn" style="position: absolute; top: 10px; right: 370px; z-index: 10;">Both Rays</button>
-  <button id="hide-component-btn" style="position: absolute; top: 50px; right: 10px; z-index: 10;">Hide Component</button>
-  <button id="show-component-btn" style="position: absolute; top: 50px; right: 140px; z-index: 10;">Show Component</button>
-  <button id="show-all-components-btn" style="position: absolute; top: 50px; right: 270px; z-index: 10;">Show All Components</button>
   <script type="module" src="js/main.js"></script>
 </body>
 </html>

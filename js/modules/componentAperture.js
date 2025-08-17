@@ -339,47 +339,36 @@ function calculateConeAngleFromGeometry(childState, parentState, centerLineLengt
         if (logDetails) console.warn('Cannot calculate cone angle: center line length is zero');
         return null;
     }
-    
-    const childDims = childState.dimensions;
-    const currentApertureRadius = childDims.apertureRadius || 0;
-    
-    if (currentApertureRadius === 0) {
-        if (logDetails) console.warn('Cannot calculate cone angle: aperture radius is zero');
-        return null;
-    }
-    
-    // Get projection factor to account for component orientation
+
+    // Use parent's aperture projection (not child's) for convergent cone angle calculation
     const projections = calculateProjections_internal(childState, parentState);
     if (!projections) {
         if (logDetails) console.warn('Could not calculate projections for cone angle calculation');
         return null;
     }
-    
-    const childUpProjectionFactor = projections.child.upProjectionFactor;
-    if (childUpProjectionFactor === 0) {
-        if (logDetails) console.warn('Cannot calculate cone angle: up projection factor is zero');
+    const parentApertureProjection = projections.parent.apertureProjection;
+
+    if (parentApertureProjection === 0) {
+        if (logDetails) console.warn('Cannot calculate cone angle: parent aperture projection is zero');
         return null;
     }
-    
-    // Calculate effective aperture projection
-    const effectiveApertureProjection = currentApertureRadius * childUpProjectionFactor;
-    
-    // Calculate cone angle: arctan(apertureProjection / centerLineLength)
-    const coneAngleRad = Math.atan(effectiveApertureProjection / centerLineLength);
+
+    // For convergent rays, cone angle = atan(parentApertureProjection / centerLineLength)
+    const coneAngleRad = Math.atan(parentApertureProjection / centerLineLength);
     const coneAngleDeg = coneAngleRad * 180 / Math.PI;
-    
+
     // Validate calculated cone angle
     if (coneAngleDeg < 0 || coneAngleDeg > 90) {
         if (logDetails) console.warn(`Calculated cone angle ${coneAngleDeg.toFixed(2)}° is out of valid range (0-90°)`);
         return null;
     }
-    
+
     if (logDetails) {
-        console.log(`  Geometry calculation: aperture=${currentApertureRadius.toFixed(2)}, projection=${effectiveApertureProjection.toFixed(2)}`);
+        console.log(`  Geometry calculation (parent aperture projection): parentApertureProjection=${parentApertureProjection.toFixed(2)}`);
         console.log(`  Center line length: ${centerLineLength.toFixed(2)}`);
-        console.log(`  Calculated cone angle: arctan(${effectiveApertureProjection.toFixed(2)}/${centerLineLength.toFixed(2)}) = ${coneAngleDeg.toFixed(2)}°`);
+        console.log(`  Calculated cone angle: arctan(${parentApertureProjection.toFixed(2)}/${centerLineLength.toFixed(2)}) = ${coneAngleDeg.toFixed(2)}°`);
     }
-    
+
     return coneAngleDeg;
 }
 

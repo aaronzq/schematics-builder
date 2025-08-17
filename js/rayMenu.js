@@ -1,10 +1,11 @@
 // Ray shape menu for selected components
 // Displays a dropdown menu to change the rayShape property of selected components
 
-import { componentState } from './componentManager.js';
+import { componentState, getComponentById } from './componentManager.js';
 import { changeComponentRayShape, getValidRayShapes, setConeAngle } from './modules/componentUtils.js';
 import { calculateOptimalAperture } from './modules/componentAperture.js';
 import { drawApertureRays, showApertureRays } from './rays.js';
+import { updateAperturePointDrawings } from './modules/componentRenderer.js';
 
 let currentMenu = null;
 
@@ -136,28 +137,51 @@ export function hideRayShapeMenu() {
 function selectRayShape(componentId, newRayShape) {
     const state = componentState[componentId];
     if (!state) return;
-    
+
     const oldRayShape = state.dimensions.rayShape || 'collimated';
-    
+
     // Update the component's dimensions with the new ray shape
-    const newDimensions = changeComponentRayShape(state.dimensions, newRayShape);
-    state.dimensions = newDimensions;
-    
+    let newDimensions = changeComponentRayShape(state.dimensions, newRayShape);
+
     // If changing from collimated to divergent/convergent, immediately update cone angle
     if (oldRayShape === 'collimated' && (newRayShape === 'divergent' || newRayShape === 'convergent')) {
+        state.dimensions = newDimensions;
         updateConeAngleForRayShapeChange(state);
     }
-    // If changing to collimated, reset cone angle to 0
+    // If changing to collimated, immediately adjust aperture to match parent's projection
     else if (newRayShape === 'collimated') {
-        state.dimensions = setConeAngle(state.dimensions, 0);
-        console.log(`Component ${componentId} cone angle reset to 0° (collimated)`);
+        if (state.parentId !== null) {
+            const parentState = componentState[state.parentId];
+            if (parentState) {
+                // Use the collimated policy to get the correct aperture
+                const optimizedDims = calculateOptimalAperture(
+                    { ...state, dimensions: newDimensions },
+                    parentState,
+                    true
+                );
+                if (optimizedDims) {
+                    newDimensions = optimizedDims;
+                }
+            }
+        }
+        newDimensions = setConeAngle(newDimensions, 0);
+        state.dimensions = newDimensions;
+        console.log(`Component ${componentId} aperture and cone angle adjusted for collimated ray shape`);
+    } else {
+        state.dimensions = newDimensions;
     }
-    
+
+    // Update debug aperture points visually
+    const compElem = getComponentById(componentId);
+    if (compElem) {
+        updateAperturePointDrawings(compElem, state.dimensions);
+    }
+
     // Redraw aperture rays if they are currently shown
     if (showApertureRays) {
         drawApertureRays();
     }
-    
+
     console.log(`Component ${componentId} ray shape changed from ${oldRayShape} to ${newRayShape}`);
 }
 
