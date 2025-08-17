@@ -2,9 +2,11 @@
 // Displays a dropdown menu to change the rayShape property of selected components
 
 import { componentState, getComponentById } from './componentManager.js';
+import { DEFAULT_SOLID_RAY_COLOR } from './constants.js';
+import { drawApertureRays } from './rays.js';
 import { changeComponentRayShape, getValidRayShapes, setConeAngle } from './modules/componentUtils.js';
 import { calculateOptimalAperture } from './modules/componentAperture.js';
-import { drawApertureRays, showApertureRays } from './rays.js';
+import { showApertureRays } from './rays.js';
 import { updateAperturePointDrawings } from './modules/componentRenderer.js';
 
 let currentMenu = null;
@@ -98,10 +100,68 @@ export function showRayShapeMenu(component) {
         menu.appendChild(option);
     });
     
+    // --- Add Solid Ray Color title and color picker row ---
+    const colorTitle = document.createElement('div');
+    colorTitle.textContent = 'Solid Ray Color:';
+    colorTitle.style.fontWeight = 'bold';
+    colorTitle.style.padding = '4px 8px';
+    colorTitle.style.borderBottom = '1px solid #eee';
+    colorTitle.style.margin = '8px 0 2px 0';
+    menu.appendChild(colorTitle);
+
+    const colorRow = document.createElement('div');
+    colorRow.className = 'ray-shape-option';
+    colorRow.style.display = 'flex';
+    colorRow.style.alignItems = 'center';
+    colorRow.style.padding = '4px 8px';
+    colorRow.style.borderRadius = '2px';
+
+    const colorInput = document.createElement('input');
+    colorInput.type = 'color';
+    colorInput.title = 'Change solid ray polygon color';
+    colorInput.style.width = '28px';
+    colorInput.style.height = '22px';
+    colorInput.style.border = 'none';
+    colorInput.style.background = 'none';
+    colorInput.style.cursor = 'pointer';
+    colorInput.style.padding = '0';
+
+    // Always use the color currently used for drawing (from state), normalizing to #RRGGBB if needed
+    let colorValue = state.rayPolygonColor;
+    if (typeof colorValue === 'string') {
+        // Add # if missing and valid hex
+        if (/^[0-9A-Fa-f]{6}$/.test(colorValue)) {
+            colorValue = '#' + colorValue;
+        }
+        // Accept #RRGGBB
+        else if (/^#([0-9A-Fa-f]{6})$/.test(colorValue)) {
+            // already valid
+        } else {
+            colorValue = null;
+        }
+    } else {
+        colorValue = null;
+    }
+    // Only fallback to default if truly missing or invalid
+    if (!colorValue) {
+        colorValue = DEFAULT_SOLID_RAY_COLOR;
+    }
+
+    colorInput.addEventListener('input', (e) => {
+        state.rayPolygonColor = colorInput.value;
+        componentState[compId].rayPolygonColor = colorInput.value;
+        drawApertureRays();
+    });
+
+    colorRow.appendChild(colorInput);
+    menu.appendChild(colorRow);
+    // Set value after appending to DOM to avoid browser quirks
+    setTimeout(() => { colorInput.value = colorValue; }, 0);
+
     // Add to document
     document.body.appendChild(menu);
     currentMenu = menu;
-    
+
     // Position adjustment if menu goes off screen
     const menuRect = menu.getBoundingClientRect();
     if (menuRect.right > window.innerWidth) {
@@ -110,7 +170,7 @@ export function showRayShapeMenu(component) {
     if (menuRect.bottom > window.innerHeight) {
         menu.style.top = `${menuY - menuRect.height - componentRect.height - 20}px`;
     }
-    
+
     // Close menu when clicking outside
     const closeHandler = (e) => {
         if (!menu.contains(e.target)) {
@@ -118,7 +178,7 @@ export function showRayShapeMenu(component) {
             document.removeEventListener('click', closeHandler);
         }
     };
-    
+
     // Add slight delay to prevent immediate closing
     setTimeout(() => {
         document.addEventListener('click', closeHandler);

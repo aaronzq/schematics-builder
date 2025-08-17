@@ -1,3 +1,4 @@
+
 // Application constants
 // Centralized configuration values used across multiple modules
 
@@ -23,6 +24,9 @@ export const ARROW_COLOR = "#2196F3";
 export const ARROW_STROKE_WIDTH = 3;
 export const ROTATION_HANDLE_COLOR = "#ffe082";
 export const ROTATION_HANDLE_STROKE = "#fbc02d";
+
+// Default color for solid ray
+export const DEFAULT_SOLID_RAY_COLOR = '#00ffff';
 
 // Vector visualization
 export const UP_VECTOR_LENGTH = 60;

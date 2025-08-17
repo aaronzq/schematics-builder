@@ -62,6 +62,7 @@ import { flipUpVector } from './modules/componentUtils.js';
 import { updateTraceLines } from './traceLines.js';
 import { validateComponentType } from './utils/validators.js';
 import { HIDDEN_COMPONENT_OPACITY, VISIBLE_COMPONENT_OPACITY } from './constants.js';
+import { DEFAULT_SOLID_RAY_COLOR } from './constants.js';
 
 // Import focused modules
 import { calculateComponentPlacement, calculateArrowEndpoint } from './modules/componentPlacement.js';
@@ -160,7 +161,8 @@ export function addComponent(type) {
         type: type,
         dimensions: dims,
         parentId: null,
-        children: []
+        children: [],
+        rayPolygonColor: DEFAULT_SOLID_RAY_COLOR
     };
 
     // Update hierarchy and next position
@@ -317,8 +319,10 @@ export function logComponentInfo(compId) {
         const lowerPos = aperturePoints ? `(${aperturePoints.lower.x.toFixed(1)}, ${aperturePoints.lower.y.toFixed(1)})` : 'undefined';
         const rayShape = state.dimensions.rayShape || 'unknown';
         const coneAngle = state.dimensions.coneAngle !== undefined ? `${state.dimensions.coneAngle.toFixed(1)}°` : 'undefined';
+        const rayPolygonColor = state.rayPolygonColor || '(default)';
         console.log(`  Aperture: Radius=${state.dimensions.apertureRadius.toFixed(2)} | Upper=${upperPos} | Lower=${lowerPos}`);
         console.log(`  Ray Shape: ${rayShape} | Cone Angle: ${coneAngle}`);
+        console.log(`  Solid Ray Color: ${rayPolygonColor}`);
     }
 }
 

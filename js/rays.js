@@ -2,6 +2,7 @@
 // Handles drawing blue dashed lines connecting aperture points between components
 
 import { componentState } from './componentManager.js';
+import { DEFAULT_SOLID_RAY_COLOR } from './constants.js';
 import { transformToGlobal } from './utils/mathUtils.js';
 
 // Import will be added when the module is loaded to avoid circular dependencies
@@ -96,7 +97,26 @@ export function drawApertureRays() {
             const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
             const points = `${upperRayStart.x},${upperRayStart.y} ${upperRayEnd.x},${upperRayEnd.y} ${lowerRayEnd.x},${lowerRayEnd.y} ${lowerRayStart.x},${lowerRayStart.y}`;
             polygon.setAttribute("points", points);
-            polygon.setAttribute("fill", "blue");
+            // Use per-component color if set, else default to DEFAULT_SOLID_RAY_COLOR, and normalize to #RRGGBB
+            let fillColor = state.rayPolygonColor;
+            if (typeof fillColor === 'string') {
+                // Add # if missing and valid hex
+                if (/^[0-9A-Fa-f]{6}$/.test(fillColor)) {
+                    fillColor = '#' + fillColor;
+                }
+                // Accept #RRGGBB
+                else if (/^#([0-9A-Fa-f]{6})$/.test(fillColor)) {
+                    // already valid
+                } else {
+                    fillColor = null;
+                }
+            } else {
+                fillColor = null;
+            }
+            if (!fillColor) {
+                fillColor = DEFAULT_SOLID_RAY_COLOR;
+            }
+            polygon.setAttribute("fill", fillColor);
             polygon.setAttribute("fill-opacity", "0.2");
             polygon.setAttribute("stroke", "none");
             polygon.setAttribute("pointer-events", "none");
@@ -111,7 +131,7 @@ export function drawApertureRays() {
             upperLine.setAttribute("y1", upperRayStart.y);
             upperLine.setAttribute("x2", upperRayEnd.x);
             upperLine.setAttribute("y2", upperRayEnd.y);
-            upperLine.setAttribute("stroke", "blue");
+            upperLine.setAttribute("stroke", "black");
             upperLine.setAttribute("stroke-width", "1");
             upperLine.setAttribute("stroke-dasharray", "3,3");
             upperLine.setAttribute("pointer-events", "none");
@@ -123,7 +143,7 @@ export function drawApertureRays() {
             lowerLine.setAttribute("y1", lowerRayStart.y);
             lowerLine.setAttribute("x2", lowerRayEnd.x);
             lowerLine.setAttribute("y2", lowerRayEnd.y);
-            lowerLine.setAttribute("stroke", "blue");
+            lowerLine.setAttribute("stroke", "black");
             lowerLine.setAttribute("stroke-width", "1");
             lowerLine.setAttribute("stroke-dasharray", "3,3");
             lowerLine.setAttribute("pointer-events", "none");
