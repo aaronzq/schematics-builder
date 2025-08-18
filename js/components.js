@@ -48,6 +48,30 @@ export const componentDimensions = {
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
+    plate: { 
+        width: 60, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 }, // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
+    cube: { 
+        width: 84, 
+        height: 84, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 }, // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
     detector: { 
         width: 56, 
         height: 80, 
@@ -190,7 +214,50 @@ export const components = {
             return g;
         }
     },
+
+    plate: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            // Plate
+            const plate = document.createElementNS(ns, "path");
+            plate.setAttribute("d", "M -3 -30 L 3 -30 L 3 30 L -3 30 Z");
+            plate.setAttribute("stroke", "black");
+            plate.setAttribute("stroke-width", "1.5");
+            plate.setAttribute("fill", "#145ec0");
+            plate.setAttribute("fill-opacity", "0.4");
+            g.appendChild(plate);
+
+            return g;
+        }
+    },
     
+    cube: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            // Cube
+            const cube = document.createElementNS(ns, "path");
+            cube.setAttribute("d", "M 0 -42 L -42 0 L 0 42 L 42 0 Z");
+            cube.setAttribute("stroke", "black");
+            cube.setAttribute("stroke-width", "1.5");
+            cube.setAttribute("fill", "#145ec0");
+            cube.setAttribute("fill-opacity", "0.4");
+            g.appendChild(cube);
+
+            const surface = document.createElementNS(ns, "line");
+            surface.setAttribute("x1", "0");
+            surface.setAttribute("y1", "-42");
+            surface.setAttribute("x2", "0");
+            surface.setAttribute("y2", "42");
+            surface.setAttribute("stroke", "black");
+            surface.setAttribute("stroke-width", "2.5");
+            g.appendChild(surface);
+
+            return g;
+        }
+    }, 
+
     detector: {
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
