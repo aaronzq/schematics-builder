@@ -1,3 +1,4 @@
+
 // Event handlers and application initialization
 // Centralized event management and application startup
 
@@ -60,8 +61,32 @@ function setupGlobalEventListeners() {
     });
 }
 
+// Deselect all components (for use before export)
+export function deselectAllComponents() {
+    const selectedComponent = getSelectedComponent();
+    if (selectedComponent) {
+        const compId = selectedComponent.getAttribute('data-id');
+        componentState[compId].selected = false;
+        showHitbox(selectedComponent, false);
+        removeArrowFromComponent(selectedComponent);
+        setSelectedComponent(null);
+        hideRayShapeMenu();
+    }
+}
+
 // Set up UI button event listeners
 function setupUIEventListeners() {
+    // Export SVG button
+    const exportSvgBtn = document.getElementById('export-svg-btn');
+    if (exportSvgBtn) {
+        exportSvgBtn.addEventListener('click', () => {
+            import('./utils/exportUtils.js').then(mod => {
+                if (mod.exportCanvasAsSVG) {
+                    mod.exportCanvasAsSVG();
+                }
+            });
+        });
+    }
     // Flip Horizontal button
     const flipHBtn = document.getElementById('flip-horizontal-btn');
     if (flipHBtn) {

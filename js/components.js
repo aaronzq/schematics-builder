@@ -97,7 +97,7 @@ export const components = {
             lens.setAttribute("d", "M 0 -30 C 6 -27 6 27 0 30 C -6 27 -6 -27 0 -30");
             lens.setAttribute("stroke", "black");
             lens.setAttribute("stroke-width", "1.5");
-            lens.setAttribute("fill", "#145ec0ff");
+            lens.setAttribute("fill", "#145ec0");
             lens.setAttribute("fill-opacity", "0.3");
             g.appendChild(lens);
             return g;
@@ -144,7 +144,7 @@ export const components = {
             rearBarrel.setAttribute("y", -30);
             rearBarrel.setAttribute("width", 90);
             rearBarrel.setAttribute("height", 60);
-            rearBarrel.setAttribute("fill", "#888");
+            rearBarrel.setAttribute("fill", "#888888");
             rearBarrel.setAttribute("stroke", "black");
             rearBarrel.setAttribute("stroke-width", "1.5");
             g.appendChild(rearBarrel);
@@ -155,7 +155,8 @@ export const components = {
             endCap.setAttribute("y", -21);
             endCap.setAttribute("width", 8);
             endCap.setAttribute("height", 42);
-            endCap.setAttribute("fill", "#686868ff");
+            endCap.setAttribute("fill", "#686868");
+            endCap.setAttribute("fill-opacity", "1");
             endCap.setAttribute("stroke", "black");
             endCap.setAttribute("stroke-width", "1.5");
             g.appendChild(endCap);
@@ -173,7 +174,7 @@ export const components = {
             mirror.setAttribute("d", "M -3 -30 L 3 -30 L 3 30 L -3 30 Z");
             mirror.setAttribute("stroke", "black");
             mirror.setAttribute("stroke-width", "1.5");
-            mirror.setAttribute("fill", "#145ec0ff");
+            mirror.setAttribute("fill", "#145ec0");
             mirror.setAttribute("fill-opacity", "0.4");
             g.appendChild(mirror);
 
@@ -249,7 +250,7 @@ export const components = {
             connector.setAttribute("y", -25);
             connector.setAttribute("width", 6);
             connector.setAttribute("height", 16);
-            connector.setAttribute("fill", "#555");
+            connector.setAttribute("fill", "#555555");
             connector.setAttribute("stroke", "black");
             g.appendChild(connector);
 
@@ -274,7 +275,7 @@ export const components = {
                 lens.setAttribute("d", `M 0 ${yOffset - height} C ${curve} ${yOffset - height + 3*scale} ${curve} ${yOffset + height - 3*scale} 0 ${yOffset + height} C ${-curve} ${yOffset + height - 3*scale} ${-curve} ${yOffset - height + 3*scale} 0 ${yOffset - height}`);
                 lens.setAttribute("stroke", "black");
                 lens.setAttribute("stroke-width", "1");
-                lens.setAttribute("fill", "#145ec0ff");
+                lens.setAttribute("fill", "#145ec0");
                 lens.setAttribute("fill-opacity", "0.3");
                 g.appendChild(lens);
             }
