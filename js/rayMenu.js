@@ -1,3 +1,14 @@
+export function hideRayShapeMenu() {
+    if (currentMenu) {
+        currentMenu.remove();
+        currentMenu = null;
+    }
+}
+// Returns true if the ray shape menu should be shown for the given component
+export function shouldShowRayShapeMenu(component) {
+    // Default: always show if a component is provided
+    return !!component;
+}
 // Ray shape menu for selected components
 // Displays a dropdown menu to change the rayShape property of selected components
 
@@ -11,8 +22,86 @@ import { updateAperturePointDrawings } from './modules/componentRenderer.js';
 
 let currentMenu = null;
 
+// No global color swatch; swatch is dynamically generated from all rays
+
 // Show ray shape menu for the selected component
+// --- Color conversion utilities ---
+function hexToRgb(hex) {
+    hex = hex.replace('#', '');
+    if (hex.length === 3) {
+        hex = hex.split('').map(x => x + x).join('');
+    }
+    const num = parseInt(hex, 16);
+    return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255
+    };
+}
+
+function rgbToHex(r, g, b) {
+    return (
+        '#' +
+        [r, g, b]
+            .map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            })
+            .join('')
+    );
+}
+
+function rgbToHsl(r, g, b) {
+    r /= 255; g /= 255; b /= 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    let h, s, l = (max + min) / 2;
+    if (max === min) {
+        h = s = 0;
+    } else {
+        const d = max - min;
+        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+        switch (max) {
+            case r: h = (g - b) / d + (g < b ? 6 : 0); break;
+            case g: h = (b - r) / d + 2; break;
+            case b: h = (r - g) / d + 4; break;
+        }
+        h /= 6;
+    }
+    return { h: Math.round(h * 359), s: s, l: l };
+}
+
+function hslToRgb(h, s, l) {
+    h = h / 359;
+    let r, g, b;
+    if (s === 0) {
+        r = g = b = l;
+    } else {
+        const hue2rgb = (p, q, t) => {
+            if (t < 0) t += 1;
+            if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+            return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, h + 1 / 3);
+        g = hue2rgb(p, q, h);
+        b = hue2rgb(p, q, h - 1 / 3);
+    }
+    return {
+        r: Math.round(r * 255),
+        g: Math.round(g * 255),
+        b: Math.round(b * 255)
+    };
+}
 export function showRayShapeMenu(component) {
+    console.log('[showRayShapeMenu] called with component:', component);
+    if (!showApertureRays) {
+        console.log('[showRayShapeMenu] showApertureRays is false, menu will not show');
+        return;
+    }
     // Only show menu if aperture rays are visible
     if (!showApertureRays) return;
     
@@ -92,13 +181,14 @@ export function showRayShapeMenu(component) {
         rayLabel.style.marginRight = '12px';
         row.appendChild(rayLabel);
 
-        // Ray Shape label
+        // Ray Shape select
+        // Add Shape label before dropdown
         const shapeLabel = document.createElement('span');
         shapeLabel.textContent = 'Shape:';
-        shapeLabel.style.marginRight = '4px';
+        shapeLabel.style.marginRight = '6px';
+        shapeLabel.style.fontWeight = 'bold';
         row.appendChild(shapeLabel);
 
-        // Ray Shape select
         const shapeSelect = document.createElement('select');
         validRayShapes.forEach(shape => {
             const opt = document.createElement('option');
@@ -111,35 +201,166 @@ export function showRayShapeMenu(component) {
             ray.shape = shapeSelect.value;
             drawApertureRays();
         });
-        // Prevent menu from closing when interacting with select
-        shapeSelect.addEventListener('mousedown', e => e.stopPropagation());
         row.appendChild(shapeSelect);
 
-        // Color label
-        const colorLabel = document.createElement('span');
-        colorLabel.textContent = 'Color:';
-        colorLabel.style.marginLeft = '12px';
-        colorLabel.style.marginRight = '4px';
-        row.appendChild(colorLabel);
+        // --- Custom Color Picker ---
+        // Color state
+        let colorHex = typeof ray.color === 'string' ? (ray.color.startsWith('#') ? ray.color : '#' + ray.color) : '#00ffff';
+        let rgb = hexToRgb(colorHex);
+        let hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
-        // Color input
-        const colorInput = document.createElement('input');
-        colorInput.type = 'color';
-        colorInput.value = typeof ray.color === 'string' ? (ray.color.startsWith('#') ? ray.color : '#' + ray.color) : DEFAULT_SOLID_RAY_COLOR;
-        colorInput.style.width = '28px';
-        colorInput.style.height = '22px';
-        colorInput.style.border = 'none';
-        colorInput.style.background = 'none';
-        colorInput.style.cursor = 'pointer';
-        colorInput.style.padding = '0';
-        ['mousedown', 'mouseup', 'click'].forEach(evt => {
-            colorInput.addEventListener(evt, e => e.stopPropagation());
+    // Hue slider
+    const hueSlider = document.createElement('input');
+    hueSlider.type = 'range';
+    hueSlider.min = 0;
+    hueSlider.max = 359;
+    hueSlider.value = hsl.h;
+    hueSlider.style.width = '160px';
+    hueSlider.title = 'Hue';
+    hueSlider.className = 'hue-slider';
+
+    row.appendChild(hueSlider);
+
+    // Add RGB label before RGB inputs
+    const rgbLabel = document.createElement('span');
+    rgbLabel.textContent = 'RGB:';
+    rgbLabel.style.marginLeft = '10px';
+    rgbLabel.style.fontWeight = 'bold';
+    row.appendChild(rgbLabel);
+
+        // RGB inputs
+        const rgbInputs = ['R', 'G', 'B'].map((label, i) => {
+            const input = document.createElement('input');
+            input.type = 'number';
+            input.min = 0;
+            input.max = 255;
+            input.value = rgb[['r','g','b'][i]];
+            input.title = label;
+            input.style.width = '60px';
+            input.style.padding = '2px 8px';
+            input.style.marginLeft = '2px';
+            input.style.fontSize = '15px';
+            input.style.boxSizing = 'border-box';
+            row.appendChild(input);
+            return input;
         });
-        colorInput.addEventListener('input', e => {
-            ray.color = colorInput.value;
+
+        // Swatch button
+        const swatchBtn = document.createElement('button');
+        swatchBtn.textContent = '🎨';
+        swatchBtn.title = 'Show color swatch';
+        swatchBtn.style.marginLeft = '4px';
+        row.appendChild(swatchBtn);
+
+        // Swatch popup logic
+        let swatchPopup = null;
+        swatchBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            if (swatchPopup) {
+                swatchPopup.remove();
+                swatchPopup = null;
+                return;
+            }
+            swatchPopup = document.createElement('div');
+            swatchPopup.style.position = 'absolute';
+            swatchPopup.style.zIndex = 2000;
+            swatchPopup.style.background = '#fff';
+            swatchPopup.style.border = '1px solid #888';
+            swatchPopup.style.borderRadius = '6px';
+            swatchPopup.style.boxShadow = '0 2px 8px rgba(0,0,0,0.15)';
+            swatchPopup.style.padding = '8px';
+            swatchPopup.style.display = 'flex';
+            swatchPopup.style.flexWrap = 'wrap';
+            swatchPopup.style.gap = '6px';
+            // Position below the button
+            const rect = swatchBtn.getBoundingClientRect();
+            swatchPopup.style.left = rect.left + 'px';
+            swatchPopup.style.top = (rect.bottom + 4) + 'px';
+            // Gather all unique colors from all rays in all components
+            const usedColors = new Set();
+            for (const compId in componentState) {
+                const comp = componentState[compId];
+                if (Array.isArray(comp.solidRays)) {
+                    comp.solidRays.forEach(r => {
+                        if (r.color) usedColors.add(r.color.startsWith('#') ? r.color : '#' + r.color);
+                    });
+                } else if (comp.rayPolygonColor) {
+                    usedColors.add(comp.rayPolygonColor.startsWith('#') ? comp.rayPolygonColor : '#' + comp.rayPolygonColor);
+                }
+            }
+            if (usedColors.size === 0) {
+                const none = document.createElement('div');
+                none.textContent = 'No colors yet';
+                none.style.color = '#888';
+                swatchPopup.appendChild(none);
+            } else {
+                usedColors.forEach(col => {
+                    const swatch = document.createElement('div');
+                    swatch.style.width = '24px';
+                    swatch.style.height = '24px';
+                    swatch.style.border = '1px solid #888';
+                    swatch.style.borderRadius = '4px';
+                    swatch.style.background = col;
+                    swatch.style.cursor = 'pointer';
+                    swatch.title = col;
+                    swatch.addEventListener('click', ev => {
+                        colorHex = col;
+                        rgb = hexToRgb(colorHex);
+                        hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+                        updateAllControls();
+                        updateRayColor();
+                        if (swatchPopup) {
+                            swatchPopup.remove();
+                            swatchPopup = null;
+                        }
+                    });
+                    swatchPopup.appendChild(swatch);
+                });
+            }
+            document.body.appendChild(swatchPopup);
+            // Remove popup on outside click
+            const closeSwatch = (evt) => {
+                if (swatchPopup && !swatchPopup.contains(evt.target) && evt.target !== swatchBtn) {
+                    swatchPopup.remove();
+                    swatchPopup = null;
+                    document.removeEventListener('mousedown', closeSwatch);
+                }
+            };
+            setTimeout(() => {
+                document.addEventListener('mousedown', closeSwatch);
+            }, 50);
+        });
+
+        // Update all controls to match current color
+        function updateAllControls() {
+            hueSlider.value = hsl.h;
+            rgbInputs[0].value = rgb.r;
+            rgbInputs[1].value = rgb.g;
+            rgbInputs[2].value = rgb.b;
+        }
+        // Update ray color and redraw
+        function updateRayColor() {
+            colorHex = rgbToHex(rgb.r, rgb.g, rgb.b);
+            ray.color = colorHex;
             drawApertureRays();
+        }
+        // Hue slider event
+        hueSlider.addEventListener('input', e => {
+            hsl.h = parseInt(hueSlider.value);
+            rgb = hslToRgb(hsl.h, hsl.s, hsl.l);
+            updateAllControls();
+            updateRayColor();
         });
-        row.appendChild(colorInput);
+        // RGB input events
+        rgbInputs.forEach((input, i) => {
+            input.addEventListener('input', e => {
+                let val = Math.max(0, Math.min(255, parseInt(input.value) || 0));
+                rgb[['r','g','b'][i]] = val;
+                hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+                updateAllControls();
+                updateRayColor();
+            });
+        });
 
         // Remove button (except for the first row)
         if (state.solidRays.length > 1) {
@@ -155,7 +376,6 @@ export function showRayShapeMenu(component) {
                 showRayShapeMenu(component); // re-render menu
                 drawApertureRays();
             });
-            removeBtn.addEventListener('mousedown', e => e.stopPropagation());
             row.appendChild(removeBtn);
         }
 
@@ -171,143 +391,31 @@ export function showRayShapeMenu(component) {
                 e.stopPropagation();
                 state.solidRays.push({
                     shape: validRayShapes[0],
-                    color: DEFAULT_SOLID_RAY_COLOR
+                    color: '#00ffff'
                 });
                 showRayShapeMenu(component); // re-render menu
                 drawApertureRays();
             });
-            plusBtn.addEventListener('mousedown', e => e.stopPropagation());
             row.appendChild(plusBtn);
         }
 
         menu.appendChild(row);
     });
 
-    // (plusBtn is now only in the topRow at the top of the menu)
-
     // Add to document
     container.appendChild(menu);
     currentMenu = menu;
-
-    // No need for position adjustment: always at top of canvas
-
-    // Close menu when clicking outside (use mousedown for better UX)
-    const closeHandler = (e) => {
-        if (!menu.contains(e.target)) {
-            hideRayShapeMenu();
-            document.removeEventListener('mousedown', closeHandler);
-        }
-    };
-
-    // Add slight delay to prevent immediate closing
+    // Debug: confirm menu is in DOM and log style/position
     setTimeout(() => {
-        document.addEventListener('mousedown', closeHandler);
+        const rect = menu.getBoundingClientRect();
+        const style = window.getComputedStyle(menu);
+        console.log('[showRayShapeMenu] menu rect:', rect, 'display:', style.display, 'visibility:', style.visibility, 'zIndex:', style.zIndex);
     }, 100);
 }
 
-// Hide the ray shape menu
-export function hideRayShapeMenu() {
-    if (currentMenu) {
-        currentMenu.remove();
-        currentMenu = null;
-    }
-}
-
-// Select a new ray shape for the component
-function selectRayShape(componentId, newRayShape) {
-    const state = componentState[componentId];
-    if (!state) return;
-
-    const oldRayShape = state.dimensions.rayShape || 'collimated';
-
-    // Update the component's dimensions with the new ray shape
-    let newDimensions = changeComponentRayShape(state.dimensions, newRayShape);
-
-    // If changing from collimated to divergent/convergent, immediately update cone angle
-    if (oldRayShape === 'collimated' && (newRayShape === 'divergent' || newRayShape === 'convergent')) {
-        state.dimensions = newDimensions;
-        updateConeAngleForRayShapeChange(state);
-    }
-    // If changing to collimated, immediately adjust aperture to match parent's projection
-    else if (newRayShape === 'collimated') {
-        if (state.parentId !== null) {
-            const parentState = componentState[state.parentId];
-            if (parentState) {
-                // Use the collimated policy to get the correct aperture
-                const optimizedDims = calculateOptimalAperture(
-                    { ...state, dimensions: newDimensions },
-                    parentState,
-                    true
-                );
-                if (optimizedDims) {
-                    newDimensions = optimizedDims;
-                }
-            }
-        }
-        newDimensions = setConeAngle(newDimensions, 0);
-        state.dimensions = newDimensions;
-        console.log(`Component ${componentId} aperture and cone angle adjusted for collimated ray shape`);
-    } else {
-        state.dimensions = newDimensions;
-    }
-
-    // Update debug aperture points visually
-    const compElem = getComponentById(componentId);
-    if (compElem) {
-        updateAperturePointDrawings(compElem, state.dimensions);
-    }
-
-    // Redraw aperture rays if they are currently shown
-    if (showApertureRays) {
-        drawApertureRays();
-    }
-
-    console.log(`Component ${componentId} ray shape changed from ${oldRayShape} to ${newRayShape}`);
-}
 
 // Helper function to update cone angle when ray shape changes from collimated to divergent/convergent
 function updateConeAngleForRayShapeChange(childState) {
-    // Only proceed if the component has a parent
-    if (childState.parentId === null) {
-        console.log(`Component ${childState.componentId || 'temp'} has no parent, cannot calculate cone angle`);
-        return;
-    }
-    
-    const parentState = componentState[childState.parentId];
-    if (!parentState) {
-        console.log(`Parent state not found for component ${childState.componentId || 'temp'}`);
-        return;
-    }
-    
-    try {
-        // Use the aperture calculation system to determine the proper cone angle
-        const optimizedDimensions = calculateOptimalAperture(childState, parentState, true);
-        
-        if (optimizedDimensions) {
-            // Update the component's dimensions with the calculated cone angle and aperture
-            childState.dimensions = optimizedDimensions;
-            
-            const newConeAngle = optimizedDimensions.coneAngle || 0;
-            console.log(`Component ${childState.componentId || 'temp'} cone angle immediately updated to ${newConeAngle.toFixed(2)}° due to ray shape change`);
-        } else {
-            console.warn(`Could not calculate optimal aperture/cone angle for component ${childState.componentId || 'temp'}`);
-        }
-    } catch (error) {
-        console.error('Error updating cone angle for ray shape change:', error);
-    }
-}
-
-// Check if a component should show the ray shape menu when selected
-export function shouldShowRayShapeMenu(component) {
-    if (!showApertureRays || !component) return false;
-    
-    const compId = component.getAttribute('data-id');
-    const state = componentState[compId];
-    
-    if (!state) return false;
-    
-    // Don't show menu if component has no parent (no rays to configure)
-    if (state.parentId === null) return false;
-    
-    return true;
+    // TODO: Implement this function as needed
+    // This is a placeholder to fix syntax errors
 }

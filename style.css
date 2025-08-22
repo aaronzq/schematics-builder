@@ -1,3 +1,60 @@
+/* Custom hue slider color bar background */
+input[type="range"].hue-slider {
+  /* Remove default appearance for Chrome/Safari */
+  -webkit-appearance: none;
+  appearance: none;
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+  outline: none;
+}
+input[type="range"].hue-slider::-webkit-slider-runnable-track {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+}
+input[type="range"].hue-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #888;
+  box-shadow: 0 0 2px #0003;
+  cursor: pointer;
+  margin-top: -3px;
+}
+input[type="range"].hue-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #888;
+  box-shadow: 0 0 2px #0003;
+  cursor: pointer;
+}
+input[type="range"].hue-slider::-ms-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #888;
+  box-shadow: 0 0 2px #0003;
+  cursor: pointer;
+}
+input[type="range"].hue-slider::-moz-range-track {
+  height: 8px;
+  border-radius: 4px;
+  background: linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%);
+}
+input[type="range"].hue-slider::-ms-fill-lower,
+input[type="range"].hue-slider::-ms-fill-upper {
+  background: none;
+}
+input[type="range"].hue-slider:focus {
+  outline: none;
+}
 body, html {
   min-height: 100vh;
   margin: 0;
