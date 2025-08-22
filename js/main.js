@@ -1,3 +1,9 @@
+import { enableCanvasPan, enableCanvasZoom } from './viewportManager.js';
+// Enable right mouse drag-to-pan and mouse wheel zoom after DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+	enableCanvasPan();
+	enableCanvasZoom();
+});
 // Main application entry point
 // Coordinates all modules and provides the public API
 

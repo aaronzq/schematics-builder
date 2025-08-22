@@ -1,3 +1,75 @@
+// Enable mouse wheel zoom for the SVG canvas
+export function enableCanvasZoom() {
+    const svg = document.getElementById("canvas");
+    svg.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        // Parse current viewBox
+        const vb = svg.getAttribute('viewBox').split(' ').map(Number);
+        let [x, y, width, height] = vb;
+        // Zoom factor
+        const zoomIntensity = 0.1;
+        // Determine zoom direction
+        const zoom = e.deltaY < 0 ? (1 - zoomIntensity) : (1 + zoomIntensity);
+
+        // Get mouse position in SVG coordinates
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const mouseSVG = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+        // Calculate new viewBox centered on mouse
+        const newWidth = width * zoom;
+        const newHeight = height * zoom;
+        const mx = (mouseSVG.x - x) / width;
+        const my = (mouseSVG.y - y) / height;
+        const newX = mouseSVG.x - mx * newWidth;
+        const newY = mouseSVG.y - my * newHeight;
+
+        svg.setAttribute('viewBox', `${newX} ${newY} ${newWidth} ${newHeight}`);
+    }, { passive: false });
+}
+// Enable right mouse drag to pan the SVG viewport
+export function enableCanvasPan() {
+    const svg = document.getElementById("canvas");
+    let isPanning = false;
+    let startPoint = null;
+    let startViewBox = null;
+
+    svg.addEventListener('contextmenu', e => {
+        // Prevent default context menu on right click
+        e.preventDefault();
+    });
+
+    svg.addEventListener('mousedown', function(e) {
+        if (e.button !== 2) return; // Only right mouse button
+        isPanning = true;
+        startPoint = { x: e.clientX, y: e.clientY };
+        // Parse current viewBox
+        const vb = svg.getAttribute('viewBox').split(' ').map(Number);
+        startViewBox = { x: vb[0], y: vb[1], width: vb[2], height: vb[3] };
+        document.body.style.cursor = 'grab';
+    });
+
+    window.addEventListener('mousemove', function(e) {
+        if (!isPanning) return;
+        const dx = e.clientX - startPoint.x;
+        const dy = e.clientY - startPoint.y;
+        // Convert pixel movement to SVG units
+        const svgRect = svg.getBoundingClientRect();
+        const scaleX = startViewBox.width / svgRect.width;
+        const scaleY = startViewBox.height / svgRect.height;
+        const newX = startViewBox.x - dx * scaleX;
+        const newY = startViewBox.y - dy * scaleY;
+        svg.setAttribute('viewBox', `${newX} ${newY} ${startViewBox.width} ${startViewBox.height}`);
+    });
+
+    window.addEventListener('mouseup', function(e) {
+        if (isPanning && e.button === 2) {
+            isPanning = false;
+            document.body.style.cursor = '';
+        }
+    });
+}
 import { componentDimensions } from './components.js';
 import { 
     MIN_CANVAS_WIDTH, 
@@ -32,6 +104,12 @@ export function initCanvas() {
     while (componentsGroup.firstChild) {
         componentsGroup.removeChild(componentsGroup.firstChild);
     }
+
+    // Enable right mouse drag to pan
+    try { require('./viewportManager.js').enableCanvasPan(); } catch (e) { /* For ES modules, call in main.js */ }
+
+    // Enable mouse wheel zoom
+    try { require('./viewportManager.js').enableCanvasZoom(); } catch (e) { /* For ES modules, call in main.js */ }
 }
 
 // Calculate the bounding box of all components and adjust viewBox
@@ -78,6 +156,7 @@ export function updateCanvasViewBox() {
                 maxY = Math.max(maxY, state.arrowY);
             }
         }
+
 
         // Add padding (configurable percentage on each side and ensure minimum size)
         const width = Math.max(maxX - minX, MIN_CANVAS_WIDTH);

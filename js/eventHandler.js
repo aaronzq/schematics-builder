@@ -37,8 +37,9 @@ export function initApp() {
 
 // Set up global document event listeners
 function setupGlobalEventListeners() {
-    // Click outside components to deselect
+    // Click outside components to deselect (only on left mouse button)
     document.addEventListener('mousedown', function(e) {
+        if (e.button !== 0) return; // Only left mouse button
         const svg = document.getElementById('canvas');
         if (e.target === svg) {
             const selectedComponent = getSelectedComponent();

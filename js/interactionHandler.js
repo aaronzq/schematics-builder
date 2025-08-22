@@ -14,26 +14,22 @@ let offsetY = 0;
 
 // Start dragging a component
 export function startDrag(e) {
+    // Only allow left mouse button to start drag
+    if (e.button !== 0) return;
     draggingElement = e.currentTarget;
     const componentId = draggingElement.getAttribute('data-id');
     const componentType = draggingElement.getAttribute('data-type');
     const dims = componentState[componentId]?.dimensions || componentDimensions[componentType];
-    
     if (!dims) return;
-    
     const cursorpt = screenToSVG(e.clientX, e.clientY);
     const state = componentState[componentId];
-    
     // Calculate center position from current state (center-based coordinates)
     const centerX = state.posX;
     const centerY = state.posY;
-    
     offsetX = cursorpt.x - centerX;
     offsetY = cursorpt.y - centerY;
-    
     document.addEventListener("mousemove", drag);
     document.addEventListener("mouseup", stopDrag);
-    
     // Deselect previous component and remove its arrow/rotation handle immediately
     const selectedComponent = getSelectedComponent();
     if (selectedComponent && selectedComponent !== e.currentTarget) {
@@ -89,6 +85,7 @@ export function makeArrowHandleDraggable(handle, line, state) {
     let dragOffsetX = 0;
     let dragOffsetY = 0;
     
+
     handle.addEventListener("mousedown", function(e) {
         e.stopPropagation();
         draggingArrow = true;
@@ -123,6 +120,7 @@ export function makeArrowHandleDraggable(handle, line, state) {
         const dy = snappedPosition.y - startY;
         const resultingAngle = Math.atan2(dy, dx) * 180 / Math.PI;
         console.log(`Arrow tip snapped to: (${snappedPosition.x}, ${snappedPosition.y}), resulting angle: ${resultingAngle.toFixed(1)}°`);
+
     }
     
     function stopDragArrowHandle() {
@@ -135,6 +133,7 @@ export function makeArrowHandleDraggable(handle, line, state) {
         const finalY = parseFloat(line.getAttribute("y2"));
         state.arrowX = finalX;
         state.arrowY = finalY;
+
     }
 }
 
