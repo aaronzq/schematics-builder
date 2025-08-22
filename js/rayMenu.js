@@ -97,7 +97,7 @@ function hslToRgb(h, s, l) {
     };
 }
 export function showRayShapeMenu(component) {
-    console.log('[showRayShapeMenu] called with component:', component);
+    // console.log('[showRayShapeMenu] called with component:', component);
     if (!showApertureRays) {
         console.log('[showRayShapeMenu] showApertureRays is false, menu will not show');
         return;
@@ -409,7 +409,7 @@ export function showRayShapeMenu(component) {
     setTimeout(() => {
         const rect = menu.getBoundingClientRect();
         const style = window.getComputedStyle(menu);
-        console.log('[showRayShapeMenu] menu rect:', rect, 'display:', style.display, 'visibility:', style.visibility, 'zIndex:', style.zIndex);
+        // console.log('[showRayShapeMenu] menu rect:', rect, 'display:', style.display, 'visibility:', style.visibility, 'zIndex:', style.zIndex);
     }, 100);
 }
 

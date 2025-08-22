@@ -1,4 +1,224 @@
 /**
+ * Prompt the user to select a schematic JSON file and import it.
+ */
+export function promptImportSchematicJSON() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.style.display = 'none';
+    document.body.appendChild(input);
+    input.addEventListener('change', (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const schematic = JSON.parse(e.target.result);
+                importSchematicFromJSON(schematic);
+            } catch (err) {
+                alert('Failed to parse schematic JSON.');
+            }
+        };
+        reader.readAsText(file);
+    });
+    input.click();
+    input.remove();
+}
+/**
+ * Import a schematic from a JSON object and reconstruct the layout and hierarchy.
+ * @param {object} schematic - The parsed schematic JSON object.
+ */
+export async function importSchematicFromJSON(schematic) {
+    // Reset the action log for a new session
+    actions = [];
+    if (!schematic || !Array.isArray(schematic.actions)) {
+        alert('Invalid schematic file.');
+        return;
+    }
+    // Clear existing components
+    const componentsGroup = document.getElementById('components');
+    while (componentsGroup.firstChild) {
+        componentsGroup.removeChild(componentsGroup.firstChild);
+    }
+    for (const key in componentState) {
+        delete componentState[key];
+    }
+    // Reset global state
+    selectedComponent = null;
+    idCounter = 0;
+    nextX = schematic.nextPosition?.x || 0;
+    nextY = schematic.nextPosition?.y || 0;
+
+    // Map from schematic id to created element/id
+    const idMap = {};
+
+    // Import setupComponentEventListeners from eventHandler
+    // (import here to avoid circular dependency at module top level)
+    const { setupComponentEventListeners } = await import('./eventHandler.js');
+
+    // Build a map from id to component data for quick lookup
+    const compDataMap = {};
+    for (const comp of schematic.components) {
+        compDataMap[comp.id] = comp;
+    }
+
+    // Track the max id to update idCounter after import
+    let maxId = 0;
+
+    // Replay actions to reconstruct schematic with original IDs
+    const oldToNewId = {};
+    for (const act of schematic.actions) {
+        if (act.action === 'add') {
+            // Set selectedComponent to parent if needed for hierarchy
+            let parentElement = null;
+            let parentIdToUse = act.parentId;
+            // If parent is missing (deleted), make this a root
+            if (parentIdToUse !== null && parentIdToUse !== undefined && (oldToNewId[parentIdToUse] === undefined || idMap[oldToNewId[parentIdToUse]] === undefined)) {
+                parentIdToUse = null;
+            }
+            if (parentIdToUse !== null && parentIdToUse !== undefined && oldToNewId[parentIdToUse] !== undefined && idMap[oldToNewId[parentIdToUse]] !== undefined) {
+                parentElement = idMap[oldToNewId[parentIdToUse]].element;
+            }
+            setSelectedComponent(parentElement);
+
+            // Force idCounter to match the original id for this add
+            const prevIdCounter = idCounter;
+            idCounter = act.id;
+            const compData = compDataMap[act.id];
+            if (!compData) continue;
+            const result = addComponent(compData.type);
+            idCounter = Math.max(prevIdCounter, idCounter + 1);
+            if (!result) continue;
+
+            // Attach event listeners for interaction
+            setupComponentEventListeners(result.element, result.id);
+
+            // Defensive: ensure state exists before setting properties
+            const state = componentState[result.id];
+            if (!state) continue;
+
+            // Set all properties from compData
+            if (compData.posX !== undefined && compData.posY !== undefined) {
+                updateComponentPosition(result.element, compData.posX, compData.posY);
+            }
+            if (compData.rotation !== undefined) {
+                updateComponentRotation(result.element, compData.rotation);
+            }
+            if (compData.rayPolygonColor !== undefined) {
+                state.rayPolygonColor = compData.rayPolygonColor;
+            }
+            if (compData.dimensions !== undefined) {
+                state.dimensions = compData.dimensions;
+            }
+            if (compData.children !== undefined) {
+                state.children = compData.children;
+            }
+            if (compData.visible !== undefined) {
+                state.visible = compData.visible;
+                if (compData.visible) {
+                    showComponent(result.element);
+                } else {
+                    hideComponent(result.element);
+                }
+            }
+            if (compData.arrowX !== undefined) {
+                state.arrowX = compData.arrowX;
+            }
+            if (compData.arrowY !== undefined) {
+                state.arrowY = compData.arrowY;
+            }
+            if (Array.isArray(compData.solidRays)) {
+                state.solidRays = compData.solidRays.map(ray => ({
+                    shape: ray.shape,
+                    color: ray.color
+                }));
+            }
+            // Set parentId in state (for completeness)
+            state.parentId = parentIdToUse;
+
+            // Store in idMap for child lookup
+            idMap[result.id] = { element: result.element, id: result.id };
+            oldToNewId[act.id] = result.id;
+
+            // Track max id
+            if (result.id > maxId) maxId = result.id;
+        } else if (act.action === 'remove') {
+            // Remove the component if it exists
+            const newId = oldToNewId[act.id];
+            if (newId !== undefined && idMap[newId] && idMap[newId].element) {
+                removeComponent(idMap[newId].element);
+                delete idMap[newId];
+            } else {
+                console.warn(`Skipped 'remove' action for id=${act.id}: component was never added or already removed.`);
+            }
+        }
+    }
+
+    // Update idCounter to avoid collisions for future adds
+    idCounter = maxId + 1;
+
+    // Fit viewport to all components after import
+    const { updateCanvasViewBox } = await import('./viewportManager.js');
+    updateCanvasViewBox();
+}
+/**
+ * Export the current schematic to a JSON object, including a hierarchy action list.
+ */
+export function exportSchematicToJSON() {
+    const componentsGroup = document.getElementById('components');
+    const schematic = {
+        components: [],
+        actions: [],
+        nextPosition: { x: nextX, y: nextY }
+    };
+
+    // 1. Export all component states
+    for (const compId in componentState) {
+        const state = componentState[compId];
+        const compExport = {
+            id: Number(compId),
+            type: state.type,
+            posX: state.posX,
+            posY: state.posY,
+            rotation: state.rotation,
+            arrowX: state.arrowX,
+            arrowY: state.arrowY,
+            parentId: state.parentId,
+            children: state.children,
+            visible: state.visible,
+            dimensions: state.dimensions,
+            rayPolygonColor: state.rayPolygonColor
+            // Add more fields as needed
+        };
+        // Include solidRays array if present
+        if (Array.isArray(state.solidRays)) {
+            compExport.solidRays = state.solidRays.map(ray => ({
+                shape: ray.shape,
+                color: ray.color
+            }));
+        }
+        schematic.components.push(compExport);
+    }
+
+    // 2. Use the real-time action log for deterministic replay
+    schematic.actions = actions.slice();
+    return schematic;
+}
+
+/**
+ * Download the current schematic as a JSON file.
+ */
+export function downloadSchematicJSON() {
+    const schematic = exportSchematicToJSON();
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(schematic, null, 2));
+    const dlAnchor = document.createElement('a');
+    dlAnchor.setAttribute("href", dataStr);
+    dlAnchor.setAttribute("download", "schematic.json");
+    document.body.appendChild(dlAnchor);
+    dlAnchor.click();
+    dlAnchor.remove();
+}
+/**
  * Flip the SVG of the selected component horizontally (left-right).
  * Only affects the SVG appearance, not the logical properties.
  */
@@ -88,6 +308,9 @@ let selectedComponent = null;
 let nextX = 0;
 let nextY = 0;
 
+// Real-time action log for add/remove operations
+export let actions = [];
+
 // Component state management
 export const componentState = {};
 
@@ -170,6 +393,10 @@ export function addComponent(type) {
     nextX = arrowEndpoint.x;
     nextY = arrowEndpoint.y;
 
+    // Log action
+    let parentId = selectedComponent ? parseInt(selectedComponent.getAttribute('data-id')) : null;
+    actions.push({ action: 'add', id: compId, parentId });
+
     // Add to DOM
     componentsGroup.appendChild(group);
 
@@ -193,6 +420,9 @@ export function removeComponent(component) {
         if (child === component) break;
         prevComponent = child;
     }
+
+    // Log action
+    actions.push({ action: 'remove', id: parseInt(compId) });
 
     // Clean up hierarchy and state
     cleanupComponentHierarchy(parseInt(compId), componentState);
@@ -287,13 +517,27 @@ export function logComponentInfo(compId) {
     const centerX = state.posX;
     const centerY = state.posY;
     
-    // Build info strings
-    const parentInfo = state.parentId !== null ? 
-        `Parent: ${state.parentId} (${componentState[state.parentId].type})` : 
-        'No Parent (Root)';
-    const childrenInfo = state.children.length > 0 ? 
-        `Children: [${state.children.map(childId => `${childId} (${componentState[childId].type})`).join(', ')}]` : 
-        'No Children';
+    // Build info strings with defensive checks
+    let parentInfo;
+    if (state.parentId !== null) {
+        const parentState = componentState[state.parentId];
+        if (parentState) {
+            parentInfo = `Parent: ${state.parentId} (${parentState.type})`;
+        } else {
+            parentInfo = `Parent: ${state.parentId} (deleted)`;
+        }
+    } else {
+        parentInfo = 'No Parent (Root)';
+    }
+    let childrenInfo;
+    if (state.children.length > 0) {
+        childrenInfo = 'Children: [' + state.children.map(childId => {
+            const childState = componentState[childId];
+            return childState ? `${childId} (${childState.type})` : `${childId} (deleted)`;
+        }).join(', ') + ']';
+    } else {
+        childrenInfo = 'No Children';
+    }
 
     console.log(`=== Selected Component ${compId} (${state.type}) ===`);
     console.log(`  Hierarchy: ${parentInfo}, ${childrenInfo}`);
@@ -323,6 +567,18 @@ export function logComponentInfo(compId) {
         console.log(`  Aperture: Radius=${state.dimensions.apertureRadius.toFixed(2)} | Upper=${upperPos} | Lower=${lowerPos}`);
         console.log(`  Ray Shape: ${rayShape} | Cone Angle: ${coneAngle}`);
         console.log(`  Solid Ray Color: ${rayPolygonColor}`);
+    }
+
+    // Log solidRays array if present
+    if (Array.isArray(state.solidRays)) {
+        if (state.solidRays.length === 0) {
+            console.log('  solidRays: []');
+        } else {
+            console.log('  solidRays:');
+            state.solidRays.forEach((ray, idx) => {
+                console.log(`    [${idx}] shape: ${ray.shape}, color: ${ray.color}`);
+            });
+        }
     }
 }
 

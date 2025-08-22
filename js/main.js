@@ -1,3 +1,16 @@
+
+import { downloadSchematicJSON, promptImportSchematicJSON } from './componentManager.js';
+
+window.addEventListener('DOMContentLoaded', () => {
+	const exportBtn = document.getElementById('export-schematic-btn');
+	if (exportBtn) {
+		exportBtn.addEventListener('click', downloadSchematicJSON);
+	}
+	const importBtn = document.getElementById('import-schematic-btn');
+	if (importBtn) {
+		importBtn.addEventListener('click', promptImportSchematicJSON);
+	}
+});
 import { enableCanvasPan, enableCanvasZoom } from './viewportManager.js';
 // Enable right mouse drag-to-pan and mouse wheel zoom after DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
