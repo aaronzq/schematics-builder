@@ -24,38 +24,48 @@ export function showRayShapeMenu(component) {
     // Hide any existing menu
     hideRayShapeMenu();
     
-    // Get component position
-    const componentRect = component.getBoundingClientRect();
+    // Always show menu as a banner at the top of the canvas, inside .canvas-container
     const canvas = document.getElementById('canvas');
     const canvasRect = canvas.getBoundingClientRect();
-    
-    // Calculate position relative to the page
-    const menuX = componentRect.left + componentRect.width / 2;
-    const menuY = componentRect.bottom + 10; // 10px below the component
-    
+    const container = canvas.closest('.canvas-container');
+    const containerRect = container.getBoundingClientRect();
+    // Position relative to container
+    // Use canvas offset within container for correct alignment
+    // Always align menu with the top edge of the canvas
+    // Use boundingClientRect to align menu with visible canvas
+    const menuX = canvasRect.left - containerRect.left + 1; // +1 for canvas border
+    const menuY = canvasRect.top - containerRect.top;
+
     // Create menu container
     const menu = document.createElement('div');
-    menu.className = 'ray-shape-menu';
-    menu.style.position = 'fixed';
     menu.style.left = `${menuX}px`;
     menu.style.top = `${menuY}px`;
+    menu.style.width = `${canvas.clientWidth}px`;
+    menu.className = 'ray-shape-menu';
+    menu.style.position = 'absolute';
+    menu.style.left = `${menuX}px`;
+    menu.style.top = `${menuY}px`;
+    menu.style.width = `${canvas.offsetWidth}px`;
     menu.style.backgroundColor = 'white';
     menu.style.border = '1px solid #ccc';
-    menu.style.borderRadius = '4px';
+    menu.style.borderRadius = '12px 12px 0 0'; // match canvas top corners
     menu.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
     menu.style.zIndex = '1000';
-    menu.style.padding = '4px';
-    menu.style.minWidth = '120px';
-    menu.style.fontSize = '12px';
+        menu.style.padding = '8px 0px 8px 0px';
+    menu.style.minWidth = '0';
+    menu.style.fontSize = '14px';
     menu.style.fontFamily = 'Arial, sans-serif';
+    menu.style.display = 'flex';
+    menu.style.alignItems = 'center';
+    menu.style.gap = '24px';
+        menu.style.boxSizing = 'border-box';
     
-    // Add title
+    // Add title (banner style)
     const title = document.createElement('div');
     title.textContent = 'Ray Shape:';
     title.style.fontWeight = 'bold';
-    title.style.padding = '4px 8px';
-    title.style.borderBottom = '1px solid #eee';
-    title.style.marginBottom = '2px';
+    title.style.marginLeft = '8px';
+    title.style.marginRight = '8px';
     menu.appendChild(title);
     
     // Get current ray shape
@@ -104,9 +114,8 @@ export function showRayShapeMenu(component) {
     const colorTitle = document.createElement('div');
     colorTitle.textContent = 'Solid Ray Color:';
     colorTitle.style.fontWeight = 'bold';
-    colorTitle.style.padding = '4px 8px';
-    colorTitle.style.borderBottom = '1px solid #eee';
-    colorTitle.style.margin = '8px 0 2px 0';
+    colorTitle.style.marginLeft = '8px';
+    colorTitle.style.marginRight = '8px';
     menu.appendChild(colorTitle);
 
     const colorRow = document.createElement('div');
@@ -125,6 +134,10 @@ export function showRayShapeMenu(component) {
     colorInput.style.background = 'none';
     colorInput.style.cursor = 'pointer';
     colorInput.style.padding = '0';
+    // Prevent menu from closing when interacting with color input
+    ['mousedown', 'mouseup', 'click'].forEach(evt => {
+        colorInput.addEventListener(evt, e => e.stopPropagation());
+    });
 
     // Always use the color currently used for drawing (from state), normalizing to #RRGGBB if needed
     let colorValue = state.rayPolygonColor;
@@ -159,17 +172,10 @@ export function showRayShapeMenu(component) {
     setTimeout(() => { colorInput.value = colorValue; }, 0);
 
     // Add to document
-    document.body.appendChild(menu);
+    container.appendChild(menu);
     currentMenu = menu;
 
-    // Position adjustment if menu goes off screen
-    const menuRect = menu.getBoundingClientRect();
-    if (menuRect.right > window.innerWidth) {
-        menu.style.left = `${menuX - menuRect.width}px`;
-    }
-    if (menuRect.bottom > window.innerHeight) {
-        menu.style.top = `${menuY - menuRect.height - componentRect.height - 20}px`;
-    }
+    // No need for position adjustment: always at top of canvas
 
     // Close menu when clicking outside
     const closeHandler = (e) => {
