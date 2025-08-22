@@ -56,120 +56,134 @@ export function showRayShapeMenu(component) {
     menu.style.fontSize = '14px';
     menu.style.fontFamily = 'Arial, sans-serif';
     menu.style.display = 'flex';
-    menu.style.alignItems = 'center';
-    menu.style.gap = '24px';
+    menu.style.flexDirection = 'column';
+    menu.style.alignItems = 'flex-start';
+    menu.style.gap = '0';
         menu.style.boxSizing = 'border-box';
     
-    // Add title (banner style)
-    const title = document.createElement('div');
-    title.textContent = 'Ray Shape:';
-    title.style.fontWeight = 'bold';
-    title.style.marginLeft = '8px';
-    title.style.marginRight = '8px';
-    menu.appendChild(title);
+    // (plus button will be added to the last Ray row below)
     
-    // Get current ray shape
-    const currentRayShape = state.dimensions.rayShape;
+
+    // --- MULTI SOLID RAY SUPPORT ---
+    // Ensure state.solidRays exists and is an array
+    if (!Array.isArray(state.solidRays)) {
+        // If legacy, migrate from single value
+        state.solidRays = [{
+            shape: state.dimensions.rayShape,
+            color: state.rayPolygonColor || DEFAULT_SOLID_RAY_COLOR
+        }];
+    }
+
+    // For each solid ray, add a row with Ray Shape and Color
     const validRayShapes = getValidRayShapes();
-    
-    // Create options for each ray shape
-    validRayShapes.forEach(rayShape => {
-        const option = document.createElement('div');
-        option.className = 'ray-shape-option';
-        option.textContent = rayShape.charAt(0).toUpperCase() + rayShape.slice(1);
-        option.style.padding = '4px 8px';
-        option.style.cursor = 'pointer';
-        option.style.borderRadius = '2px';
-        
-        // Highlight current selection
-        if (rayShape === currentRayShape) {
-            option.style.backgroundColor = '#e3f2fd';
-            option.style.fontWeight = 'bold';
-        }
-        
-        // Add hover effects
-        option.addEventListener('mouseenter', () => {
-            if (rayShape !== currentRayShape) {
-                option.style.backgroundColor = '#f5f5f5';
-            }
+    state.solidRays.forEach((ray, idx) => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.gap = '8px';
+        row.style.margin = '4px 0';
+        row.style.width = '100%';
+
+        // Ray label
+        const rayLabel = document.createElement('span');
+        rayLabel.textContent = `Ray ${idx + 1}`;
+        rayLabel.style.fontWeight = 'bold';
+        rayLabel.style.marginLeft = '12px';
+        rayLabel.style.marginRight = '12px';
+        row.appendChild(rayLabel);
+
+        // Ray Shape label
+        const shapeLabel = document.createElement('span');
+        shapeLabel.textContent = 'Shape:';
+        shapeLabel.style.marginRight = '4px';
+        row.appendChild(shapeLabel);
+
+        // Ray Shape select
+        const shapeSelect = document.createElement('select');
+        validRayShapes.forEach(shape => {
+            const opt = document.createElement('option');
+            opt.value = shape;
+            opt.textContent = shape.charAt(0).toUpperCase() + shape.slice(1);
+            if (shape === ray.shape) opt.selected = true;
+            shapeSelect.appendChild(opt);
         });
-        
-        option.addEventListener('mouseleave', () => {
-            if (rayShape !== currentRayShape) {
-                option.style.backgroundColor = 'transparent';
-            }
+        shapeSelect.addEventListener('change', e => {
+            ray.shape = shapeSelect.value;
+            drawApertureRays();
         });
-        
-        // Handle selection
-        option.addEventListener('click', (e) => {
-            e.stopPropagation();
-            selectRayShape(compId, rayShape);
-            hideRayShapeMenu();
+        // Prevent menu from closing when interacting with select
+        shapeSelect.addEventListener('mousedown', e => e.stopPropagation());
+        row.appendChild(shapeSelect);
+
+        // Color label
+        const colorLabel = document.createElement('span');
+        colorLabel.textContent = 'Color:';
+        colorLabel.style.marginLeft = '12px';
+        colorLabel.style.marginRight = '4px';
+        row.appendChild(colorLabel);
+
+        // Color input
+        const colorInput = document.createElement('input');
+        colorInput.type = 'color';
+        colorInput.value = typeof ray.color === 'string' ? (ray.color.startsWith('#') ? ray.color : '#' + ray.color) : DEFAULT_SOLID_RAY_COLOR;
+        colorInput.style.width = '28px';
+        colorInput.style.height = '22px';
+        colorInput.style.border = 'none';
+        colorInput.style.background = 'none';
+        colorInput.style.cursor = 'pointer';
+        colorInput.style.padding = '0';
+        ['mousedown', 'mouseup', 'click'].forEach(evt => {
+            colorInput.addEventListener(evt, e => e.stopPropagation());
         });
-        
-        menu.appendChild(option);
-    });
-    
-    // --- Add Solid Ray Color title and color picker row ---
-    const colorTitle = document.createElement('div');
-    colorTitle.textContent = 'Solid Ray Color:';
-    colorTitle.style.fontWeight = 'bold';
-    colorTitle.style.marginLeft = '8px';
-    colorTitle.style.marginRight = '8px';
-    menu.appendChild(colorTitle);
+        colorInput.addEventListener('input', e => {
+            ray.color = colorInput.value;
+            drawApertureRays();
+        });
+        row.appendChild(colorInput);
 
-    const colorRow = document.createElement('div');
-    colorRow.className = 'ray-shape-option';
-    colorRow.style.display = 'flex';
-    colorRow.style.alignItems = 'center';
-    colorRow.style.padding = '4px 8px';
-    colorRow.style.borderRadius = '2px';
-
-    const colorInput = document.createElement('input');
-    colorInput.type = 'color';
-    colorInput.title = 'Change solid ray polygon color';
-    colorInput.style.width = '28px';
-    colorInput.style.height = '22px';
-    colorInput.style.border = 'none';
-    colorInput.style.background = 'none';
-    colorInput.style.cursor = 'pointer';
-    colorInput.style.padding = '0';
-    // Prevent menu from closing when interacting with color input
-    ['mousedown', 'mouseup', 'click'].forEach(evt => {
-        colorInput.addEventListener(evt, e => e.stopPropagation());
-    });
-
-    // Always use the color currently used for drawing (from state), normalizing to #RRGGBB if needed
-    let colorValue = state.rayPolygonColor;
-    if (typeof colorValue === 'string') {
-        // Add # if missing and valid hex
-        if (/^[0-9A-Fa-f]{6}$/.test(colorValue)) {
-            colorValue = '#' + colorValue;
+        // Remove button (except for the first row)
+        if (state.solidRays.length > 1) {
+            const removeBtn = document.createElement('button');
+            removeBtn.textContent = '−';
+            removeBtn.title = 'Remove this solid ray';
+            removeBtn.style.marginLeft = '8px';
+            removeBtn.style.fontWeight = 'bold';
+            removeBtn.style.cursor = 'pointer';
+            removeBtn.addEventListener('click', e => {
+                e.stopPropagation();
+                state.solidRays.splice(idx, 1);
+                showRayShapeMenu(component); // re-render menu
+                drawApertureRays();
+            });
+            removeBtn.addEventListener('mousedown', e => e.stopPropagation());
+            row.appendChild(removeBtn);
         }
-        // Accept #RRGGBB
-        else if (/^#([0-9A-Fa-f]{6})$/.test(colorValue)) {
-            // already valid
-        } else {
-            colorValue = null;
-        }
-    } else {
-        colorValue = null;
-    }
-    // Only fallback to default if truly missing or invalid
-    if (!colorValue) {
-        colorValue = DEFAULT_SOLID_RAY_COLOR;
-    }
 
-    colorInput.addEventListener('input', (e) => {
-        state.rayPolygonColor = colorInput.value;
-        componentState[compId].rayPolygonColor = colorInput.value;
-        drawApertureRays();
+        // Add plus button to the right of the last Ray row
+        if (idx === state.solidRays.length - 1) {
+            const plusBtn = document.createElement('button');
+            plusBtn.textContent = '+';
+            plusBtn.title = 'Add another solid ray';
+            plusBtn.style.marginLeft = '8px';
+            plusBtn.style.fontWeight = 'bold';
+            plusBtn.style.cursor = 'pointer';
+            plusBtn.addEventListener('click', e => {
+                e.stopPropagation();
+                state.solidRays.push({
+                    shape: validRayShapes[0],
+                    color: DEFAULT_SOLID_RAY_COLOR
+                });
+                showRayShapeMenu(component); // re-render menu
+                drawApertureRays();
+            });
+            plusBtn.addEventListener('mousedown', e => e.stopPropagation());
+            row.appendChild(plusBtn);
+        }
+
+        menu.appendChild(row);
     });
 
-    colorRow.appendChild(colorInput);
-    menu.appendChild(colorRow);
-    // Set value after appending to DOM to avoid browser quirks
-    setTimeout(() => { colorInput.value = colorValue; }, 0);
+    // (plusBtn is now only in the topRow at the top of the menu)
 
     // Add to document
     container.appendChild(menu);
@@ -177,17 +191,17 @@ export function showRayShapeMenu(component) {
 
     // No need for position adjustment: always at top of canvas
 
-    // Close menu when clicking outside
+    // Close menu when clicking outside (use mousedown for better UX)
     const closeHandler = (e) => {
         if (!menu.contains(e.target)) {
             hideRayShapeMenu();
-            document.removeEventListener('click', closeHandler);
+            document.removeEventListener('mousedown', closeHandler);
         }
     };
 
     // Add slight delay to prevent immediate closing
     setTimeout(() => {
-        document.addEventListener('click', closeHandler);
+        document.addEventListener('mousedown', closeHandler);
     }, 100);
 }
 
