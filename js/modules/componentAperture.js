@@ -73,17 +73,21 @@ export function calculateOptimalAperture(childState, parentState, logDetails = f
                 if (logDetails) console.log(`  Set cone angle to 0° (collimated)`);
             }
             break;
-            
+
         case 'divergent':
             // Handle divergent rays with cone angle inheritance/calculation logic
             optimizedDimensions = handleDivergentRays(childState, parentState, parentRayShape, centerLineLength, logDetails);
             break;
-            
+
         case 'convergent':
             // Handle convergent rays with dynamic cone angle calculation from current geometry
             optimizedDimensions = handleConvergentRays(childState, parentState, parentRayShape, centerLineLength, logDetails);
             break;
-            
+
+        case 'manual': 
+            optimizedDimensions = handleManualRays(childState, parentState, centerLineLength, logDetails);
+            break;    
+
         default:
             if (logDetails) console.warn(`Unknown ray shape: ${childRayShape}, falling back to collimated`);
             optimizedDimensions = handleCollimatedRays(childState, parentState, logDetails);
@@ -95,6 +99,31 @@ export function calculateOptimalAperture(childState, parentState, logDetails = f
     
     return optimizedDimensions;
 }
+
+
+function handleManualRays(childState, parentState, centerLineLength, logDetails){
+    // Do not auto-scale aperture. Only update cone angle.
+    const childDims = childState.dimensions;
+    let coneAngle = 0;
+    if (centerLineLength > 0) {
+        // Use the same projection logic as other handlers
+        const projections = calculateProjections_internal(childState, parentState);
+        if (projections) {
+            const childProj = projections.child.apertureProjection;
+            const parentProj = projections.parent.apertureProjection;
+            coneAngle = Math.atan(Math.abs(parentProj - childProj) / centerLineLength) * 180 / Math.PI;
+            if (logDetails) {
+                console.log(`  Manual ray debug: parentProj=${parentProj.toFixed(3)}, childProj=${childProj.toFixed(3)}, centerLineLength=${centerLineLength.toFixed(3)}`);
+            }
+        }
+    }
+    const optimizedDimensions = setConeAngle(childDims, coneAngle);
+    if (logDetails) {
+        console.log(`  Manual ray: cone angle set to ${coneAngle.toFixed(2)}° (aperture not auto-scaled)`);
+    }
+    return optimizedDimensions;
+}
+
 
 /**
  * Handle collimated ray scaling using projection-based policy

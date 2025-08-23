@@ -84,6 +84,12 @@ export function drawApertureRays() {
                     lStart = parentLower;
                     lEnd = childCenter;
                     break;
+                case 'manual':
+                    uStart = parentUpper;
+                    uEnd = childUpper;
+                    lStart = parentLower;
+                    lEnd = childLower;
+                    break;
                 default:
                     uStart = parentUpper;
                     uEnd = childUpper;

@@ -193,13 +193,27 @@ export function showRayShapeMenu(component) {
         });
         shapeSelect.addEventListener('change', e => {
             state.rayShape[idx] = shapeSelect.value;
-            // If changing the first ray, update this component's own aperture to match parent
+            // If changing the first ray, update this component's own aperture to match parent or handle manual
             if (idx === 0) {
-                // Update this component's own aperture
-                const scaledDims = autoScaleForComponentDragRotation(component, componentState);
-                if (scaledDims) {
-                    state.dimensions = scaledDims;
-                    updateAperturePointDrawings(component, scaledDims);
+                if (shapeSelect.value === 'manual') {
+                    // For manual, update cone angle and aperture using main logic
+                    const parentId = state.parentId;
+                    const parentState = parentId !== null ? componentState[parentId] : null;
+                    if (parentState) {
+                        // Use calculateOptimalAperture to update cone angle for manual
+                        const updatedDims = calculateOptimalAperture(state, parentState, true);
+                        if (updatedDims) {
+                            state.dimensions = updatedDims;
+                            updateAperturePointDrawings(component, updatedDims);
+                        }
+                    }
+                } else {
+                    // Update this component's own aperture
+                    const scaledDims = autoScaleForComponentDragRotation(component, componentState);
+                    if (scaledDims) {
+                        state.dimensions = scaledDims;
+                        updateAperturePointDrawings(component, scaledDims);
+                    }
                 }
                 // Then update all children recursively
                 recursivelyUpdateChildrenApertures(
@@ -210,8 +224,83 @@ export function showRayShapeMenu(component) {
                 );
             }
             drawApertureRays();
+            // Re-render menu to show/hide slider if needed
+            if (idx === 0) showRayShapeMenu(component);
         });
         row.appendChild(shapeSelect);
+        // If this is the first ray and set to 'manual', show aperture radius slider (immediately after the dropdown)
+        if (idx === 0 && state.rayShape[0] === 'manual') {
+            const parentId = state.parentId;
+            let parentDims = null;
+            if (parentId !== null && componentState[parentId]) {
+                parentDims = componentState[parentId].dimensions;
+            }
+            // Reasonable slider range: 0 to 200
+            const minRadius = 0;
+            const maxRadius = 50;
+            const currentRadius = state.dimensions.apertureRadius || 1;
+            // Label
+            const sliderLabel = document.createElement('span');
+            sliderLabel.textContent = 'Radius:';
+            sliderLabel.style.fontWeight = 'bold';
+            sliderLabel.style.marginLeft = '12px';
+            // Slider
+            const radiusSlider = document.createElement('input');
+            radiusSlider.type = 'range';
+            radiusSlider.min = minRadius;
+            radiusSlider.max = maxRadius;
+            radiusSlider.step = 0.1;
+            radiusSlider.value = currentRadius;
+            radiusSlider.style.width = '100px';
+            // Value display
+            const valueDisplay = document.createElement('span');
+            valueDisplay.textContent = currentRadius.toFixed(2);
+            valueDisplay.style.minWidth = '30px';
+            // Insert shapeSelect first, then slider label, slider, and value display after
+            // row.appendChild(shapeSelect);
+            row.appendChild(sliderLabel);
+            row.appendChild(radiusSlider);
+            row.appendChild(valueDisplay);
+            // Slider event
+            radiusSlider.addEventListener('input', e => {
+                const newRadius = parseFloat(radiusSlider.value);
+                valueDisplay.textContent = newRadius.toFixed(2);
+                // Update aperture radius and aperture points directly
+                state.dimensions.apertureRadius = newRadius;
+                const up = state.dimensions.upVector;
+                const center = state.dimensions.centerPoint;
+                state.dimensions.aperturePoints = {
+                    upper: {
+                        x: center.x + up.x * newRadius,
+                        y: center.y + up.y * newRadius
+                    },
+                    lower: {
+                        x: center.x - up.x * newRadius,
+                        y: center.y - up.y * newRadius
+                    }
+                };
+                // Now update cone angle using main logic, but preserve the radius and points
+                const parentId = state.parentId;
+                const parentState = parentId !== null ? componentState[parentId] : null;
+                if (parentState) {
+                    const updatedDims = calculateOptimalAperture(state, parentState, true);
+                    if (updatedDims && typeof updatedDims.coneAngle === 'number') {
+                        state.dimensions.coneAngle = updatedDims.coneAngle;
+                    }
+                }
+                updateAperturePointDrawings(component, state.dimensions);
+                recursivelyUpdateChildrenApertures(
+                    component,
+                    componentState,
+                    getComponentById,
+                    updateAperturePointDrawings
+                );
+                drawApertureRays();
+            });
+        } else {
+            row.appendChild(shapeSelect);
+        }
+        // row.appendChild(shapeSelect);
 
         // --- Custom Color Picker ---
         let colorHex = typeof state.rayPolygonColor[idx] === 'string' ? (state.rayPolygonColor[idx].startsWith('#') ? state.rayPolygonColor[idx] : '#' + state.rayPolygonColor[idx]) : '#00ffff';

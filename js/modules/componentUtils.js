@@ -121,7 +121,7 @@ export function getAvailableComponentTypes(componentsObj) {
 
 // Utility function to get valid ray shapes
 export function getValidRayShapes() {
-    return ['collimated', 'divergent', 'convergent'];
+    return ['collimated', 'divergent', 'convergent', 'manual'];
 }
 
 // Utility function to check if a component type exists
