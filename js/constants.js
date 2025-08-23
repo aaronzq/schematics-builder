@@ -6,8 +6,8 @@
 export const COMPONENT_SPACING = 150;
 
 // Angle and grid snapping
-export const ANGLE_SNAP_INCREMENT = 5;
-export const ROTATION_SNAP_INCREMENT = 5;
+// export const ANGLE_SNAP_INCREMENT = 5;
+export const ROTATION_SNAP_INCREMENT = 1;
 export const GRID_SIZE = 5;
 export const ARROW_TIP_SNAP_SIZE = 5;
 

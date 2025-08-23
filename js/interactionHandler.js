@@ -4,7 +4,7 @@
 import { screenToSVG, snapToGrid, updateCanvasViewBox } from './viewportManager.js';
 import { componentState, updateComponentPosition, updateComponentRotation, getSelectedComponent, setSelectedComponent } from './componentManager.js';
 import { componentDimensions } from './components.js';
-import { ANGLE_SNAP_INCREMENT, ROTATION_SNAP_INCREMENT, ARROW_TIP_SNAP_SIZE, GRID_SIZE } from './constants.js';
+import { ROTATION_SNAP_INCREMENT, ARROW_TIP_SNAP_SIZE, GRID_SIZE } from './constants.js';
 import { snapAngle } from './utils/mathUtils.js';
 
 // Component drag state

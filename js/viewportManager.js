@@ -58,8 +58,9 @@ export function enableCanvasPan() {
         const svgRect = svg.getBoundingClientRect();
         const scaleX = startViewBox.width / svgRect.width;
         const scaleY = startViewBox.height / svgRect.height;
-        const newX = startViewBox.x - dx * scaleX;
-        const newY = startViewBox.y - dy * scaleY;
+        const scaleXY = 0.5 * (scaleX + scaleY);
+        const newX = startViewBox.x - dx * scaleXY;
+        const newY = startViewBox.y - dy * scaleXY;
         svg.setAttribute('viewBox', `${newX} ${newY} ${startViewBox.width} ${startViewBox.height}`);
     });
 

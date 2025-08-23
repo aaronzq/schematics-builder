@@ -110,7 +110,7 @@ body, html {
   padding: 32px 12px;
   background: #fafafa;
   border-radius: 8px;
-  margin: 32px 12px;
+  margin: 12px 12px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.07);
 }
 
@@ -146,7 +146,7 @@ body, html {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  padding: 32px 24px 0 24px;
+  padding: 12px 24px 0 24px;
   min-width: 0;
 }
 
@@ -224,7 +224,7 @@ body, html {
   padding: 0px 0px;
   min-height: 400px;
   min-width: 0;
-  max-height: 800px;
+  max-height: 900px;
 }
 
 #canvas {

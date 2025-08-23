@@ -1,5 +1,6 @@
 
 import { downloadSchematicJSON, promptImportSchematicJSON } from './componentManager.js';
+// import { resetCanvas } from './componentManager.js';
 
 window.addEventListener('DOMContentLoaded', () => {
 	const exportBtn = document.getElementById('export-schematic-btn');
@@ -9,6 +10,12 @@ window.addEventListener('DOMContentLoaded', () => {
 	const importBtn = document.getElementById('import-schematic-btn');
 	if (importBtn) {
 		importBtn.addEventListener('click', promptImportSchematicJSON);
+	}
+	const resetBtn = document.getElementById('reset-canvas-btn');
+	if (resetBtn) {
+		resetBtn.addEventListener('click', () => {
+			window.location.reload();
+		});
 	}
 });
 import { enableCanvasPan, enableCanvasZoom } from './viewportManager.js';
