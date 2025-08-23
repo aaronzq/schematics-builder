@@ -31,10 +31,20 @@ export function calculateOptimalAperture(childState, parentState, logDetails = f
     
     const childDims = childState.dimensions;
     const parentDims = parentState.dimensions;
-    
-    // Get ray shape from child component (determines the policy to use)
-    const childRayShape = childDims.rayShape || 'collimated';
-    const parentRayShape = parentDims.rayShape || 'collimated';
+
+    // Always use the first ray for scaling strategy
+    let childRayShape = 'collimated';
+    let parentRayShape = 'collimated';
+    if (Array.isArray(childState.rayShape) && childState.rayShape.length > 0) {
+        childRayShape = childState.rayShape[0] || 'collimated';
+    } else if (childDims.rayShape) {
+        childRayShape = childDims.rayShape;
+    }
+    if (Array.isArray(parentState.rayShape) && parentState.rayShape.length > 0) {
+        parentRayShape = parentState.rayShape[0] || 'collimated';
+    } else if (parentDims.rayShape) {
+        parentRayShape = parentDims.rayShape;
+    }
     const parentConeAngle = parentDims.coneAngle || 0;
     
     // Calculate center line length for non-collimated cases

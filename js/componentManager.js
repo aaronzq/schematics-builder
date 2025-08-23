@@ -104,8 +104,14 @@ export async function importSchematicFromJSON(schematic) {
             if (compData.rotation !== undefined) {
                 updateComponentRotation(result.element, compData.rotation);
             }
-            if (compData.rayPolygonColor !== undefined) {
-                state.rayPolygonColor = compData.rayPolygonColor;
+            // rayPolygonColor: now array
+            if (Array.isArray(compData.rayPolygonColor)) {
+                state.rayPolygonColor = compData.rayPolygonColor.slice();
+            } else if (compData.rayPolygonColor !== undefined) {
+                // legacy: single value
+                state.rayPolygonColor = [compData.rayPolygonColor];
+            } else {
+                state.rayPolygonColor = ['#00ffff'];
             }
             if (compData.dimensions !== undefined) {
                 state.dimensions = compData.dimensions;
@@ -127,11 +133,16 @@ export async function importSchematicFromJSON(schematic) {
             if (compData.arrowY !== undefined) {
                 state.arrowY = compData.arrowY;
             }
-            if (Array.isArray(compData.solidRays)) {
-                state.solidRays = compData.solidRays.map(ray => ({
-                    shape: ray.shape,
-                    color: ray.color
-                }));
+            // rayShape: now array
+            if (Array.isArray(compData.rayShape)) {
+                state.rayShape = compData.rayShape.slice();
+            } else if (compData.rayShape !== undefined) {
+                // legacy: single value
+                state.rayShape = [compData.rayShape];
+            } else if (compData.dimensions && compData.dimensions.rayShape) {
+                state.rayShape = [compData.dimensions.rayShape];
+            } else {
+                state.rayShape = ['collimated'];
             }
             // Set parentId in state (for completeness)
             state.parentId = parentIdToUse;
@@ -187,16 +198,10 @@ export function exportSchematicToJSON() {
             children: state.children,
             visible: state.visible,
             dimensions: state.dimensions,
-            rayPolygonColor: state.rayPolygonColor
+            rayPolygonColor: Array.isArray(state.rayPolygonColor) ? state.rayPolygonColor.slice() : [state.rayPolygonColor],
+            rayShape: Array.isArray(state.rayShape) ? state.rayShape.slice() : [state.rayShape]
             // Add more fields as needed
         };
-        // Include solidRays array if present
-        if (Array.isArray(state.solidRays)) {
-            compExport.solidRays = state.solidRays.map(ray => ({
-                shape: ray.shape,
-                color: ray.color
-            }));
-        }
         schematic.components.push(compExport);
     }
 
@@ -385,7 +390,8 @@ export function addComponent(type) {
         dimensions: dims,
         parentId: null,
         children: [],
-        rayPolygonColor: DEFAULT_SOLID_RAY_COLOR
+        rayPolygonColor: ['#00ffff'],
+        rayShape: [dims.rayShape || 'collimated']
     };
 
     // Update hierarchy and next position
@@ -561,24 +567,21 @@ export function logComponentInfo(compId) {
         const aperturePoints = state.dimensions.aperturePoints;
         const upperPos = aperturePoints ? `(${aperturePoints.upper.x.toFixed(1)}, ${aperturePoints.upper.y.toFixed(1)})` : 'undefined';
         const lowerPos = aperturePoints ? `(${aperturePoints.lower.x.toFixed(1)}, ${aperturePoints.lower.y.toFixed(1)})` : 'undefined';
-        const rayShape = state.dimensions.rayShape || 'unknown';
         const coneAngle = state.dimensions.coneAngle !== undefined ? `${state.dimensions.coneAngle.toFixed(1)}°` : 'undefined';
-        const rayPolygonColor = state.rayPolygonColor || '(default)';
         console.log(`  Aperture: Radius=${state.dimensions.apertureRadius.toFixed(2)} | Upper=${upperPos} | Lower=${lowerPos}`);
-        console.log(`  Ray Shape: ${rayShape} | Cone Angle: ${coneAngle}`);
-        console.log(`  Solid Ray Color: ${rayPolygonColor}`);
-    }
-
-    // Log solidRays array if present
-    if (Array.isArray(state.solidRays)) {
-        if (state.solidRays.length === 0) {
-            console.log('  solidRays: []');
+        // Log all ray shapes and colors
+        if (Array.isArray(state.rayShape) && Array.isArray(state.rayPolygonColor)) {
+            for (let i = 0; i < state.rayShape.length; i++) {
+                const shape = state.rayShape[i] || 'unknown';
+                const color = state.rayPolygonColor[i] || '(default)';
+                console.log(`  Ray ${i + 1}: Shape: ${shape} | Color: ${color}`);
+            }
         } else {
-            console.log('  solidRays:');
-            state.solidRays.forEach((ray, idx) => {
-                console.log(`    [${idx}] shape: ${ray.shape}, color: ${ray.color}`);
-            });
+            const shape = state.rayShape || 'unknown';
+            const color = state.rayPolygonColor || '(default)';
+            console.log(`  Ray: Shape: ${shape} | Color: ${color}`);
         }
+        console.log(`  Cone Angle: ${coneAngle}`);
     }
 }
 

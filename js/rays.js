@@ -58,195 +58,44 @@ export function drawApertureRays() {
         const parentLower = transformToGlobal(parentDims.aperturePoints.lower.x, parentDims.aperturePoints.lower.y, parentState);
         const parentCenter = transformToGlobal(parentDims.centerPoint.x, parentDims.centerPoint.y, parentState);
         
-        // Always define main ray connection points for dotted lines (use first solid ray if available, else legacy shape)
-        let mainShape = childDims.rayShape;
-        if (Array.isArray(state.solidRays) && state.solidRays.length > 0) {
-            mainShape = state.solidRays[0].shape;
-        }
-        let upperRayStart, upperRayEnd, lowerRayStart, lowerRayEnd;
-        switch (mainShape) {
-            case 'collimated':
-                upperRayStart = parentUpper;
-                upperRayEnd = childUpper;
-                lowerRayStart = parentLower;
-                lowerRayEnd = childLower;
-                break;
-            case 'divergent':
-                upperRayStart = parentCenter;
-                upperRayEnd = childUpper;
-                lowerRayStart = parentCenter;
-                lowerRayEnd = childLower;
-                break;
-            case 'convergent':
-                upperRayStart = parentUpper;
-                upperRayEnd = childCenter;
-                lowerRayStart = parentLower;
-                lowerRayEnd = childCenter;
-                break;
-            default:
-                upperRayStart = parentUpper;
-                upperRayEnd = childUpper;
-                lowerRayStart = parentLower;
-                lowerRayEnd = childLower;
-                break;
-        }
-
-        // Draw all solid rays and their dotted lines if present
-        if (Array.isArray(state.solidRays)) {
-            // Flags for each ray type to ensure only the first draws dotted lines
-            let collimatedDrawn = false;
-            let divergentDrawn = false;
-            let convergentDrawn = false;
-            // Store the connection points for each type
-            let collimatedPoints = null;
-            let divergentPoints = null;
-            let convergentPoints = null;
-            // First, draw all solid rays and set flags/points
-            for (const ray of state.solidRays) {
-                let uStart, uEnd, lStart, lEnd;
-                switch (ray.shape) {
-                    case 'collimated':
-                        uStart = parentUpper;
-                        uEnd = childUpper;
-                        lStart = parentLower;
-                        lEnd = childLower;
-                        if (!collimatedDrawn) {
-                            collimatedDrawn = true;
-                            collimatedPoints = { uStart, uEnd, lStart, lEnd };
-                        }
-                        break;
-                    case 'divergent':
-                        uStart = parentCenter;
-                        uEnd = childUpper;
-                        lStart = parentCenter;
-                        lEnd = childLower;
-                        if (!divergentDrawn) {
-                            divergentDrawn = true;
-                            divergentPoints = { uStart, uEnd, lStart, lEnd };
-                        }
-                        break;
-                    case 'convergent':
-                        uStart = parentUpper;
-                        uEnd = childCenter;
-                        lStart = parentLower;
-                        lEnd = childCenter;
-                        if (!convergentDrawn) {
-                            convergentDrawn = true;
-                            convergentPoints = { uStart, uEnd, lStart, lEnd };
-                        }
-                        break;
-                    default:
-                        uStart = parentUpper;
-                        uEnd = childUpper;
-                        lStart = parentLower;
-                        lEnd = childLower;
-                        break;
-                }
-                if (rayDisplayMode === 'solid' || rayDisplayMode === 'both') {
-                    const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-                    const points = `${uStart.x},${uStart.y} ${uEnd.x},${uEnd.y} ${lEnd.x},${lEnd.y} ${lStart.x},${lStart.y}`;
-                    polygon.setAttribute("points", points);
-                    let fillColor = ray.color;
-                    if (typeof fillColor === 'string') {
-                        if (/^[0-9A-Fa-f]{6}$/.test(fillColor)) {
-                            fillColor = '#' + fillColor;
-                        }
-                        else if (/^#([0-9A-Fa-f]{6})$/.test(fillColor)) {
-                            // already valid
-                        } else {
-                            fillColor = null;
-                        }
-                    } else {
-                        fillColor = null;
-                    }
-                    if (!fillColor) {
-                        fillColor = DEFAULT_SOLID_RAY_COLOR;
-                    }
-                    polygon.setAttribute("fill", fillColor);
-                    polygon.setAttribute("fill-opacity", "0.2");
-                    polygon.setAttribute("stroke", "none");
-                    polygon.setAttribute("pointer-events", "none");
-                    rayLinesGroup.appendChild(polygon);
-                }
+        // Draw all rays using rayShape and rayPolygonColor arrays
+        const rayShapes = Array.isArray(state.rayShape) ? state.rayShape : [childDims.rayShape || 'collimated'];
+        const rayColors = Array.isArray(state.rayPolygonColor) ? state.rayPolygonColor : ['#00ffff'];
+        for (let i = 0; i < rayShapes.length; i++) {
+            const shape = rayShapes[i] || 'collimated';
+            const color = rayColors[i] || '#00ffff';
+            let uStart, uEnd, lStart, lEnd;
+            switch (shape) {
+                case 'collimated':
+                    uStart = parentUpper;
+                    uEnd = childUpper;
+                    lStart = parentLower;
+                    lEnd = childLower;
+                    break;
+                case 'divergent':
+                    uStart = parentCenter;
+                    uEnd = childUpper;
+                    lStart = parentCenter;
+                    lEnd = childLower;
+                    break;
+                case 'convergent':
+                    uStart = parentUpper;
+                    uEnd = childCenter;
+                    lStart = parentLower;
+                    lEnd = childCenter;
+                    break;
+                default:
+                    uStart = parentUpper;
+                    uEnd = childUpper;
+                    lStart = parentLower;
+                    lEnd = childLower;
+                    break;
             }
-            // After all solid rays, draw dotted lines for each type that was present
-            if ((rayDisplayMode === 'dotted' || rayDisplayMode === 'both')) {
-                if (collimatedDrawn && collimatedPoints) {
-                    // Draw upper ray line
-                    const upperLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    upperLine.setAttribute("x1", collimatedPoints.uStart.x);
-                    upperLine.setAttribute("y1", collimatedPoints.uStart.y);
-                    upperLine.setAttribute("x2", collimatedPoints.uEnd.x);
-                    upperLine.setAttribute("y2", collimatedPoints.uEnd.y);
-                    upperLine.setAttribute("stroke", "black");
-                    upperLine.setAttribute("stroke-width", "1");
-                    upperLine.setAttribute("stroke-dasharray", "3,3");
-                    upperLine.setAttribute("pointer-events", "none");
-                    rayLinesGroup.appendChild(upperLine);
-                    // Draw lower ray line
-                    const lowerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    lowerLine.setAttribute("x1", collimatedPoints.lStart.x);
-                    lowerLine.setAttribute("y1", collimatedPoints.lStart.y);
-                    lowerLine.setAttribute("x2", collimatedPoints.lEnd.x);
-                    lowerLine.setAttribute("y2", collimatedPoints.lEnd.y);
-                    lowerLine.setAttribute("stroke", "black");
-                    lowerLine.setAttribute("stroke-width", "1");
-                    lowerLine.setAttribute("stroke-dasharray", "3,3");
-                    lowerLine.setAttribute("pointer-events", "none");
-                    rayLinesGroup.appendChild(lowerLine);
-                }
-                if (divergentDrawn && divergentPoints) {
-                    const upperLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    upperLine.setAttribute("x1", divergentPoints.uStart.x);
-                    upperLine.setAttribute("y1", divergentPoints.uStart.y);
-                    upperLine.setAttribute("x2", divergentPoints.uEnd.x);
-                    upperLine.setAttribute("y2", divergentPoints.uEnd.y);
-                    upperLine.setAttribute("stroke", "black");
-                    upperLine.setAttribute("stroke-width", "1");
-                    upperLine.setAttribute("stroke-dasharray", "3,3");
-                    upperLine.setAttribute("pointer-events", "none");
-                    rayLinesGroup.appendChild(upperLine);
-                    const lowerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    lowerLine.setAttribute("x1", divergentPoints.lStart.x);
-                    lowerLine.setAttribute("y1", divergentPoints.lStart.y);
-                    lowerLine.setAttribute("x2", divergentPoints.lEnd.x);
-                    lowerLine.setAttribute("y2", divergentPoints.lEnd.y);
-                    lowerLine.setAttribute("stroke", "black");
-                    lowerLine.setAttribute("stroke-width", "1");
-                    lowerLine.setAttribute("stroke-dasharray", "3,3");
-                    lowerLine.setAttribute("pointer-events", "none");
-                    rayLinesGroup.appendChild(lowerLine);
-                }
-                if (convergentDrawn && convergentPoints) {
-                    const upperLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    upperLine.setAttribute("x1", convergentPoints.uStart.x);
-                    upperLine.setAttribute("y1", convergentPoints.uStart.y);
-                    upperLine.setAttribute("x2", convergentPoints.uEnd.x);
-                    upperLine.setAttribute("y2", convergentPoints.uEnd.y);
-                    upperLine.setAttribute("stroke", "black");
-                    upperLine.setAttribute("stroke-width", "1");
-                    upperLine.setAttribute("stroke-dasharray", "3,3");
-                    upperLine.setAttribute("pointer-events", "none");
-                    rayLinesGroup.appendChild(upperLine);
-                    const lowerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    lowerLine.setAttribute("x1", convergentPoints.lStart.x);
-                    lowerLine.setAttribute("y1", convergentPoints.lStart.y);
-                    lowerLine.setAttribute("x2", convergentPoints.lEnd.x);
-                    lowerLine.setAttribute("y2", convergentPoints.lEnd.y);
-                    lowerLine.setAttribute("stroke", "black");
-                    lowerLine.setAttribute("stroke-width", "1");
-                    lowerLine.setAttribute("stroke-dasharray", "3,3");
-                    lowerLine.setAttribute("pointer-events", "none");
-                    rayLinesGroup.appendChild(lowerLine);
-                }
-            }
-        } else {
             if (rayDisplayMode === 'solid' || rayDisplayMode === 'both') {
-                // Legacy: single ray shape/color
                 const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-                const points = `${upperRayStart.x},${upperRayStart.y} ${upperRayEnd.x},${upperRayEnd.y} ${lowerRayEnd.x},${lowerRayEnd.y} ${lowerRayStart.x},${lowerRayStart.y}`;
+                const points = `${uStart.x},${uStart.y} ${uEnd.x},${uEnd.y} ${lEnd.x},${lEnd.y} ${lStart.x},${lStart.y}`;
                 polygon.setAttribute("points", points);
-                let fillColor = state.rayPolygonColor;
+                let fillColor = color;
                 if (typeof fillColor === 'string') {
                     if (/^[0-9A-Fa-f]{6}$/.test(fillColor)) {
                         fillColor = '#' + fillColor;
@@ -268,14 +117,13 @@ export function drawApertureRays() {
                 polygon.setAttribute("pointer-events", "none");
                 rayLinesGroup.appendChild(polygon);
             }
-            // Draw dotted lines if mode includes dotted
             if (rayDisplayMode === 'dotted' || rayDisplayMode === 'both') {
                 // Draw upper ray line
                 const upperLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                upperLine.setAttribute("x1", upperRayStart.x);
-                upperLine.setAttribute("y1", upperRayStart.y);
-                upperLine.setAttribute("x2", upperRayEnd.x);
-                upperLine.setAttribute("y2", upperRayEnd.y);
+                upperLine.setAttribute("x1", uStart.x);
+                upperLine.setAttribute("y1", uStart.y);
+                upperLine.setAttribute("x2", uEnd.x);
+                upperLine.setAttribute("y2", uEnd.y);
                 upperLine.setAttribute("stroke", "black");
                 upperLine.setAttribute("stroke-width", "1");
                 upperLine.setAttribute("stroke-dasharray", "3,3");
@@ -283,10 +131,10 @@ export function drawApertureRays() {
                 rayLinesGroup.appendChild(upperLine);
                 // Draw lower ray line
                 const lowerLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                lowerLine.setAttribute("x1", lowerRayStart.x);
-                lowerLine.setAttribute("y1", lowerRayStart.y);
-                lowerLine.setAttribute("x2", lowerRayEnd.x);
-                lowerLine.setAttribute("y2", lowerRayEnd.y);
+                lowerLine.setAttribute("x1", lStart.x);
+                lowerLine.setAttribute("y1", lStart.y);
+                lowerLine.setAttribute("x2", lEnd.x);
+                lowerLine.setAttribute("y2", lEnd.y);
                 lowerLine.setAttribute("stroke", "black");
                 lowerLine.setAttribute("stroke-width", "1");
                 lowerLine.setAttribute("stroke-dasharray", "3,3");
@@ -337,10 +185,9 @@ export function toggleApertureRays() {
     }
 }
 
-// Toggle solid rays
+// Toggle ray display mode (UI button still called 'solid-rays-btn' for compatibility)
 export function toggleSolidRays() {
     const solidRaysBtn = document.getElementById('solid-rays-btn');
-    
     // Cycle through three modes: both -> dotted -> solid -> both
     switch (rayDisplayMode) {
         case 'both':
@@ -356,8 +203,6 @@ export function toggleSolidRays() {
             solidRaysBtn.textContent = 'Both Rays';
             break;
     }
-    
-    // Redraw aperture rays if they are currently shown
     if (showApertureRays) {
         drawApertureRays();
     }

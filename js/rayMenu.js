@@ -16,7 +16,7 @@ import { componentState, getComponentById } from './componentManager.js';
 import { DEFAULT_SOLID_RAY_COLOR } from './constants.js';
 import { drawApertureRays } from './rays.js';
 import { changeComponentRayShape, getValidRayShapes, setConeAngle } from './modules/componentUtils.js';
-import { calculateOptimalAperture } from './modules/componentAperture.js';
+import { calculateOptimalAperture, recursivelyUpdateChildrenApertures, autoScaleForComponentDragRotation } from './modules/componentAperture.js';
 import { showApertureRays } from './rays.js';
 import { updateAperturePointDrawings } from './modules/componentRenderer.js';
 
@@ -153,19 +153,14 @@ export function showRayShapeMenu(component) {
     // (plus button will be added to the last Ray row below)
     
 
-    // --- MULTI SOLID RAY SUPPORT ---
-    // Ensure state.solidRays exists and is an array
-    if (!Array.isArray(state.solidRays)) {
-        // If legacy, migrate from single value
-        state.solidRays = [{
-            shape: state.dimensions.rayShape,
-            color: state.rayPolygonColor || DEFAULT_SOLID_RAY_COLOR
-        }];
-    }
+    // --- MULTI RAY SUPPORT ---
+    // Ensure arrays exist
+    if (!Array.isArray(state.rayShape)) state.rayShape = [state.dimensions.rayShape || 'collimated'];
+    if (!Array.isArray(state.rayPolygonColor)) state.rayPolygonColor = ['#00ffff'];
 
-    // For each solid ray, add a row with Ray Shape and Color
     const validRayShapes = getValidRayShapes();
-    state.solidRays.forEach((ray, idx) => {
+    const numRays = Math.max(state.rayShape.length, state.rayPolygonColor.length);
+    for (let idx = 0; idx < numRays; idx++) {
         const row = document.createElement('div');
         row.style.display = 'flex';
         row.style.alignItems = 'center';
@@ -182,7 +177,6 @@ export function showRayShapeMenu(component) {
         row.appendChild(rayLabel);
 
         // Ray Shape select
-        // Add Shape label before dropdown
         const shapeLabel = document.createElement('span');
         shapeLabel.textContent = 'Shape:';
         shapeLabel.style.marginRight = '6px';
@@ -194,39 +188,53 @@ export function showRayShapeMenu(component) {
             const opt = document.createElement('option');
             opt.value = shape;
             opt.textContent = shape.charAt(0).toUpperCase() + shape.slice(1);
-            if (shape === ray.shape) opt.selected = true;
+            if (shape === (state.rayShape[idx] || 'collimated')) opt.selected = true;
             shapeSelect.appendChild(opt);
         });
         shapeSelect.addEventListener('change', e => {
-            ray.shape = shapeSelect.value;
+            state.rayShape[idx] = shapeSelect.value;
+            // If changing the first ray, update this component's own aperture to match parent
+            if (idx === 0) {
+                // Update this component's own aperture
+                const scaledDims = autoScaleForComponentDragRotation(component, componentState);
+                if (scaledDims) {
+                    state.dimensions = scaledDims;
+                    updateAperturePointDrawings(component, scaledDims);
+                }
+                // Then update all children recursively
+                recursivelyUpdateChildrenApertures(
+                    component,
+                    componentState,
+                    getComponentById,
+                    updateAperturePointDrawings
+                );
+            }
             drawApertureRays();
         });
         row.appendChild(shapeSelect);
 
         // --- Custom Color Picker ---
-        // Color state
-        let colorHex = typeof ray.color === 'string' ? (ray.color.startsWith('#') ? ray.color : '#' + ray.color) : '#00ffff';
+        let colorHex = typeof state.rayPolygonColor[idx] === 'string' ? (state.rayPolygonColor[idx].startsWith('#') ? state.rayPolygonColor[idx] : '#' + state.rayPolygonColor[idx]) : '#00ffff';
         let rgb = hexToRgb(colorHex);
         let hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
-    // Hue slider
-    const hueSlider = document.createElement('input');
-    hueSlider.type = 'range';
-    hueSlider.min = 0;
-    hueSlider.max = 359;
-    hueSlider.value = hsl.h;
-    hueSlider.style.width = '160px';
-    hueSlider.title = 'Hue';
-    hueSlider.className = 'hue-slider';
+        // Hue slider
+        const hueSlider = document.createElement('input');
+        hueSlider.type = 'range';
+        hueSlider.min = 0;
+        hueSlider.max = 359;
+        hueSlider.value = hsl.h;
+        hueSlider.style.width = '160px';
+        hueSlider.title = 'Hue';
+        hueSlider.className = 'hue-slider';
+        row.appendChild(hueSlider);
 
-    row.appendChild(hueSlider);
-
-    // Add RGB label before RGB inputs
-    const rgbLabel = document.createElement('span');
-    rgbLabel.textContent = 'RGB:';
-    rgbLabel.style.marginLeft = '10px';
-    rgbLabel.style.fontWeight = 'bold';
-    row.appendChild(rgbLabel);
+        // Add RGB label before RGB inputs
+        const rgbLabel = document.createElement('span');
+        rgbLabel.textContent = 'RGB:';
+        rgbLabel.style.marginLeft = '10px';
+        rgbLabel.style.fontWeight = 'bold';
+        row.appendChild(rgbLabel);
 
         // RGB inputs
         const rgbInputs = ['R', 'G', 'B'].map((label, i) => {
@@ -280,9 +288,9 @@ export function showRayShapeMenu(component) {
             const usedColors = new Set();
             for (const compId in componentState) {
                 const comp = componentState[compId];
-                if (Array.isArray(comp.solidRays)) {
-                    comp.solidRays.forEach(r => {
-                        if (r.color) usedColors.add(r.color.startsWith('#') ? r.color : '#' + r.color);
+                if (Array.isArray(comp.rayPolygonColor)) {
+                    comp.rayPolygonColor.forEach(col => {
+                        if (col) usedColors.add(col.startsWith('#') ? col : '#' + col);
                     });
                 } else if (comp.rayPolygonColor) {
                     usedColors.add(comp.rayPolygonColor.startsWith('#') ? comp.rayPolygonColor : '#' + comp.rayPolygonColor);
@@ -341,7 +349,7 @@ export function showRayShapeMenu(component) {
         // Update ray color and redraw
         function updateRayColor() {
             colorHex = rgbToHex(rgb.r, rgb.g, rgb.b);
-            ray.color = colorHex;
+            state.rayPolygonColor[idx] = colorHex;
             drawApertureRays();
         }
         // Hue slider event
@@ -363,16 +371,17 @@ export function showRayShapeMenu(component) {
         });
 
         // Remove button (except for the first row)
-        if (state.solidRays.length > 1) {
+        if (numRays > 1) {
             const removeBtn = document.createElement('button');
             removeBtn.textContent = '−';
-            removeBtn.title = 'Remove this solid ray';
+            removeBtn.title = 'Remove this ray';
             removeBtn.style.marginLeft = '8px';
             removeBtn.style.fontWeight = 'bold';
             removeBtn.style.cursor = 'pointer';
             removeBtn.addEventListener('click', e => {
                 e.stopPropagation();
-                state.solidRays.splice(idx, 1);
+                state.rayShape.splice(idx, 1);
+                state.rayPolygonColor.splice(idx, 1);
                 showRayShapeMenu(component); // re-render menu
                 drawApertureRays();
             });
@@ -380,19 +389,17 @@ export function showRayShapeMenu(component) {
         }
 
         // Add plus button to the right of the last Ray row
-        if (idx === state.solidRays.length - 1) {
+        if (idx === numRays - 1) {
             const plusBtn = document.createElement('button');
             plusBtn.textContent = '+';
-            plusBtn.title = 'Add another solid ray';
+            plusBtn.title = 'Add another ray';
             plusBtn.style.marginLeft = '8px';
             plusBtn.style.fontWeight = 'bold';
             plusBtn.style.cursor = 'pointer';
             plusBtn.addEventListener('click', e => {
                 e.stopPropagation();
-                state.solidRays.push({
-                    shape: validRayShapes[0],
-                    color: '#00ffff'
-                });
+                state.rayShape.push(validRayShapes[0]);
+                state.rayPolygonColor.push('#00ffff');
                 showRayShapeMenu(component); // re-render menu
                 drawApertureRays();
             });
@@ -400,7 +407,7 @@ export function showRayShapeMenu(component) {
         }
 
         menu.appendChild(row);
-    });
+    }
 
     // Add to document
     container.appendChild(menu);
