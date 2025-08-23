@@ -201,7 +201,7 @@ export function showRayShapeMenu(component) {
                     const parentState = parentId !== null ? componentState[parentId] : null;
                     if (parentState) {
                         // Use calculateOptimalAperture to update cone angle for manual
-                        const updatedDims = calculateOptimalAperture(state, parentState, true);
+                        const updatedDims = calculateOptimalAperture(state, parentState, false);
                         if (updatedDims) {
                             state.dimensions = updatedDims;
                             updateAperturePointDrawings(component, updatedDims);
@@ -283,7 +283,7 @@ export function showRayShapeMenu(component) {
                 const parentId = state.parentId;
                 const parentState = parentId !== null ? componentState[parentId] : null;
                 if (parentState) {
-                    const updatedDims = calculateOptimalAperture(state, parentState, true);
+                    const updatedDims = calculateOptimalAperture(state, parentState, false);
                     if (updatedDims && typeof updatedDims.coneAngle === 'number') {
                         state.dimensions.coneAngle = updatedDims.coneAngle;
                     }
@@ -307,6 +307,12 @@ export function showRayShapeMenu(component) {
         let rgb = hexToRgb(colorHex);
         let hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
 
+        const hueLabel = document.createElement('span');
+        hueLabel.textContent = 'Hue:';
+        hueLabel.style.marginLeft = '10px';
+        hueLabel.style.fontWeight = 'bold';
+        row.appendChild(hueLabel);
+
         // Hue slider
         const hueSlider = document.createElement('input');
         hueSlider.type = 'range';
@@ -318,29 +324,35 @@ export function showRayShapeMenu(component) {
         hueSlider.className = 'hue-slider';
         row.appendChild(hueSlider);
 
-        // Add RGB label before RGB inputs
-        const rgbLabel = document.createElement('span');
-        rgbLabel.textContent = 'RGB:';
-        rgbLabel.style.marginLeft = '10px';
-        rgbLabel.style.fontWeight = 'bold';
-        row.appendChild(rgbLabel);
+        const hueInput = document.createElement('input');
+        hueInput.type = 'number';
+        hueInput.min = 0;
+        hueInput.max = 359;
+        hueInput.value = hsl.h;
+        hueInput.title = 'Hue';
+        hueInput.style.width = '60px';
+        hueInput.style.padding = '2px 8px';
+        hueInput.style.marginLeft = '2px';
+        hueInput.style.fontSize = '15px';
+        hueInput.style.boxSizing = 'border-box';
+        row.appendChild(hueInput);
 
-        // RGB inputs
-        const rgbInputs = ['R', 'G', 'B'].map((label, i) => {
-            const input = document.createElement('input');
-            input.type = 'number';
-            input.min = 0;
-            input.max = 255;
-            input.value = rgb[['r','g','b'][i]];
-            input.title = label;
-            input.style.width = '60px';
-            input.style.padding = '2px 8px';
-            input.style.marginLeft = '2px';
-            input.style.fontSize = '15px';
-            input.style.boxSizing = 'border-box';
-            row.appendChild(input);
-            return input;
+        // Sync hue slider and input
+        hueInput.addEventListener('input', e => {
+            let val = Math.max(0, Math.min(359, parseInt(hueInput.value) || 0));
+            hsl.h = val;
+            hueSlider.value = val;
+            rgb = hslToRgb(hsl.h, hsl.s, hsl.l);
+            updateRayColor();
         });
+        hueSlider.addEventListener('input', e => {
+            hsl.h = parseInt(hueSlider.value);
+            hueInput.value = hsl.h;
+            rgb = hslToRgb(hsl.h, hsl.s, hsl.l);
+            updateRayColor();
+        });
+        // Update all controls to match current color
+    // Only one updateAllControls function should exist. Remove this duplicate.
 
         // Swatch button
         const swatchBtn = document.createElement('button');
@@ -404,7 +416,8 @@ export function showRayShapeMenu(component) {
                         colorHex = col;
                         rgb = hexToRgb(colorHex);
                         hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-                        updateAllControls();
+                        hueSlider.value = hsl.h;
+                        hueInput.value = hsl.h;
                         updateRayColor();
                         if (swatchPopup) {
                             swatchPopup.remove();
@@ -429,12 +442,7 @@ export function showRayShapeMenu(component) {
         });
 
         // Update all controls to match current color
-        function updateAllControls() {
-            hueSlider.value = hsl.h;
-            rgbInputs[0].value = rgb.r;
-            rgbInputs[1].value = rgb.g;
-            rgbInputs[2].value = rgb.b;
-        }
+    // No updateAllControls needed for RGB inputs; only sync hue slider and input elsewhere.
         // Update ray color and redraw
         function updateRayColor() {
             colorHex = rgbToHex(rgb.r, rgb.g, rgb.b);
@@ -442,22 +450,7 @@ export function showRayShapeMenu(component) {
             drawApertureRays();
         }
         // Hue slider event
-        hueSlider.addEventListener('input', e => {
-            hsl.h = parseInt(hueSlider.value);
-            rgb = hslToRgb(hsl.h, hsl.s, hsl.l);
-            updateAllControls();
-            updateRayColor();
-        });
-        // RGB input events
-        rgbInputs.forEach((input, i) => {
-            input.addEventListener('input', e => {
-                let val = Math.max(0, Math.min(255, parseInt(input.value) || 0));
-                rgb[['r','g','b'][i]] = val;
-                hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
-                updateAllControls();
-                updateRayColor();
-            });
-        });
+    // No RGB input events needed.
 
         // Remove button (except for the first row)
         if (numRays > 1) {

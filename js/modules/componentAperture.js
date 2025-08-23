@@ -512,7 +512,7 @@ export function autoScaleForNewComponentPlacement(childDims, componentType, comp
     
     try {
         // Use core aperture policy to calculate optimal dimensions
-        const optimizedDimensions = calculateOptimalAperture(tempChildState, parentState, true);
+        const optimizedDimensions = calculateOptimalAperture(tempChildState, parentState, false);
         return optimizedDimensions || childDims;
         
     } catch (error) {
