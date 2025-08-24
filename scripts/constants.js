@@ -1,4 +1,3 @@
-
 // Application constants
 // Centralized configuration values used across multiple modules
 
@@ -36,6 +35,9 @@ export const MIN_CANVAS_HEIGHT = 300;
 export const CANVAS_PADDING_PERCENT = 0.1;
 export const MIN_CANVAS_PADDING = 50;
 
+// Grid configuration
+export const GRID_EXTEND_FACTOR = 3; // Grid area will be (1 + 2*factor)x the viewBox
+
 // Debug visualization
 export const SHOW_DEBUG_DRAWING = false;
 export const UP_VECTOR_LENGTH = 60;
@@ -43,6 +45,8 @@ export const FORWARD_VECTOR_LENGTH = 60;
 export const CENTER_MARKER_RADIUS = 2;
 export const APERTURE_POINT_RADIUS = 3;
 export const LOWER_APERTURE_POINT_RADIUS = 2;
+
+
 
 
 
