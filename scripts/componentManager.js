@@ -171,6 +171,10 @@ export async function importSchematicFromJSON(schematic) {
     // Fit viewport to all components after import
     const { updateCanvasViewBox } = await import('./viewportManager.js');
     updateCanvasViewBox();
+
+    // Redraw aperture rays to reflect imported ray colors/shapes
+    const { drawApertureRays } = await import('./rays.js');
+    drawApertureRays();
 }
 /**
  * Export the current schematic to a JSON object, including a hierarchy action list.
