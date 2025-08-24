@@ -260,7 +260,7 @@ export function showAngleDisplay(x, y, angle) {
     text.setAttribute("font-size", "14");
     text.setAttribute("font-weight", "bold");
     text.setAttribute("fill", "white");
-    text.textContent = `${Math.round(angle)}°`;
+    text.textContent = `${angle.toFixed(1)}°`;
     angleDisplay.appendChild(text);
     
     svg.appendChild(angleDisplay);

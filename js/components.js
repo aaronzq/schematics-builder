@@ -73,10 +73,10 @@ export const componentDimensions = {
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     detector: { 
-        width: 56, 
-        height: 80, 
+        width: 85, 
+        height: 60, 
         offsetX: 0,
-        centerPoint: { x: -25, y: 0 }, // Center at component origin
+        centerPoint: { x: -45, y: 0 }, // Center at component origin
         upVector: { x: 0, y: -1 },     // Up direction (negative Y)
         forwardVector: { x: 1, y: 0 },  // Forward direction (positive X)
         apertureRadius: DEFAULT_APERTURE_RADIUS,            // Scalar radius for aperture points
@@ -107,7 +107,55 @@ export const componentDimensions = {
         coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
-    }
+    },
+    mask: {
+        width: 6, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
+    'wedge-prism': {
+        width: 25, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); } 
+    },
+    dmd: {
+        width: 10, 
+        height: 80, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }  
+    },
+    slm: {
+        width: 10, 
+        height: 80, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }  
+    }    
 };
 
 // Component drawing functions
@@ -262,8 +310,8 @@ export const components = {
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
 
-            const totalWidth = 50;
-            const totalHeight = 80;
+            const totalWidth = 80;
+            const totalHeight = 60;
             const border = 1.5; // Border thickness
 
             const xLeft = -totalWidth / 2;
@@ -271,7 +319,7 @@ export const components = {
             const xRight = xLeft + totalWidth;
             const yBottom = yTop + totalHeight;
 
-            // Bold outer enclosure using path
+            // Outer enclosure 
             const framePath = document.createElementNS(ns, "path");
             framePath.setAttribute("d", `
             M ${xLeft} ${yTop}
@@ -280,46 +328,21 @@ export const components = {
             H ${xLeft}
             Z
             `);
-            framePath.setAttribute("fill", "none");
+            framePath.setAttribute("fill", "#cccccc");
             framePath.setAttribute("stroke", "black");
-            framePath.setAttribute("stroke-width", border * 2);
+            framePath.setAttribute("stroke-width", border);
             g.appendChild(framePath);
-
-            // Inner body (gray detection area)
-            const inner = document.createElementNS(ns, "rect");
-            inner.setAttribute("x", xLeft + border * 2);
-            inner.setAttribute("y", yTop + border * 2);
-            inner.setAttribute("width", totalWidth - border * 4);
-            inner.setAttribute("height", totalHeight - border * 4);
-            inner.setAttribute("fill", "#cccccc");
-            g.appendChild(inner);
-
-            // Yellow screw markers (rectangular)
-            const screwTop = document.createElementNS(ns, "rect");
-            screwTop.setAttribute("x", xLeft + 4);
-            screwTop.setAttribute("y", yTop + 4);
-            screwTop.setAttribute("width", 5);
-            screwTop.setAttribute("height", 5);
-            screwTop.setAttribute("fill", "gold");
-            g.appendChild(screwTop);
-
-            const screwBottom = document.createElementNS(ns, "rect");
-            screwBottom.setAttribute("x", xLeft + 4);
-            screwBottom.setAttribute("y", yBottom - 9);
-            screwBottom.setAttribute("width", 5);
-            screwBottom.setAttribute("height", 5);
-            screwBottom.setAttribute("fill", "gold");
-            g.appendChild(screwBottom);
-
-            // Right-side connector
-            const connector = document.createElementNS(ns, "rect");
-            connector.setAttribute("x", xRight - 1);
-            connector.setAttribute("y", -25);
-            connector.setAttribute("width", 6);
-            connector.setAttribute("height", 16);
-            connector.setAttribute("fill", "#555555");
-            connector.setAttribute("stroke", "black");
-            g.appendChild(connector);
+            
+            // Adapter ring
+            const adapter = document.createElementNS(ns, "rect");
+            adapter.setAttribute("x", xLeft-5);
+            adapter.setAttribute("y", yTop+totalHeight/6);
+            adapter.setAttribute("width", 5);
+            adapter.setAttribute("height", totalHeight*2/3);
+            adapter.setAttribute("fill", "#2e2e2e");
+            adapter.setAttribute("stroke", "black");
+            adapter.setAttribute("stroke-width", border);
+            g.appendChild(adapter);
 
             return g;
         }
@@ -337,7 +360,7 @@ export const components = {
                 const lens = document.createElementNS(ns, "path");
                 const scale = 0.2; // Scale factor reduced to make lenses smaller
                 const height = 30 * scale; // 6px height
-                const curve = 12 * scale; // 1.8px curve
+                const curve = 18 * scale; // 1.8px curve
                 
                 lens.setAttribute("d", `M 0 ${yOffset - height} C ${curve} ${yOffset - height + 3*scale} ${curve} ${yOffset + height - 3*scale} 0 ${yOffset + height} C ${-curve} ${yOffset + height - 3*scale} ${-curve} ${yOffset - height + 3*scale} 0 ${yOffset - height}`);
                 lens.setAttribute("stroke", "black");
@@ -367,5 +390,160 @@ export const components = {
 
             return g;
         }
+    },
+
+    mask: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            const totalWidth = 6;
+            const totalHeight = 60;
+            const border = 1.5; // Border thickness
+
+            const xLeft = -totalWidth / 2;
+            const yTop = -totalHeight / 2;
+            const xRight = xLeft + totalWidth;
+            const yBottom = yTop + totalHeight;
+
+            // Outer enclosure 
+            const plate = document.createElementNS(ns, "path");
+            plate.setAttribute("d", `
+            M ${xLeft} ${yTop}
+            H ${xRight}
+            V ${yBottom}
+            H ${xLeft}
+            Z
+            `);
+            plate.setAttribute("fill", "#ffffff");
+            plate.setAttribute("stroke", "black");
+            plate.setAttribute("stroke-width", border);
+            g.appendChild(plate);
+
+            const blockout1 = document.createElementNS(ns, "rect");
+            blockout1.setAttribute("x", xLeft);
+            blockout1.setAttribute("y", yTop);
+            blockout1.setAttribute("width", totalWidth);
+            blockout1.setAttribute("height", 10);
+            blockout1.setAttribute("fill", "#000000");
+            g.appendChild(blockout1);
+
+            const blockout2 = document.createElementNS(ns, "rect");
+            blockout2.setAttribute("x", xLeft);
+            blockout2.setAttribute("y", yTop+15);
+            blockout2.setAttribute("width", totalWidth);
+            blockout2.setAttribute("height", 5);
+            blockout2.setAttribute("fill", "#000000");
+            g.appendChild(blockout2);
+
+            const blockout3 = document.createElementNS(ns, "rect");
+            blockout3.setAttribute("x", xLeft);
+            blockout3.setAttribute("y", yTop+30);
+            blockout3.setAttribute("width", totalWidth);
+            blockout3.setAttribute("height", 15);
+            blockout3.setAttribute("fill", "#000000");
+            g.appendChild(blockout3);
+
+            const blockout4 = document.createElementNS(ns, "rect");
+            blockout4.setAttribute("x", xLeft);
+            blockout4.setAttribute("y", yTop+52);
+            blockout4.setAttribute("width", totalWidth);
+            blockout4.setAttribute("height", 8);
+            blockout4.setAttribute("fill", "#000000");
+            g.appendChild(blockout4);
+
+            return g;
+        }
+    },
+
+    'wedge-prism': {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            const border = 1.5;
+
+            const prism = document.createElementNS(ns, "path");
+            prism.setAttribute("d", 'M -10 -30 L -10 30 L 15 30 L 5 -30 Z');
+            prism.setAttribute("fill", "#145ec0");
+            prism.setAttribute("fill-opacity", "0.3");
+            prism.setAttribute("stroke", "black");
+            prism.setAttribute("stroke-width", border);
+            g.appendChild(prism);
+
+            return g;
+        }
+    },
+
+    dmd: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            const border = 1.5;
+
+            const baseplate = document.createElementNS(ns, "rect");
+            baseplate.setAttribute("x", 0);
+            baseplate.setAttribute("y", -40);
+            baseplate.setAttribute("width", 5);
+            baseplate.setAttribute("height", 80);
+            baseplate.setAttribute("stroke", "black");
+            baseplate.setAttribute("stroke-width", border);
+            baseplate.setAttribute("fill", "#868686");
+            g.appendChild(baseplate);
+
+            const mirror1 = document.createElementNS(ns, "rect");
+            mirror1.setAttribute("x", -5);
+            mirror1.setAttribute("y", -30);
+            mirror1.setAttribute("width", 5);
+            mirror1.setAttribute("height", 18);
+            mirror1.setAttribute("fill", "#000000");
+            g.appendChild(mirror1);
+
+            const mirror2 = document.createElementNS(ns, "rect");
+            mirror2.setAttribute("x", -5);
+            mirror2.setAttribute("y", -5);
+            mirror2.setAttribute("width", 5);
+            mirror2.setAttribute("height", 10);
+            mirror2.setAttribute("fill", "#000000");
+            g.appendChild(mirror2);
+
+            const mirror3 = document.createElementNS(ns, "rect");
+            mirror3.setAttribute("x", -5);
+            mirror3.setAttribute("y", 10);
+            mirror3.setAttribute("width", 5);
+            mirror3.setAttribute("height", 20);
+            mirror3.setAttribute("fill", "#000000");
+            g.appendChild(mirror3);
+
+            return g;
+        }
+    },
+
+    slm: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            const border = 1.5;
+
+            const baseplate = document.createElementNS(ns, "rect");
+            baseplate.setAttribute("x", 0);
+            baseplate.setAttribute("y", -40);
+            baseplate.setAttribute("width", 5);
+            baseplate.setAttribute("height", 80);
+            baseplate.setAttribute("stroke", "black");
+            baseplate.setAttribute("stroke-width", border);
+            baseplate.setAttribute("fill", "#868686");
+            g.appendChild(baseplate);
+
+            const lc = document.createElementNS(ns, "rect");
+            lc.setAttribute("x", -5);
+            lc.setAttribute("y", -30);
+            lc.setAttribute("width", 5);
+            lc.setAttribute("height", 60);
+            lc.setAttribute("fill", "#145ec0");
+            lc.setAttribute("fill-opacity", "0.5");
+            g.appendChild(lc);
+
+            return g;
+        }
     }
+
 };

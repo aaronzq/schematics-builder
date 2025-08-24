@@ -7,12 +7,12 @@ export const COMPONENT_SPACING = 150;
 
 // Angle and grid snapping
 // export const ANGLE_SNAP_INCREMENT = 5;
-export const ROTATION_SNAP_INCREMENT = 1;
+export const ROTATION_SNAP_INCREMENT = 0.5;
 export const GRID_SIZE = 5;
 export const ARROW_TIP_SNAP_SIZE = 5;
 
 // Debug and visualization
-export const SHOW_DEBUG_DRAWING = false;
+export const SHOW_DEBUG_DRAWING = true;
 
 // UI measurements
 export const ROTATION_HANDLE_DISTANCE = 40;
@@ -27,6 +27,7 @@ export const ROTATION_HANDLE_STROKE = "#fbc02d";
 
 // Default color for solid ray
 export const DEFAULT_SOLID_RAY_COLOR = '#00ffff';
+export const DEFAULT_RAY_POLYGON_OPACITY = 0.2;
 
 // Vector visualization
 export const UP_VECTOR_LENGTH = 60;

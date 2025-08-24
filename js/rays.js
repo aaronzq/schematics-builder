@@ -2,7 +2,7 @@
 // Handles drawing blue dashed lines connecting aperture points between components
 
 import { componentState } from './componentManager.js';
-import { DEFAULT_SOLID_RAY_COLOR } from './constants.js';
+import { DEFAULT_SOLID_RAY_COLOR, DEFAULT_RAY_POLYGON_OPACITY} from './constants.js';
 import { transformToGlobal } from './utils/mathUtils.js';
 
 // Import will be added when the module is loaded to avoid circular dependencies
@@ -118,7 +118,7 @@ export function drawApertureRays() {
                     fillColor = DEFAULT_SOLID_RAY_COLOR;
                 }
                 polygon.setAttribute("fill", fillColor);
-                polygon.setAttribute("fill-opacity", "0.2");
+                polygon.setAttribute("fill-opacity", `${DEFAULT_RAY_POLYGON_OPACITY}`);
                 polygon.setAttribute("stroke", "none");
                 polygon.setAttribute("pointer-events", "none");
                 rayLinesGroup.appendChild(polygon);
