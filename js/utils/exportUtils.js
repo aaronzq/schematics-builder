@@ -1,4 +1,6 @@
 import { deselectAllComponents } from '../eventHandler.js';
+import { hideGridForExport, showGridAfterExport } from '../grid.js';
+import { updateCanvasViewBox } from '../viewportManager.js';
 // Export SVG utility for the schematic builder
 
 // Helper: Inline computed styles as SVG attributes for color compatibility
@@ -46,10 +48,19 @@ function inlineSVGStyles(svgElement) {
 
 export function exportCanvasAsSVG() {
     deselectAllComponents();
+    // Hide grid before export, remember if it was visible
+    const gridGroup = document.getElementById('grid');
+    const wasGridVisible = gridGroup && gridGroup.style.display !== 'none';
+    
+    // Ensure viewBox is updated and centered on all components
+    updateCanvasViewBox();
+    hideGridForExport();
     setTimeout(() => {
         const svg = document.getElementById('canvas');
         if (!svg) {
             alert('SVG canvas not found!');
+            // Restore grid if needed
+            if (wasGridVisible) showGridAfterExport();
             return;
         }
         // Clone and clean
@@ -75,5 +86,7 @@ export function exportCanvasAsSVG() {
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+        // Restore grid if it was visible
+        if (wasGridVisible) showGridAfterExport();
     }, 10);
 }

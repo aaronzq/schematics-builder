@@ -1,4 +1,3 @@
-
 import { downloadSchematicJSON, promptImportSchematicJSON } from './componentManager.js';
 // import { resetCanvas } from './componentManager.js';
 
@@ -30,6 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
 // Import all modules
 import './eventHandler.js'; // This will initialize the app when DOM loads
 
+
+import { drawGrid, toggleGrid } from './grid.js';
+
+window.addEventListener('resize', drawGrid);
+document.getElementById('toggle-grid-btn').addEventListener('click', toggleGrid);
+
+// Optionally, call drawGrid() after SVG/canvas size changes
+
+
 // The eventHandler module handles initialization and sets up the global addComponent function
 // All other functionality is modularized into their respective files:
 
@@ -51,3 +59,4 @@ import './eventHandler.js'; // This will initialize the app when DOM loads
 // The application uses a clean modular architecture with clear separation of concerns
 
 console.log('Optical Schematic Builder initialized with modular architecture');
+

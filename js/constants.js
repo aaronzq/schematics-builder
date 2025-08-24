@@ -16,12 +16,12 @@ export const SHOW_DEBUG_DRAWING = true;
 
 // UI measurements
 export const ROTATION_HANDLE_DISTANCE = 40;
-export const ROTATION_HANDLE_RADIUS = 12;
-export const ARROW_HANDLE_RADIUS = 10;
+export const ROTATION_HANDLE_RADIUS = 8;
+export const ARROW_HANDLE_RADIUS = 5;
 
 // Visual styling
 export const ARROW_COLOR = "#2196F3";
-export const ARROW_STROKE_WIDTH = 3;
+export const ARROW_STROKE_WIDTH = 2;
 export const ROTATION_HANDLE_COLOR = "#ffe082";
 export const ROTATION_HANDLE_STROKE = "#fbc02d";
 

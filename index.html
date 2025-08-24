@@ -44,18 +44,21 @@
           <div class="toolbar-right">
             <p class="toolbar-label">Component Actions</p>
             <button id="delete-btn">Delete Selected</button>
-            <button id="flip-horizontal-btn">Flip Horizontal</button>
-            <button id="flip-vertical-btn">Flip Vertical</button>
+            <button id="flip-horizontal-btn">Flip X</button>
+            <button id="flip-vertical-btn">Flip Y</button>
             <button id="hide-component-btn">Hide Component</button>
             <button id="show-component-btn">Show Component</button>
             <button id="show-all-components-btn">Show All Components</button>
+            <button id="toggle-grid-btn">Show Grid</button>
           </div>
         </div>
         <div class="canvas-container">
-          <svg id="canvas">
+          <!-- <canvas id="grid-canvas" style="position:absolute; left:0; top:0; z-index:0;"></canvas> -->
+          <svg id="canvas" style="position:relative; z-index:1;">
             <defs>
               <!-- Component definitions will go here -->
             </defs>
+            <!-- <circle cx="0" cy="0" r="5" fill="red"/> -->
             <g id="grid"></g>
             <g id="components"></g>
           </svg>

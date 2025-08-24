@@ -25,7 +25,8 @@ export function enableCanvasZoom() {
         const newX = mouseSVG.x - mx * newWidth;
         const newY = mouseSVG.y - my * newHeight;
 
-        svg.setAttribute('viewBox', `${newX} ${newY} ${newWidth} ${newHeight}`);
+    svg.setAttribute('viewBox', `${newX} ${newY} ${newWidth} ${newHeight}`);
+    if (typeof drawGrid === 'function') drawGrid();
     }, { passive: false });
 }
 // Enable right mouse drag to pan the SVG viewport
@@ -61,7 +62,8 @@ export function enableCanvasPan() {
         const scaleXY = 0.5 * (scaleX + scaleY);
         const newX = startViewBox.x - dx * scaleXY;
         const newY = startViewBox.y - dy * scaleXY;
-        svg.setAttribute('viewBox', `${newX} ${newY} ${startViewBox.width} ${startViewBox.height}`);
+    svg.setAttribute('viewBox', `${newX} ${newY} ${startViewBox.width} ${startViewBox.height}`);
+    if (typeof drawGrid === 'function') drawGrid();
     });
 
     window.addEventListener('mouseup', function(e) {
@@ -72,6 +74,7 @@ export function enableCanvasPan() {
     });
 }
 import { componentDimensions } from './components.js';
+import { drawGrid } from './grid.js';
 import { 
     MIN_CANVAS_WIDTH, 
     MIN_CANVAS_HEIGHT, 
@@ -175,7 +178,8 @@ export function updateCanvasViewBox() {
         const viewBoxX = centerX - viewBoxWidth / 2;
         const viewBoxY = centerY - viewBoxHeight / 2;
 
-        svg.setAttribute("viewBox", `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
+    svg.setAttribute("viewBox", `${viewBoxX} ${viewBoxY} ${viewBoxWidth} ${viewBoxHeight}`);
+    drawGrid();
     });
 }
 
