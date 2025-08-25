@@ -12,7 +12,7 @@ export const ARROW_HANDLE_RADIUS = 5;
 export const ARROW_TIP_SNAP_SIZE = 5;
 
 // Component rotation handle
-export const ROTATION_SNAP_INCREMENT = 0.5;
+export const ROTATION_SNAP_INCREMENT = 2.5;
 export const ROTATION_HANDLE_DISTANCE = 40;
 export const ROTATION_HANDLE_RADIUS = 8;
 export const ROTATION_HANDLE_COLOR = "#ffe082";

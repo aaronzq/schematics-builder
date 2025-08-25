@@ -125,9 +125,7 @@ export async function importSchematicFromJSON(schematic) {
             if (compData.dimensions !== undefined) {
                 state.dimensions = compData.dimensions;
             }
-            if (compData.children !== undefined) {
-                state.children = compData.children;
-            }
+            // Do NOT set state.children from compData here to avoid duplicate children.
             if (compData.visible !== undefined) {
                 state.visible = compData.visible;
                 if (compData.visible) {
@@ -299,7 +297,7 @@ import { componentDimensions } from './components.js';
 import { flipUpVector } from './modules/componentUtils.js';
 import { updateTraceLines } from './traceLines.js';
 import { validateComponentType } from './utils/validators.js';
-import { HIDDEN_COMPONENT_OPACITY, VISIBLE_COMPONENT_OPACITY } from './constants.js';
+import { HIDDEN_COMPONENT_OPACITY, VISIBLE_COMPONENT_OPACITY, GRID_SIZE, ROTATION_SNAP_INCREMENT } from './constants.js';
 import { DEFAULT_SOLID_RAY_COLOR } from './constants.js';
 
 
@@ -480,9 +478,12 @@ export function updateComponentPosition(component, centerX, centerY) {
     const state = componentState[compId];
     if (!state) return;
 
-    // Calculate delta from previous center position and update state
+    // Only update if position changes by at least GRID_SIZE
     const dx = centerX - state.posX;
     const dy = centerY - state.posY;
+    if (Math.abs(dx) < GRID_SIZE && Math.abs(dy) < GRID_SIZE) {
+        return;
+    }
     state.posX = centerX;
     state.posY = centerY;
 
@@ -513,6 +514,10 @@ export function updateComponentRotation(component, rotation) {
     const state = componentState[compId];
     if (!state) return;
 
+    // Only update if rotation changes by at least ROTATION_SNAP_INCREMENT
+    if (Math.abs(rotation - state.rotation) < ROTATION_SNAP_INCREMENT) {
+        return;
+    }
     state.rotation = rotation;
     
     // Handle aperture scaling
