@@ -106,8 +106,8 @@ body, html {
 .toolbar {
   display: flex;
   flex-direction: column;
-  gap: 15px;
-  padding: 32px 12px;
+  gap: 8px;
+  padding: 20px 12px;
   background: #fafafa;
   border-radius: 8px;
   margin: 12px 12px;
@@ -125,7 +125,7 @@ body, html {
 }
 
 .toolbar button {
-  padding: 12px 0;
+  padding: 5px 0;
   cursor: pointer;
   border: 1px solid #bdbdbd;
   background: #ededed;
@@ -157,7 +157,7 @@ body, html {
   align-items: left;
   margin-bottom: 10px;
   background: #fafafa;
-  padding: 10px 10px;
+  padding: 1px 10px;
   border-radius: 8px;
   /* box-shadow: 0 2px 8px rgba(0,0,0,0.07);
   gap: 0; */
@@ -167,12 +167,12 @@ body, html {
   display: flex;
   flex-direction: row;
   padding: 5px 0px;
-  gap: 10px;
+  gap: 5px;
   align-items: center; /* Vertically center children */
 }
 
 .canvas-toolbar button {
-  padding: 8px 8px;
+  padding: 5px 5px;
   font-size: 1rem;
   border: 1px solid #bdbdbd;
   background: #ededed;
@@ -262,6 +262,17 @@ body, html {
   pointer-events: all;
 }
 
+.gallery-instructions-row {
+  display:flex; 
+  gap:0.5vw; 
+  justify-content:flex-start; 
+  align-items:flex-start; 
+  margin:0em 0; 
+  width:100vw; 
+  max-width:100vw;
+  padding: 5px 0px;
+  background: #dcdcdc;
+}
 
 .gallery-row, .instructions-row {
   background: #f8f8f8;
