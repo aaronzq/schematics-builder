@@ -24,6 +24,7 @@ export function promptImportSchematicJSON() {
     input.click();
     input.remove();
 }
+
 /**
  * Import a schematic from a JSON object and reconstruct the layout and hierarchy.
  * @param {object} schematic - The parsed schematic JSON object.
@@ -35,6 +36,14 @@ export async function importSchematicFromJSON(schematic) {
         alert('Invalid schematic file.');
         return;
     }
+    // Remove any lingering arrows and rotation handles
+    const svg = document.getElementById('canvas');
+    if (!svg) return;
+    // Remove all arrow groups
+    svg.querySelectorAll('[id^="arrow-preview-"]').forEach(el => el.remove());
+    // Remove all rotation handles
+    svg.querySelectorAll('[id^="rotation-handle-"]').forEach(el => el.remove());
+
     // Clear existing components
     const componentsGroup = document.getElementById('components');
     while (componentsGroup.firstChild) {
@@ -292,6 +301,7 @@ import { updateTraceLines } from './traceLines.js';
 import { validateComponentType } from './utils/validators.js';
 import { HIDDEN_COMPONENT_OPACITY, VISIBLE_COMPONENT_OPACITY } from './constants.js';
 import { DEFAULT_SOLID_RAY_COLOR } from './constants.js';
+
 
 // Import focused modules
 import { calculateComponentPlacement, calculateArrowEndpoint } from './modules/componentPlacement.js';
