@@ -37,6 +37,7 @@
             <button id="trace-btn">Hide Trace Line</button>
             <button id="rays-btn">Hide Rays</button>
             <button id="solid-rays-btn">Both Rays</button>
+            <p class="toolbar-label">Export/Import</p>
             <button id="export-svg-btn">Export SVG</button>  
             <button id="export-schematic-btn">Export JSON</button>
             <button id="import-schematic-btn">Import JSON</button>
@@ -44,12 +45,12 @@
           <div class="toolbar-right">
             <p class="toolbar-label">Component Actions</p>
             <button id="delete-btn">Delete Selected</button>
+            <button id="toggle-grid-btn">Hide Grid</button>
             <button id="flip-horizontal-btn">Flip X</button>
             <button id="flip-vertical-btn">Flip Y</button>
             <button id="hide-component-btn">Hide Component</button>
             <button id="show-component-btn">Show Component</button>
-            <button id="show-all-components-btn">Show All Components</button>
-            <button id="toggle-grid-btn">Hide Grid</button>
+            <button id="show-all-components-btn">Show All Components</button> 
           </div>
         </div>
         <div class="canvas-container">
@@ -66,19 +67,27 @@
       </main>
     </div>
 
-    
 
-    <section class="instructions-row">
-      <h2>How to Use</h2>
-      <ol>
-        <li>Select a component from the left sidebar to add it to the canvas.</li>
-        <li>Arrow indicates the position to spawn next component. Adjust arrow if needed.</li>
-        <li>You can drag, rotate and change ray shape for each component. Just click on the component to reveal interaction handles. </li>
-        <li>Use the buttons above the canvas to delete, hide, or show components and rays.</li>
-        <li>Refresh webpage to start over.</li>
-        <li>Tips: use Plane and Hide Component to achieve 4F system layout.</li>
-      </ol>
-    </section>
+    <div class="gallery-instructions-row" style="display:flex; gap:0.5vw; justify-content:flex-start; align-items:flex-start; margin:2em 0; width:100vw; max-width:100vw;">
+      <section class="instructions-row" style="flex:0 0 35%; min-width:220px; box-sizing:border-box;">
+        <h2>How to Use (on PC browser)</h2>
+        <ol>
+          <li>Click a component from the left sidebar to add it to the canvas.</li>
+          <li>Arrow indicates the position to spawn next component. Adjust arrow if needed.</li>
+          <li>Left mouse: Select component. Right mouse: Pan the canvas. Wheel: Zoom in/out.</li>
+          <li>Change ray shape, color and overlay multiple rays in the ray menu.</li>
+          <li>Tips: use Plane and Hide Component to draw focus point between components</li>
+        </ol>
+      </section>
+      <section class="gallery-row" style="flex:0 0 65%; min-width:320px; max-width:none; box-sizing:border-box; padding:24px 8px 24px 8px;">
+        <h2 style="text-align:center;">Example Gallery (Click to import)</h2>
+        <div id="gallery-container" style="display:flex; align-items:center; justify-content:flex-start; width:100%;">
+          <div id="gallery-images" style="display:flex; gap:0.5em; overflow:hidden; width:100%; justify-content:flex-start;">
+            <!-- Gallery images will be rendered by gallery.js -->
+          </div>
+        </div>
+      </section>
+    </div>
   </div>
 
   <footer style="text-align:center; margin-top:2em; color:#888; font-size:0.95em;">

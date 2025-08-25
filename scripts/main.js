@@ -1,4 +1,6 @@
 import { downloadSchematicJSON, promptImportSchematicJSON } from './componentManager.js';
+import { enableCanvasPan, enableCanvasZoom } from './viewportManager.js';
+import { galleryJsonPaths, renderGallery } from './gallery.js';
 // import { resetCanvas } from './componentManager.js';
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -16,16 +18,42 @@ window.addEventListener('DOMContentLoaded', () => {
 			window.location.reload();
 		});
 	}
+
+	// Render gallery images dynamically
+	renderGallery();
+
+	// Add click listeners to gallery images for schematic import
+	const galleryDiv = document.getElementById('gallery-images');
+	if (galleryDiv) {
+		const imgs = galleryDiv.getElementsByTagName('img');
+
+		async function importSchematicFromFile(jsonPath) {
+			try {
+				const response = await fetch(jsonPath);
+				if (!response.ok) throw new Error('File not found: ' + jsonPath);
+				const schematic = await response.json();
+				// Use the importSchematicFromJSON function from componentManager.js
+				const mod = await import('./componentManager.js');
+				mod.importSchematicFromJSON(schematic);
+			} catch (err) {
+				alert('Failed to load schematic: ' + err.message);
+			}
+		}
+
+		for (let i = 0; i < imgs.length; i++) {
+			const img = imgs[i];
+			img.style.cursor = 'pointer';
+			img.title = 'Click to import a schematic from JSON';
+			img.onclick = () => importSchematicFromFile(galleryJsonPaths[i]);
+		}
+	}
 });
 
-
-import { enableCanvasPan, enableCanvasZoom } from './viewportManager.js';
 // Enable right mouse drag-to-pan and mouse wheel zoom after DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
 	enableCanvasPan();
 	enableCanvasZoom();
 });
-
 
 import './eventHandler.js'; // This will initialize the app when DOM loads
 

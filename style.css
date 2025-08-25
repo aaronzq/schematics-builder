@@ -146,7 +146,7 @@ body, html {
   flex-direction: column;
   align-items: stretch;
   justify-content: flex-start;
-  padding: 12px 24px 0 24px;
+  padding: 12px 24px 12px 24px;
   min-width: 0;
 }
 
@@ -262,20 +262,43 @@ body, html {
   pointer-events: all;
 }
 
-.instructions-row {
-  background: #f0f0f0;
+
+.gallery-row, .instructions-row {
+  background: #f8f8f8;
   color: #222;
-  padding: 32px 24px 32px 24px;
-  border-top: 1px solid #bdbdbd;
-  box-shadow: 0 -2px 8px rgba(0,0,0,0.03);
+  padding: 32px 28px 32px 28px;
+  border-radius: 14px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-size: 1.08rem;
+  line-height: 1.7;
+  margin: 0;
 }
-.instructions-row h2 {
+
+.gallery-row h2, .instructions-row h2 {
   margin-top: 0;
-  color: #555;
+  margin-bottom: 18px;
+  color: #333;
+  font-size: 1.35rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  font-family: inherit;
+  text-align: center;
 }
+
 .instructions-row ol {
   margin: 0;
   padding-left: 22px;
-  font-size: 1.1rem;
+  font-size: 1.08rem;
   line-height: 1.7;
+  font-family: inherit;
+}
+
+.gallery-row img {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  background: #fff;
+  object-fit: contain;
+  font-family: inherit;
 }
