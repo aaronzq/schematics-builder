@@ -1,6 +1,6 @@
 import { GRID_SIZE, GRID_EXTEND_FACTOR } from './constants.js';
 
-let gridVisible = false;
+let gridVisible = true;
 
 export function drawGrid() {
   const svg = document.getElementById('canvas');

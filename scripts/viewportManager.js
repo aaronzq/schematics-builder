@@ -114,6 +114,9 @@ export function initCanvas() {
 
     // Enable mouse wheel zoom
     try { require('./viewportManager.js').enableCanvasZoom(); } catch (e) { /* For ES modules, call in main.js */ }
+
+    // Always draw grid on canvas initialization
+    if (typeof drawGrid === 'function') drawGrid();
 }
 
 // Calculate the bounding box of all components and adjust viewBox
