@@ -1,0 +1,807 @@
+{
+  "components": [
+    {
+      "id": 0,
+      "type": "plane",
+      "posX": 0,
+      "posY": 0,
+      "rotation": 270,
+      "arrowX": 0,
+      "arrowY": 45,
+      "parentId": null,
+      "children": [
+        1,
+        2,
+        12
+      ],
+      "visible": true,
+      "dimensions": {
+        "width": 6,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 15,
+        "coneAngle": 0,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": 0,
+            "y": -15
+          },
+          "lower": {
+            "x": 0,
+            "y": 15
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#00ffff"
+      ],
+      "rayShape": [
+        "collimated"
+      ]
+    },
+    {
+      "id": 1,
+      "type": "objective",
+      "posX": -45,
+      "posY": -75,
+      "rotation": -120.96375653207352,
+      "arrowX": -120,
+      "arrowY": -205,
+      "parentId": 0,
+      "children": [
+        11
+      ],
+      "visible": true,
+      "dimensions": {
+        "width": 129,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 11.467039073410426,
+        "coneAngle": 7.469185402739773,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": 0,
+            "y": -11.467039073410426
+          },
+          "lower": {
+            "x": 0,
+            "y": 11.467039073410426
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#03ff00"
+      ],
+      "rayShape": [
+        "divergent"
+      ]
+    },
+    {
+      "id": 2,
+      "type": "objective",
+      "posX": 80,
+      "posY": -50,
+      "rotation": -32.5,
+      "arrowX": 195,
+      "arrowY": -125,
+      "parentId": 0,
+      "children": [
+        3
+      ],
+      "visible": true,
+      "dimensions": {
+        "width": 129,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 7.950280339023687,
+        "coneAngle": 4.816915296492628,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": 0,
+            "y": -7.950280339023687
+          },
+          "lower": {
+            "x": 0,
+            "y": 7.950280339023687
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#00bdff"
+      ],
+      "rayShape": [
+        "divergent"
+      ]
+    },
+    {
+      "id": 3,
+      "type": "mirror",
+      "posX": 280,
+      "posY": -180,
+      "rotation": -57.5,
+      "arrowX": 280,
+      "arrowY": -85,
+      "parentId": 2,
+      "children": [
+        4
+      ],
+      "visible": true,
+      "dimensions": {
+        "width": 60,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": -3,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 8.73492096062318,
+        "coneAngle": 0,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": -3,
+            "y": -8.73492096062318
+          },
+          "lower": {
+            "x": -3,
+            "y": 8.73492096062318
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#00bdff"
+      ],
+      "rayShape": [
+        "collimated"
+      ]
+    },
+    {
+      "id": 4,
+      "type": "lens",
+      "posX": 280,
+      "posY": -45,
+      "rotation": 90,
+      "arrowX": 280,
+      "arrowY": 0,
+      "parentId": 3,
+      "children": [
+        7
+      ],
+      "visible": true,
+      "dimensions": {
+        "width": 60,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": 1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 7.366957618041265,
+        "coneAngle": 0,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": 0,
+            "y": 7.366957618041265
+          },
+          "lower": {
+            "x": 0,
+            "y": -7.366957618041265
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#00bdff"
+      ],
+      "rayShape": [
+        "collimated"
+      ]
+    },
+    {
+      "id": 7,
+      "type": "plane",
+      "posX": 280,
+      "posY": 0,
+      "rotation": 90,
+      "arrowX": 280,
+      "arrowY": 150,
+      "parentId": 4,
+      "children": [
+        8
+      ],
+      "visible": false,
+      "dimensions": {
+        "width": 6,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": 1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 7.3669576180412655,
+        "coneAngle": 9.297427023629822,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": 0,
+            "y": 7.3669576180412655
+          },
+          "lower": {
+            "x": 0,
+            "y": -7.3669576180412655
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#00bdff"
+      ],
+      "rayShape": [
+        "convergent"
+      ]
+    },
+    {
+      "id": 8,
+      "type": "lens",
+      "posX": 280,
+      "posY": 50,
+      "rotation": 90,
+      "arrowX": 280,
+      "arrowY": 200,
+      "parentId": 7,
+      "children": [
+        9
+      ],
+      "visible": true,
+      "dimensions": {
+        "width": 60,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": 1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 8.185508464490294,
+        "coneAngle": 9.297427023629822,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": 0,
+            "y": 8.185508464490294
+          },
+          "lower": {
+            "x": 0,
+            "y": -8.185508464490294
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#00bdff"
+      ],
+      "rayShape": [
+        "divergent"
+      ]
+    },
+    {
+      "id": 9,
+      "type": "mask",
+      "posX": 280,
+      "posY": 150,
+      "rotation": 90,
+      "arrowX": 280,
+      "arrowY": 300,
+      "parentId": 8,
+      "children": [
+        10
+      ],
+      "visible": true,
+      "dimensions": {
+        "width": 6,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": 1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 8.185508464490294,
+        "coneAngle": 0,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": 0,
+            "y": 8.185508464490294
+          },
+          "lower": {
+            "x": 0,
+            "y": -8.185508464490294
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#00bdff"
+      ],
+      "rayShape": [
+        "collimated"
+      ]
+    },
+    {
+      "id": 10,
+      "type": "plane",
+      "posX": 280,
+      "posY": 250,
+      "rotation": 90,
+      "arrowX": 280,
+      "arrowY": 400,
+      "parentId": 9,
+      "children": [],
+      "visible": false,
+      "dimensions": {
+        "width": 6,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": 1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 8.185508464490294,
+        "coneAngle": 0,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": 0,
+            "y": 8.185508464490294
+          },
+          "lower": {
+            "x": 0,
+            "y": -8.185508464490294
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#00bdff"
+      ],
+      "rayShape": [
+        "collimated"
+      ]
+    },
+    {
+      "id": 11,
+      "type": "lens",
+      "posX": -145,
+      "posY": -250,
+      "rotation": -119.98163936884934,
+      "arrowX": -220,
+      "arrowY": -380,
+      "parentId": 1,
+      "children": [
+        15
+      ],
+      "visible": true,
+      "dimensions": {
+        "width": 60,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 11.464542306338348,
+        "coneAngle": 0,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": 0,
+            "y": -11.464542306338348
+          },
+          "lower": {
+            "x": 0,
+            "y": 11.464542306338348
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#03ff00"
+      ],
+      "rayShape": [
+        "collimated"
+      ]
+    },
+    {
+      "id": 12,
+      "type": "objective",
+      "posX": 0,
+      "posY": 80,
+      "rotation": 90,
+      "arrowX": 0,
+      "arrowY": 230,
+      "parentId": 0,
+      "children": [
+        13
+      ],
+      "visible": true,
+      "dimensions": {
+        "width": 129,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": 1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 15,
+        "coneAngle": 0,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": 0,
+            "y": 15
+          },
+          "lower": {
+            "x": 0,
+            "y": -15
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#00ffff",
+        "#03ff00"
+      ],
+      "rayShape": [
+        "collimated",
+        "collimated"
+      ]
+    },
+    {
+      "id": 13,
+      "type": "lens",
+      "posX": 0,
+      "posY": 200,
+      "rotation": 90,
+      "arrowX": 0,
+      "arrowY": 350,
+      "parentId": 12,
+      "children": [],
+      "visible": false,
+      "dimensions": {
+        "width": 60,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": 1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 15,
+        "coneAngle": 0,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": 0,
+            "y": 15
+          },
+          "lower": {
+            "x": 0,
+            "y": -15
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#00ffff",
+        "#03ff00"
+      ],
+      "rayShape": [
+        "collimated",
+        "collimated"
+      ]
+    },
+    {
+      "id": 15,
+      "type": "mirror",
+      "posX": -190,
+      "posY": -330,
+      "rotation": 245,
+      "arrowX": -190,
+      "arrowY": -195,
+      "parentId": 11,
+      "children": [
+        16
+      ],
+      "visible": true,
+      "dimensions": {
+        "width": 60,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": -3,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 7.1,
+        "coneAngle": 2.7347442772532946,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": -3,
+            "y": -7.1
+          },
+          "lower": {
+            "x": -3,
+            "y": 7.1
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#03ff00"
+      ],
+      "rayShape": [
+        "manual"
+      ]
+    },
+    {
+      "id": 16,
+      "type": "detector",
+      "posX": -190,
+      "posY": -210,
+      "rotation": 90,
+      "arrowX": -190,
+      "arrowY": -60,
+      "parentId": 15,
+      "children": [],
+      "visible": true,
+      "dimensions": {
+        "width": 85,
+        "height": 60,
+        "offsetX": 0,
+        "centerPoint": {
+          "x": -45,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": 1
+        },
+        "forwardVector": {
+          "x": 1,
+          "y": 0
+        },
+        "apertureRadius": 6.434785287960213,
+        "coneAngle": 3.0694439019203283,
+        "rayShape": "collimated",
+        "aperturePoints": {
+          "upper": {
+            "x": -45,
+            "y": 6.434785287960213
+          },
+          "lower": {
+            "x": -45,
+            "y": -6.434785287960213
+          }
+        }
+      },
+      "rayPolygonColor": [
+        "#03ff00"
+      ],
+      "rayShape": [
+        "convergent"
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "action": "add",
+      "id": 0,
+      "parentId": null
+    },
+    {
+      "action": "add",
+      "id": 1,
+      "parentId": 0
+    },
+    {
+      "action": "add",
+      "id": 2,
+      "parentId": 0
+    },
+    {
+      "action": "add",
+      "id": 3,
+      "parentId": 2
+    },
+    {
+      "action": "add",
+      "id": 4,
+      "parentId": 3
+    },
+    {
+      "action": "add",
+      "id": 5,
+      "parentId": 4
+    },
+    {
+      "action": "add",
+      "id": 6,
+      "parentId": 5
+    },
+    {
+      "action": "remove",
+      "id": 6
+    },
+    {
+      "action": "remove",
+      "id": 5
+    },
+    {
+      "action": "add",
+      "id": 7,
+      "parentId": 4
+    },
+    {
+      "action": "add",
+      "id": 8,
+      "parentId": 7
+    },
+    {
+      "action": "add",
+      "id": 9,
+      "parentId": 8
+    },
+    {
+      "action": "add",
+      "id": 10,
+      "parentId": 9
+    },
+    {
+      "action": "add",
+      "id": 11,
+      "parentId": 1
+    },
+    {
+      "action": "add",
+      "id": 12,
+      "parentId": 0
+    },
+    {
+      "action": "add",
+      "id": 13,
+      "parentId": 12
+    },
+    {
+      "action": "add",
+      "id": 14,
+      "parentId": 13
+    },
+    {
+      "action": "add",
+      "id": 15,
+      "parentId": 11
+    },
+    {
+      "action": "add",
+      "id": 16,
+      "parentId": 15
+    },
+    {
+      "action": "remove",
+      "id": 14
+    }
+  ],
+  "nextPosition": {
+    "x": -195,
+    "y": -50
+  }
+}

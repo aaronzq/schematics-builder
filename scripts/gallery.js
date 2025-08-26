@@ -1,16 +1,16 @@
 
 // Example images (replace with your own image paths)
 export const galleryImages = [
-  { src: 'img/Bai_Lu_et_al_nm2024.svg', alt: 'Example Drawing 1' },
-  { src: 'img/Bai_Lu_et_al_nm2024.svg', alt: 'Example Drawing 2' },
-  { src: 'img/Bai_Lu_et_al_nm2024.svg', alt: 'Example Drawing 3' }
+  { src: 'img/Bai_Lu_et_al_nm2024.svg', alt: 'Bai_Lu_et_al_nm2024' },
+  { src: 'img/Kabuli_Leyla_et_al_sr2025.svg', alt: 'Kabuli_Leyla_et_al_sr2025' },
+  { src: 'img/Zhao_Yuxuan_et_al_nm2022.svg', alt: 'Zhao_Yuxuan_et_al_nm2022' }
 ];
 
 // Specify the JSON file path for each image (order matters)
 export const galleryJsonPaths = [
   'examples/Bai_Lu_et_al_nm2024.json',
-  'examples/Bai_Lu_et_al_nm2024.json',
-  'examples/Bai_Lu_et_al_nm2024.json'
+  'examples/Kabuli_Leyla_et_al_sr2025.json',
+  'examples/Zhao_Yuxuan_et_al_nm2022.json'
 ];
 
 // Dynamically render the gallery images into the gallery-images div

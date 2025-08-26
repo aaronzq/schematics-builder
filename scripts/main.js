@@ -43,7 +43,7 @@ window.addEventListener('DOMContentLoaded', () => {
 		for (let i = 0; i < imgs.length; i++) {
 			const img = imgs[i];
 			img.style.cursor = 'pointer';
-			img.title = 'Click to import a schematic from JSON';
+			img.title = 'Click to import this schematic.';
 			img.onclick = () => importSchematicFromFile(galleryJsonPaths[i]);
 		}
 	}
