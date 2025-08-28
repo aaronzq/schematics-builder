@@ -18,8 +18,18 @@ __No ray tracing is used. Rays are drawn only for illustration.__
 
 - Library of components (i.e. lens, prism, mirror, etc).
 - Web-based editor for component layout and automated ray drawing. 
+
+<div align="center">
+    <img src="./img/v1.gif" alt="v1" />
+</div>
+
 - Dynamic ray adjustment throughout schematics given changes in individual component.
-- Configurateable ray shape, color, and number (i.e. allowing for multiple rays drawn in same place).  
+- Configurable ray shape, color, and number (i.e. allowing for multiple rays drawn in same place).
+
+<div align="center">
+    <img src="./img/v2.gif" alt="v2" />
+</div>
+
 - Hide/Show component.
 - Canvas grid. Canvas panning and zooming with mouse.
 - Canvas export in SVG, directly compatible with Microsoft Powerpoint and Adobe Illustrator.
