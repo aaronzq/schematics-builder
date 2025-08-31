@@ -25,7 +25,19 @@ export const componentDimensions = {
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     lens: { 
-        width: 60, 
+        width: 10, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
+    lens2: { 
+        width: 10, 
         height: 60, 
         offsetX: 0,
         centerPoint: { x: 0, y: 0 },  // Center at component origin
@@ -37,7 +49,7 @@ export const componentDimensions = {
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     mirror: { 
-        width: 60, 
+        width: 6, 
         height: 60, 
         offsetX: 0,
         centerPoint: { x: -3, y: 0 }, // Center at component origin
@@ -49,7 +61,7 @@ export const componentDimensions = {
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     plate: { 
-        width: 60, 
+        width: 6, 
         height: 60, 
         offsetX: 0,
         centerPoint: { x: 0, y: 0 }, // Center at component origin
@@ -85,7 +97,7 @@ export const componentDimensions = {
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     'lenslet-array': { 
-        width: 25, 
+        width: 15, 
         height: 60, 
         offsetX: 0,
         centerPoint: { x: 0, y: 0 },  // Center at component origin
@@ -98,7 +110,7 @@ export const componentDimensions = {
     },
     plane: { 
         width: 6, 
-        height: 60, 
+        height: 40, 
         offsetX: 0,
         centerPoint: { x: 0, y: 0 },  // Center at component origin
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
@@ -120,8 +132,20 @@ export const componentDimensions = {
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
+    aperture: {
+        width: 6, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
     'wedge-prism': {
-        width: 25, 
+        width: 32, 
         height: 60, 
         offsetX: 0,
         centerPoint: { x: 0, y: 0 },  // Center at component origin
@@ -131,6 +155,18 @@ export const componentDimensions = {
         coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); } 
+    },
+    grating: {
+        width: 10,
+        height: 60,
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     dmd: {
         width: 10, 
@@ -167,6 +203,22 @@ export const components = {
             // Double convex lens shape
             const lens = document.createElementNS(ns, "path");
             lens.setAttribute("d", "M 0 -30 C 6 -27 6 27 0 30 C -6 27 -6 -27 0 -30");
+            lens.setAttribute("stroke", "black");
+            lens.setAttribute("stroke-width", "1.5");
+            lens.setAttribute("fill", "#145ec0");
+            lens.setAttribute("fill-opacity", "0.3");
+            g.appendChild(lens);
+            return g;
+        }
+    },
+
+    lens2: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            // Double concave lens shape
+            const lens = document.createElementNS(ns, "path");
+            lens.setAttribute("d", "M 5 -30 C 0 -22 0 22 5 30 L -5 30 C 0 22 0 -22 -5 -30 Z");
             lens.setAttribute("stroke", "black");
             lens.setAttribute("stroke-width", "1.5");
             lens.setAttribute("fill", "#145ec0");
@@ -252,9 +304,9 @@ export const components = {
 
             const backsurface = document.createElementNS(ns, "line");
             backsurface.setAttribute("x1", "3");
-            backsurface.setAttribute("y1", "-30");
+            backsurface.setAttribute("y1", "-30.75");
             backsurface.setAttribute("x2", "3");
-            backsurface.setAttribute("y2", "30");
+            backsurface.setAttribute("y2", "30.75");
             backsurface.setAttribute("stroke", "black");
             backsurface.setAttribute("stroke-width", "2.5");
             g.appendChild(backsurface);
@@ -455,6 +507,37 @@ export const components = {
         }
     },
 
+    aperture: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            const totalWidth = 6;
+            const totalHeight = 60;
+
+            const opening = 20;
+            const blockout = (totalHeight - opening)/2;
+            const xLeft = -totalWidth / 2
+
+            const blockout1 = document.createElementNS(ns, "rect");
+            blockout1.setAttribute("x", xLeft);
+            blockout1.setAttribute("y", -totalHeight/2);
+            blockout1.setAttribute("width", totalWidth);
+            blockout1.setAttribute("height", blockout);
+            blockout1.setAttribute("fill", "#000000");
+            g.appendChild(blockout1);
+
+            const blockout2 = document.createElementNS(ns, "rect");
+            blockout2.setAttribute("x", xLeft);
+            blockout2.setAttribute("y", -totalHeight/2+blockout+opening);
+            blockout2.setAttribute("width", totalWidth);
+            blockout2.setAttribute("height", blockout);
+            blockout2.setAttribute("fill", "#000000");
+            g.appendChild(blockout2);
+
+            return g;
+        }
+    },
+
     'wedge-prism': {
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
@@ -468,6 +551,24 @@ export const components = {
             prism.setAttribute("stroke", "black");
             prism.setAttribute("stroke-width", border);
             g.appendChild(prism);
+
+            return g;
+        }
+    },
+
+    grating: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            const border = 1.5;
+
+            const baseplate = document.createElementNS(ns, "path");
+            baseplate.setAttribute("d", 'M 0 -30 L 3 -30 L 3 30 L 0 30 L -3 28 L 0 20 L -3 18 L 0 10 L -3 8 L 0 0 L -3 -2 L 0 -10 L -3 -12 L 0 -20 L -3 -22 L 0 -30');
+            baseplate.setAttribute("stroke", "black");
+            baseplate.setAttribute("stroke-width", border);
+            baseplate.setAttribute("fill", "#145ec0");
+            baseplate.setAttribute("fill-opacity", "0.4");
+            g.appendChild(baseplate);
 
             return g;
         }

@@ -2,7 +2,7 @@
 // Centralized configuration values used across multiple modules
 
 // Component spacing and positioning
-export const GRID_SIZE = 5;
+export const GRID_SIZE = 2.5;
 
 // Positioning arrow handle
 export const COMPONENT_SPACING = 150;
