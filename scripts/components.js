@@ -72,6 +72,30 @@ export const componentDimensions = {
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
+    mirror2: { 
+        width: 10, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 2, y: 0 }, // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
+    mirror3: { 
+        width: 6, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 }, // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
     plate: { 
         width: 6, 
         height: 60, 
@@ -354,6 +378,58 @@ export const components = {
             return g;
         }
     },
+
+    mirror2: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            // Mirror line
+            const mirror = document.createElementNS(ns, "path");
+            mirror.setAttribute("d", "M -5 -30 C 4 -9 4 9 -5 30 L 5 30 L 5 -30 Z");
+            mirror.setAttribute("stroke", "black");
+            mirror.setAttribute("stroke-width", "1.5");
+            mirror.setAttribute("fill", "#8caed6");
+            mirror.setAttribute("fill-opacity", "1");
+            g.appendChild(mirror);
+
+            const backsurface = document.createElementNS(ns, "line");
+            backsurface.setAttribute("x1", "5");
+            backsurface.setAttribute("y1", "-30.75");
+            backsurface.setAttribute("x2", "5");
+            backsurface.setAttribute("y2", "30.75");
+            backsurface.setAttribute("stroke", "black");
+            backsurface.setAttribute("stroke-width", "2.5");
+            g.appendChild(backsurface);
+
+            return g;
+        }
+    },    
+
+    mirror3: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            // Mirror line
+            const mirror = document.createElementNS(ns, "path");
+            mirror.setAttribute("d", "M 0 -30 C -4 -9 -4 9 0 30 L 5 30 L 5 -30 Z");
+            mirror.setAttribute("stroke", "black");
+            mirror.setAttribute("stroke-width", "1.5");
+            mirror.setAttribute("fill", "#8caed6");
+            mirror.setAttribute("fill-opacity", "1");
+            g.appendChild(mirror);
+
+            const backsurface = document.createElementNS(ns, "line");
+            backsurface.setAttribute("x1", "5");
+            backsurface.setAttribute("y1", "-30.75");
+            backsurface.setAttribute("x2", "5");
+            backsurface.setAttribute("y2", "30.75");
+            backsurface.setAttribute("stroke", "black");
+            backsurface.setAttribute("stroke-width", "2.5");
+            g.appendChild(backsurface);
+
+            return g;
+        }
+    }, 
 
     plate: {
         draw: (ns) => {
