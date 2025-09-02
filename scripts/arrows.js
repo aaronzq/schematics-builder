@@ -18,10 +18,20 @@ import { ensureAllMarkers } from './utils/svgUtils.js';
 
 // Show arrow for component with draggable handle and rotation control
 export function showArrowForComponent(component) {
-    if (!component) return; // Guard against null/undefined component
+    if (!component) {
+        // If called with null/undefined, clear any arrow previews on the canvas
+        const svg = document.getElementById("canvas");
+        if (svg) {
+            svg.querySelectorAll('[id^="arrow-preview-"]').forEach(el => el.remove());
+        }
+        return;
+    }
     
-    removeArrowFromComponent(component); // Remove any existing arrow for this component
     const svg = document.getElementById("canvas");
+    if (!svg) return;
+
+    // Remove any existing arrow previews (from other components)
+    svg.querySelectorAll('[id^="arrow-preview-"]').forEach(el => el.remove());
     
     // Get persistent state
     const compId = component.getAttribute('data-id');
