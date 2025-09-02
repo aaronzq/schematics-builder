@@ -48,6 +48,18 @@ export const componentDimensions = {
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
+    lens3: { 
+        width: 18, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
     mirror: { 
         width: 6, 
         height: 60, 
@@ -168,6 +180,18 @@ export const componentDimensions = {
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
+    doe: {
+        width: 10,
+        height: 60,
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
     dmd: {
         width: 10, 
         height: 80, 
@@ -219,6 +243,22 @@ export const components = {
             // Double concave lens shape
             const lens = document.createElementNS(ns, "path");
             lens.setAttribute("d", "M 5 -30 C 0 -22 0 22 5 30 L -5 30 C 0 22 0 -22 -5 -30 Z");
+            lens.setAttribute("stroke", "black");
+            lens.setAttribute("stroke-width", "1.5");
+            lens.setAttribute("fill", "#145ec0");
+            lens.setAttribute("fill-opacity", "0.3");
+            g.appendChild(lens);
+            return g;
+        }
+    },
+
+    lens3: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            // Double concave lens shape
+            const lens = document.createElementNS(ns, "path");
+            lens.setAttribute("d", "M 3 -30 L 3 30 L -3 30 C 0 20 -9 15 -9 0 C -9 -15 0 -20 -3 -30 Z");
             lens.setAttribute("stroke", "black");
             lens.setAttribute("stroke-width", "1.5");
             lens.setAttribute("fill", "#145ec0");
@@ -564,6 +604,24 @@ export const components = {
 
             const baseplate = document.createElementNS(ns, "path");
             baseplate.setAttribute("d", 'M 0 -30 L 3 -30 L 3 30 L 0 30 L -3 28 L 0 20 L -3 18 L 0 10 L -3 8 L 0 0 L -3 -2 L 0 -10 L -3 -12 L 0 -20 L -3 -22 L 0 -30');
+            baseplate.setAttribute("stroke", "black");
+            baseplate.setAttribute("stroke-width", border);
+            baseplate.setAttribute("fill", "#145ec0");
+            baseplate.setAttribute("fill-opacity", "0.4");
+            g.appendChild(baseplate);
+
+            return g;
+        }
+    },
+
+    doe: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            const border = 1.5;
+
+            const baseplate = document.createElementNS(ns, "path");
+            baseplate.setAttribute("d", 'M 0 -30 L 4 -30 L 4 30 L 0 30 L 0 28 L -2 28 L -2 20 L -1 20 L -1 12 L -3 12 L -3 4 L -1 4 L -1 -4 L -4 -4 L -4 -12 L -1 -12 L -1 -20 L -2 -20 L -2 -28 L 0 -28 L 0 -30');
             baseplate.setAttribute("stroke", "black");
             baseplate.setAttribute("stroke-width", border);
             baseplate.setAttribute("fill", "#145ec0");
