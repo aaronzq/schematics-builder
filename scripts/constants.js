@@ -8,13 +8,13 @@ export const GRID_SIZE = 2.5;
 export const COMPONENT_SPACING = 150;
 export const ARROW_COLOR = "#2196F3";
 export const ARROW_STROKE_WIDTH = 2;
-export const ARROW_HANDLE_RADIUS = 5;
+export const ARROW_HANDLE_RADIUS = 3;
 export const ARROW_TIP_SNAP_SIZE = 5;
 
 // Component rotation handle
 export const ROTATION_SNAP_INCREMENT = 2.5;
 export const ROTATION_HANDLE_DISTANCE = 40;
-export const ROTATION_HANDLE_RADIUS = 8;
+export const ROTATION_HANDLE_RADIUS = 5;
 export const ROTATION_HANDLE_COLOR = "#ffe082";
 export const ROTATION_HANDLE_STROKE = "#fbc02d";
 
@@ -36,7 +36,7 @@ export const CANVAS_PADDING_PERCENT = 0.1;
 export const MIN_CANVAS_PADDING = 50;
 
 // Grid configuration
-export const GRID_EXTEND_FACTOR = 3; // Grid area will be (1 + 2*factor)x the viewBox
+export const GRID_EXTEND_FACTOR = 5; // Grid area will be (1 + 2*factor)x the viewBox
 
 // Debug visualization
 export const SHOW_DEBUG_DRAWING = false;
