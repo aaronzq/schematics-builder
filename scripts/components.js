@@ -144,6 +144,18 @@ export const componentDimensions = {
         rayShape: 'collimated',        // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
+    point: { 
+        width: 5, 
+        height: 5, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: 0,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'convergent',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
     plane: { 
         width: 6, 
         height: 40, 
@@ -538,6 +550,23 @@ export const components = {
                 g.appendChild(lens);
             }
             
+            return g;
+        }
+    },
+
+    point: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            // Solid point
+            const point = document.createElementNS(ns, "circle");
+            point.setAttribute("cx", "0");
+            point.setAttribute("cy", "0");
+            point.setAttribute("r", "2.5");
+            point.setAttribute("stroke", "black");
+            // point.setAttribute("stroke-width", "1.5");
+            g.appendChild(point);
+
             return g;
         }
     },
