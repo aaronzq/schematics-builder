@@ -55,6 +55,217 @@ input[type="range"].hue-slider::-ms-fill-upper {
 input[type="range"].hue-slider:focus {
   outline: none;
 }
+
+/* Gradient toggle button styling */
+button.gradient-toggle {
+  background: #ededed;
+  border: 1px solid #bdbdbd;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button.gradient-toggle:hover {
+  background: #bdbdbd;
+  border-color: #222;
+}
+
+button.gradient-toggle.active {
+  background: #4CAF50;
+  border-color: #45a049;
+  color: white;
+}
+
+/* Ray Shape Menu */
+.ray-shape-menu {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  z-index: 1000;
+  padding: 0px 8px 0px 8px;
+  min-width: 0;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  box-sizing: border-box;
+  margin-right: 20px;
+}
+
+.ray-shape-menu .ray-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+  width: 100%;
+}
+
+.ray-shape-menu .ray-label {
+  font-weight: bold;
+  margin-left: 0px;
+  margin-right: 0px;
+}
+
+.ray-shape-menu .shape-label,
+.ray-shape-menu .slider-label,
+.ray-shape-menu .hue-label {
+  font-weight: bold;
+  margin-right: 6px;
+}
+
+.ray-shape-menu .slider-label {
+  margin-left: 0px;
+}
+
+.ray-shape-menu .hue-label {
+  margin-left: 10px;
+}
+
+.ray-shape-menu .radius-slider {
+  width: 80px;
+}
+
+.ray-shape-menu .value-display {
+  min-width: 25px;
+  font-size: 15px;
+}
+
+.ray-shape-menu .hue-input {
+  width: 60px;
+  padding: 2px 8px;
+  margin-left: 2px;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+/* Slider Container */
+.slider-container {
+  position: relative;
+  width: 160px;
+  height: 20px;
+}
+
+.slider-container input[type="range"].background-only {
+  pointer-events: none;
+  width: 160px;
+}
+
+/* Custom Knobs */
+.custom-knob {
+  position: absolute;
+  background-color: #ffffff;
+  border: 1px solid #b3b3b3;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  background: linear-gradient(to bottom, #ffffff 0%, #e6e6e6 100%);
+}
+
+.custom-knob.knob1.selected,
+.custom-knob.knob2.selected {
+  z-index: 10;
+}
+
+.custom-knob:not(.selected) {
+  z-index: 9;
+}
+
+/* Single knob slider */
+input[type="range"].single-knob {
+  width: 160px;
+}
+
+/* Gradient Toggle Button */
+.gradient-toggle {
+  margin-left: 4px;
+  width: 24px;
+  height: 24px;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+}
+
+.gradient-toggle.active {
+  border: 2px solid #4CAF50;
+}
+
+.gradient-toggle:not(.active) {
+  border: none;
+}
+
+.gradient-icon {
+  width: 100%;
+  height: 100%;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #ff0000, #ff8000, #ffff00, #80ff00, #00ff00, #00ff80, #00ffff);
+}
+
+.gradient-icon.enabled {
+  border: 2px solid #4CAF50;
+}
+
+.gradient-icon.disabled {
+  border: none;
+  background: none;
+}
+
+/* Swatch Button */
+.swatch-btn {
+  margin-left: 4px;
+}
+
+/* Swatch Popup */
+.swatch-popup {
+  position: absolute;
+  z-index: 2000;
+  background: #fff;
+  border: 1px solid #888;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.swatch-popup .swatch {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.swatch-popup .no-colors {
+  color: #888;
+}
+
+/* Remove Button */
+.remove-btn {
+  margin-left: 0px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Plus Button */
+.plus-btn {
+  margin-left: 0px;
+  margin-right: 0px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
 body, html {
   min-height: 100vh;
   margin: 0;

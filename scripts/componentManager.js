@@ -122,6 +122,26 @@ export async function importSchematicFromJSON(schematic) {
             } else {
                 state.rayPolygonColor = ['#00ffff'];
             }
+            
+            // rayPolygonColor2: array for second gradient color
+            if (Array.isArray(compData.rayPolygonColor2)) {
+                state.rayPolygonColor2 = compData.rayPolygonColor2.slice();
+            } else if (compData.rayPolygonColor2 !== undefined) {
+                // legacy: single value
+                state.rayPolygonColor2 = [compData.rayPolygonColor2];
+            } else {
+                state.rayPolygonColor2 = ['#ff00ff']; // Default to magenta
+            }
+            
+            // gradientEnabled: array for each ray
+            if (Array.isArray(compData.gradientEnabled)) {
+                state.gradientEnabled = compData.gradientEnabled.slice();
+            } else if (compData.gradientEnabled !== undefined) {
+                // legacy: single value
+                state.gradientEnabled = [compData.gradientEnabled];
+            } else {
+                state.gradientEnabled = [false]; // Default to disabled
+            }
             if (compData.dimensions !== undefined) {
                 state.dimensions = compData.dimensions;
             }
@@ -210,6 +230,8 @@ export function exportSchematicToJSON() {
             visible: state.visible,
             dimensions: state.dimensions,
             rayPolygonColor: Array.isArray(state.rayPolygonColor) ? state.rayPolygonColor.slice() : [state.rayPolygonColor],
+            rayPolygonColor2: Array.isArray(state.rayPolygonColor2) ? state.rayPolygonColor2.slice() : [state.rayPolygonColor2 || '#ff00ff'],
+            gradientEnabled: Array.isArray(state.gradientEnabled) ? state.gradientEnabled.slice() : [state.gradientEnabled || false],
             rayShape: Array.isArray(state.rayShape) ? state.rayShape.slice() : [state.rayShape]
             // Add more fields as needed
         };
@@ -588,17 +610,31 @@ export function logComponentInfo(compId) {
         const lowerPos = aperturePoints ? `(${aperturePoints.lower.x.toFixed(1)}, ${aperturePoints.lower.y.toFixed(1)})` : 'undefined';
         const coneAngle = state.dimensions.coneAngle !== undefined ? `${state.dimensions.coneAngle.toFixed(1)}°` : 'undefined';
         console.log(`  Aperture: Radius=${state.dimensions.apertureRadius.toFixed(2)} | Upper=${upperPos} | Lower=${lowerPos}`);
-        // Log all ray shapes and colors
+        // Log all ray shapes and colors (including gradient information)
         if (Array.isArray(state.rayShape) && Array.isArray(state.rayPolygonColor)) {
             for (let i = 0; i < state.rayShape.length; i++) {
                 const shape = state.rayShape[i] || 'unknown';
-                const color = state.rayPolygonColor[i] || '(default)';
-                console.log(`  Ray ${i + 1}: Shape: ${shape} | Color: ${color}`);
+                const color1 = state.rayPolygonColor[i] || '(default)';
+                const color2 = (state.rayPolygonColor2 && state.rayPolygonColor2[i]) || '(default)';
+                const gradientEnabled = (state.gradientEnabled && state.gradientEnabled[i]) || false;
+                
+                if (gradientEnabled) {
+                    console.log(`  Ray ${i + 1}: Shape: ${shape} | Gradient: ${color1} → ${color2} (enabled)`);
+                } else {
+                    console.log(`  Ray ${i + 1}: Shape: ${shape} | Color: ${color1} (solid)`);
+                }
             }
         } else {
             const shape = state.rayShape || 'unknown';
-            const color = state.rayPolygonColor || '(default)';
-            console.log(`  Ray: Shape: ${shape} | Color: ${color}`);
+            const color1 = state.rayPolygonColor || '(default)';
+            const color2 = state.rayPolygonColor2 || '(default)';
+            const gradientEnabled = state.gradientEnabled || false;
+            
+            if (gradientEnabled) {
+                console.log(`  Ray: Shape: ${shape} | Gradient: ${color1} → ${color2} (enabled)`);
+            } else {
+                console.log(`  Ray: Shape: ${shape} | Color: ${color1} (solid)`);
+            }
         }
         console.log(`  Cone Angle: ${coneAngle}`);
     }

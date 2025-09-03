@@ -417,7 +417,7 @@ function calculateConeAngleFromGeometry(childState, parentState, centerLineLengt
  * @param {object} parentState - Parent component state
  * @returns {object|null} Projection data or null
  */
-function calculateProjections_internal(childState, parentState) {
+export function calculateProjections_internal(childState, parentState) {
     const childDims = childState.dimensions;
     const parentDims = parentState.dimensions;
     
