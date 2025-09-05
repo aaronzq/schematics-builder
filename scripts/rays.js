@@ -257,6 +257,7 @@ export function drawApertureRays() {
                         
                         stop.setAttribute("offset", `${percentage}%`);
                         stop.setAttribute("stop-color", interpolatedColor);
+                        stop.setAttribute("stop-opacity", DEFAULT_RAY_POLYGON_OPACITY); // Embed opacity in stops for PowerPoint compatibility
                         gradient.appendChild(stop);
                     }
                     
@@ -282,7 +283,11 @@ export function drawApertureRays() {
                 }
                 
                 polygon.setAttribute("fill", fillColor);
-                polygon.setAttribute("fill-opacity", `${DEFAULT_RAY_POLYGON_OPACITY}`);
+                if (isGradient) {
+                    polygon.setAttribute("fill-opacity", "1"); // Opacity embedded in gradient stops
+                } else {
+                    polygon.setAttribute("fill-opacity", `${DEFAULT_RAY_POLYGON_OPACITY}`);
+                }
                 polygon.setAttribute("stroke", "none");
                 polygon.setAttribute("pointer-events", "none");
                 rayLinesGroup.appendChild(polygon);
