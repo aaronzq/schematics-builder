@@ -379,9 +379,9 @@ export const components = {
             g.appendChild(mirror);
 
             const backsurface = document.createElementNS(ns, "line");
-            backsurface.setAttribute("x1", "3");
+            backsurface.setAttribute("x1", "-3");
             backsurface.setAttribute("y1", "-30.75");
-            backsurface.setAttribute("x2", "3");
+            backsurface.setAttribute("x2", "-3");
             backsurface.setAttribute("y2", "30.75");
             backsurface.setAttribute("stroke", "black");
             backsurface.setAttribute("stroke-width", "2.5");
@@ -404,11 +404,9 @@ export const components = {
             mirror.setAttribute("fill-opacity", "1");
             g.appendChild(mirror);
 
-            const backsurface = document.createElementNS(ns, "line");
-            backsurface.setAttribute("x1", "5");
-            backsurface.setAttribute("y1", "-30.75");
-            backsurface.setAttribute("x2", "5");
-            backsurface.setAttribute("y2", "30.75");
+            const backsurface = document.createElementNS(ns, "path");
+            backsurface.setAttribute("d", "M -5 -30 C 4 -9 4 9 -5 30");
+            backsurface.setAttribute("fill", "none");
             backsurface.setAttribute("stroke", "black");
             backsurface.setAttribute("stroke-width", "2.5");
             g.appendChild(backsurface);
@@ -430,11 +428,9 @@ export const components = {
             mirror.setAttribute("fill-opacity", "1");
             g.appendChild(mirror);
 
-            const backsurface = document.createElementNS(ns, "line");
-            backsurface.setAttribute("x1", "5");
-            backsurface.setAttribute("y1", "-30.75");
-            backsurface.setAttribute("x2", "5");
-            backsurface.setAttribute("y2", "30.75");
+            const backsurface = document.createElementNS(ns, "path");
+            backsurface.setAttribute("d", "M 0 -30 C -4 -9 -4 9 0 30");
+            backsurface.setAttribute("fill", "none");
             backsurface.setAttribute("stroke", "black");
             backsurface.setAttribute("stroke-width", "2.5");
             g.appendChild(backsurface);
