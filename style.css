@@ -146,12 +146,13 @@ body, html {
 /* Workspace Action Toolbar */
 .action-toolbar {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   margin-bottom: 10px;
   background: #fafafa;
-  padding: 8px 10px;
+  padding: 8px 8px;
   border-radius: 8px;
-  gap: 2px;
+  gap: 8px;
+  align-items: stretch;
 }
 
 .action-row {
@@ -159,7 +160,24 @@ body, html {
   flex-direction: row;
   gap: 5px;
   align-items: center;
+  flex: 1;
+  min-width: 500px;
+}
+
+.action-title-column {
+  display: flex;
+  align-items: center;
+  min-width: 150px;
+  flex-shrink: 0;
+}
+
+.action-buttons-column {
+  display: flex;
   flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+  min-width: 350px;
+  flex: 1;
 }
 
 .action-toolbar button {
@@ -183,13 +201,11 @@ body, html {
   font-family: inherit;
   font-size: 0.9375rem;
   font-weight: bold;
-  margin: 0 8px 0 0;
+  margin: 0;
   padding: 0;
   color: inherit;
-  display: inline-block;
   line-height: 1;
   white-space: nowrap;
-  width: 140px;
   text-align: center;
 }
 

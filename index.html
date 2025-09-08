@@ -55,27 +55,39 @@
       <main class="workspace-area">
         <div class="action-toolbar">
           <div class="action-row">
-            <p class="action-label">Render Actions</p>
-            <button id="reset-canvas-btn">Reset Canvas</button>
-            <button id="trace-btn">Hide Trace Line</button>
-            <button id="rays-btn">Hide Rays</button>
-            <button id="solid-rays-btn">Both Rays</button>
+            <div class="action-title-column">
+              <p class="action-label">Component Actions</p>
+            </div>
+            <div class="action-buttons-column">
+              <button id="delete-btn">Delete</button>
+              <button id="flip-horizontal-btn">Flip X</button>
+              <button id="flip-vertical-btn">Flip Y</button>            
+              <button id="hide-component-btn">Hide</button>
+              <button id="show-component-btn">Show</button>
+              <button id="show-all-components-btn">Show All</button> 
+            </div>
           </div>
           <div class="action-row">
-            <p class="action-label">Export/Import</p>
-            <button id="export-svg-btn">Export SVG</button>  
-            <button id="export-schematic-btn">Export JSON</button>
-            <button id="import-schematic-btn">Import JSON</button>
+            <div class="action-title-column">
+              <p class="action-label">Render Actions</p>
+            </div>
+            <div class="action-buttons-column">
+              <button id="reset-canvas-btn">Reset Canvas</button>
+              <button id="trace-btn">Hide Trace Line</button>
+              <button id="rays-btn">Hide Rays</button>
+              <button id="solid-rays-btn">Both Rays</button>
+              <button id="toggle-grid-btn">Hide Grid</button>
+            </div>
           </div>
           <div class="action-row">
-            <p class="action-label">Component Actions</p>
-            <button id="delete-btn">Delete</button>
-            <button id="flip-horizontal-btn">Flip X</button>
-            <button id="flip-vertical-btn">Flip Y</button>            
-            <button id="hide-component-btn">Hide</button>
-            <button id="show-component-btn">Show</button>
-            <button id="show-all-components-btn">Show All</button> 
-            <button id="toggle-grid-btn">Hide Grid</button>
+            <div class="action-title-column">
+              <p class="action-label">Export/Import</p>
+            </div>
+            <div class="action-buttons-column">
+              <button id="export-svg-btn">Export SVG</button>  
+              <button id="export-schematic-btn">Export JSON</button>
+              <button id="import-schematic-btn">Import JSON</button>
+            </div>
           </div>
         </div>
         <div class="canvas-container">
@@ -95,7 +107,7 @@
       <p>
         Developed by &nbsp 
         <a href="https://github.com/aaronzq/schematics-builder" target="_blank" rel="noopener">
-          <img src="img/github-mark.svg" alt="GitHub">
+          <img style="filter: invert(100%)" src="img/github-mark.svg" alt="GitHub">
           aaronzq
         </a>
       </p>
