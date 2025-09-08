@@ -17,7 +17,7 @@ import {
 import { startDrag, showHitbox } from './interactionHandler.js';
 import { showArrowForComponent, removeArrowFromComponent } from './arrows.js';
 import { toggleTraceLines, drawTraceLines, showTraceLines } from './traceLines.js';
-import { toggleApertureRays, toggleSolidRays, showApertureRays, drawApertureRays, initRayShapeMenuIntegration } from './rays.js';
+import { toggleRaysIntegrated, showApertureRays, drawApertureRays, initRayShapeMenuIntegration } from './rays.js';
 import { showRayShapeMenu, hideRayShapeMenu, shouldShowRayShapeMenu } from './rayMenu.js';
 
 // Initialize the application
@@ -123,16 +123,10 @@ function setupUIEventListeners() {
         traceBtn.addEventListener('click', toggleTraceLines);
     }
 
-    // Aperture rays button
-    const raysBtn = document.getElementById('rays-btn');
-    if (raysBtn) {
-        raysBtn.addEventListener('click', toggleApertureRays);
-    }
-
-    // Solid rays button
-    const solidRaysBtn = document.getElementById('solid-rays-btn');
-    if (solidRaysBtn) {
-        solidRaysBtn.addEventListener('click', toggleSolidRays);
+    // Integrated rays toggle button
+    const raysToggleBtn = document.getElementById('rays-toggle-btn');
+    if (raysToggleBtn) {
+        raysToggleBtn.addEventListener('click', toggleRaysIntegrated);
     }
 
     // Hide component button

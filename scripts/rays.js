@@ -333,14 +333,14 @@ export function hideApertureRays() {
     }
 }
 
-// Toggle aperture rays
+// Toggle aperture rays (legacy function - now uses integrated button)
 export function toggleApertureRays() {
     showApertureRays = !showApertureRays;
-    const raysBtn = document.getElementById('rays-btn');
+    const raysBtn = document.getElementById('rays-toggle-btn');
     
     if (showApertureRays) {
         drawApertureRays();
-        raysBtn.textContent = 'Hide Rays';
+        if (raysBtn) raysBtn.textContent = 'Hide Rays';
         
         // Show ray shape menu for currently selected component if appropriate
         if (showRayShapeMenu && shouldShowRayShapeMenu && getSelectedComponent) {
@@ -351,7 +351,7 @@ export function toggleApertureRays() {
         }
     } else {
         hideApertureRays();
-        raysBtn.textContent = 'Draw Rays';
+        if (raysBtn) raysBtn.textContent = 'Show Rays';
         
         // Hide ray shape menu when rays are turned off
         if (hideRayShapeMenu) {
@@ -360,25 +360,66 @@ export function toggleApertureRays() {
     }
 }
 
-// Toggle ray display mode (UI button still called 'solid-rays-btn' for compatibility)
+// Toggle ray display mode (legacy function - now uses integrated button)
 export function toggleSolidRays() {
-    const solidRaysBtn = document.getElementById('solid-rays-btn');
+    const raysToggleBtn = document.getElementById('rays-toggle-btn');
     // Cycle through three modes: both -> dotted -> solid -> both
     switch (rayDisplayMode) {
         case 'both':
             rayDisplayMode = 'dotted';
-            solidRaysBtn.textContent = 'Outline Only';
+            if (raysToggleBtn) raysToggleBtn.textContent = 'Outline Only';
             break;
         case 'dotted':
             rayDisplayMode = 'solid';
-            solidRaysBtn.textContent = 'Solid Only';
+            if (raysToggleBtn) raysToggleBtn.textContent = 'Solid Only';
             break;
         case 'solid':
             rayDisplayMode = 'both';
-            solidRaysBtn.textContent = 'Both Rays';
+            if (raysToggleBtn) raysToggleBtn.textContent = 'Both Rays';
             break;
     }
     if (showApertureRays) {
         drawApertureRays();
+    }
+}
+
+// Integrated rays toggle function - cycles through: Hide -> Show Outline -> Show Solid -> Show Both -> Hide
+export function toggleRaysIntegrated() {
+    const raysToggleBtn = document.getElementById('rays-toggle-btn');
+    
+    if (!showApertureRays) {
+        // Currently hidden, show with outline only
+        showApertureRays = true;
+        rayDisplayMode = 'dotted';
+        raysToggleBtn.textContent = 'Show Ray Body';  // Next action: show solid rays
+        drawApertureRays();
+        
+        // Show ray shape menu for currently selected component if appropriate
+        if (showRayShapeMenu && shouldShowRayShapeMenu && getSelectedComponent) {
+            const selectedComponent = getSelectedComponent();
+            if (selectedComponent && shouldShowRayShapeMenu(selectedComponent)) {
+                showRayShapeMenu(selectedComponent);
+            }
+        }
+    } else if (rayDisplayMode === 'dotted') {
+        // Currently outline, show solid only
+        rayDisplayMode = 'solid';
+        raysToggleBtn.textContent = 'Show Both';   // Next action: show both rays
+        drawApertureRays();
+    } else if (rayDisplayMode === 'solid') {
+        // Currently solid, show both
+        rayDisplayMode = 'both';
+        raysToggleBtn.textContent = 'Hide Rays';   // Next action: hide rays
+        drawApertureRays();
+    } else {
+        // Currently showing both, hide rays
+        showApertureRays = false;
+        raysToggleBtn.textContent = 'Show Ray Outlines'; // Next action: show outline rays
+        hideApertureRays();
+        
+        // Hide ray shape menu when rays are turned off
+        if (hideRayShapeMenu) {
+            hideRayShapeMenu();
+        }
     }
 }

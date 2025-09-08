@@ -90,10 +90,10 @@ export function toggleTraceLines() {
     
     if (showTraceLines) {
         drawCenterTraceLines();
-        traceBtn.textContent = 'Hide Trace Line';
+        traceBtn.textContent = 'Hide Trace';
     } else {
         hideCenterTraceLines();
-        traceBtn.textContent = 'Show Trace Line';
+        traceBtn.textContent = 'Show Trace';
     }
 }
 
