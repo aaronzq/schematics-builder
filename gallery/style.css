@@ -7,7 +7,7 @@
 }
 
 body {
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Segoe UI', Arial, sans-serif;
   background-color: #f5f5f5;
   color: #1a1a1a;
   line-height: 1.5;
@@ -15,22 +15,25 @@ body {
 
 /* Header */
 .header {
-  background: #2d2d2d;
-  color: white;
-  padding: 12px 20px;
+  background: #222;
+  color: #fafafa;
+  padding: 16px 16px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  position: relative;
 }
 
 .back-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: white;
+  color: #fafafa;
   text-decoration: none;
   font-weight: 500;
   transition: opacity 0.2s ease;
+  z-index: 1;
 }
 
 .back-btn:hover {
@@ -38,9 +41,15 @@ body {
 }
 
 .title {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 1.5rem;
   margin: 0;
+  letter-spacing: 1px;
+  text-align: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  pointer-events: none;
 }
 
 /* Main Content */
@@ -110,7 +119,7 @@ body {
 
 /* Import Button */
 .import-btn {
-  background: #007bff;
+  background: #474747;
   color: white;
   border: none;
   border-radius: 6px;
@@ -120,16 +129,41 @@ body {
   cursor: pointer;
   transition: all 0.2s ease;
   align-self: center;
-  min-width: 80px;
+  min-width: 200px;
 }
 
 .import-btn:hover {
-  background: #0056b3;
+  background: #1a1a1a;
   transform: translateY(-1px);
 }
 
 .import-btn:active {
   transform: translateY(0);
+}
+
+/* Footer */
+.footer {
+  background: #333;
+  color: #ccc;
+  text-align: center;
+  padding: 6px 12px;
+  flex-shrink: 0;
+  font-size: 0.875rem;
+}
+
+.footer p {
+  margin: 0;
+}
+
+.footer a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.footer img {
+  height: 0.9em;
+  vertical-align: middle;
+  margin-right: 4px;
 }
 
 /* Responsive Design */
