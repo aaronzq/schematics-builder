@@ -4,205 +4,175 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Example Gallery — Optical Schematic Builder</title>
-
-  <!-- Inter font (local network load from Google) -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
-  <style>
-    /* Page-specific overrides for elegant layout */
-    body {
-      background: #f4f4f4;
-      font-family: 'Inter', sans-serif;
-      margin: 0;
-      padding: 0;
-    }
-    .gallery-layout {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-    }
-    .g-header {
-      background: #222;
-      color: #fafafa;
-      padding: 12px 16px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-      flex-shrink: 0;
-    }
-    .g-back {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      text-decoration: none;
-      color: #fafafa;
-      font-weight: 500;
-    }
-    .g-back:hover {
-      color: #ccc;
-    }
-    .g-title {
-      margin: 0;
-      font-size: 1.5rem;
-      font-weight: 600;
-      flex: 1;
-      text-align: center;
-    }
-    .g-main {
-      padding: 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-      flex: 1;
-      overflow-y: auto;
-    }
-    .examples-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 24px;
-      margin-top: 20px;
-    }
-    .example-card {
-      background: #fff;
-      border: 1px solid #e0e0e0;
-      border-radius: 12px;
-      overflow: hidden;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .example-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-    }
-    .example-card img {
-      width: 100%;
-      height: 200px;
-      object-fit: cover;
-      display: block;
-    }
-    .example-info {
-      padding: 16px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .example-info h3 {
-      margin: 0;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #333;
-    }
-    .example-info p {
-      margin: 0;
-      color: #666;
-      font-size: 0.9rem;
-    }
-    .import-btn {
-      margin-top: auto;
-      align-self: flex-start;
-      padding: 10px 16px;
-      background: #1f6feb;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.95rem;
-      transition: background 0.2s ease;
-    }
-    .import-btn:hover {
-      background: #155fd6;
-    }
-    .footer {
-      background: #333;
-      color: #ccc;
-      text-align: center;
-      padding: 6px 12px;
-      flex-shrink: 0;
-      font-size: 0.875rem;
-    }
-    .footer p {
-      margin: 0;
-    }
-    .footer a {
-      color: #fff;
-      text-decoration: none;
-    }
-    .footer img {
-      height: 0.9em;
-      vertical-align: middle;
-      margin-right: 4px;
-    }
-  </style>
 </head>
 <body>
-  <div class="gallery-layout">
-    <header class="g-header">
-      <a class="g-back" href="../index.html" aria-label="Back to Builder">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden>
-          <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-        Back
-      </a>
-      <h1 class="g-title">Example Gallery</h1>
-    </header>
+  <header class="header">
+    <a class="back-btn" href="../index.html">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back
+    </a>
+    <h1 class="title">Example Gallery</h1>
+  </header>
 
-    <main class="g-main">
-      <section id="examples" class="g-examples">
-        <div class="examples-grid">
-          <div class="example-card" data-file="Zhao_Yuxuan_et_al_nm2022.json">
-            <img src="../img/Zhao_Yuxuan_et_al_nm2022.svg" alt="Zhao et al. Nature Methods 2022" loading="lazy">
-            <div class="example-info">
-              <h3>Zhao et al. (2022)</h3>
-              <p>Nature Methods - Advanced microscopy setup</p>
-              <button class="import-btn" onclick="importExample('Zhao_Yuxuan_et_al_nm2022.json')">Import</button>
-            </div>
-          </div>
+  <main class="main">
+    <div class="gallery">
 
-          <div class="example-card" data-file="Bai_Lu_et_al_nm2024.json">
-            <img src="../img/Bai_Lu_et_al_nm2024.svg" alt="Bai & Lu et al. Nature Methods 2024" loading="lazy">
-            <div class="example-info">
-              <h3>Bai & Lu et al. (2024)</h3>
-              <p>Nature Methods - Optical imaging system</p>
-              <button class="import-btn" onclick="importExample('Bai_Lu_et_al_nm2024.json')">Import</button>
-            </div>
-          </div>
-
-          <div class="example-card" data-file="Howe_Carmel_et_al_bioRxiv2025.json">
-            <img src="../img/Howe_Carmel_et_al_bioRxiv2025.svg" alt="Howe & Carmel et al. bioRxiv 2025" loading="lazy">
-            <div class="example-info">
-              <h3>Howe & Carmel et al. (2025)</h3>
-              <p>bioRxiv - Novel optical configuration</p>
-              <button class="import-btn" onclick="importExample('Howe_Carmel_et_al_bioRxiv2025.json')">Import</button>
-            </div>
-          </div>
-
-          <div class="example-card" data-file="Kabuli_Leyla_et_al_sr2025.json">
-            <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. Scientific Reports 2025" loading="lazy">
-            <div class="example-info">
-              <h3>Kabuli & Leyla et al. (2025)</h3>
-              <p>Scientific Reports - Specialized optics</p>
-              <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
-            </div>
-          </div>
+      <div class="card" data-file="Bai_Lu_et_al_nm2024.json">
+        <div class="card-image">
+          <img src="../img/Bai_Lu_et_al_nm2024.svg" alt="Bai & Lu et al. (2024)" loading="lazy">
         </div>
-      </section>
-    </main>
+        <div class="card-content">
+          <h3 class="card-title">Bai & Lu et al. (2024)</h3>
+          <button class="import-btn" onclick="importExample('Bai_Lu_et_al_nm2024.json')">Import</button>
+        </div>
+      </div>
 
-    <footer class="footer">
-      <p>
-        Developed by &nbsp 
-        <a href="https://github.com/aaronzq/schematics-builder" target="_blank" rel="noopener">
-          <img style="filter: invert(100%)" src="../img/github-mark.svg" alt="GitHub">
-          aaronzq
-        </a>
-      </p>
-    </footer>
-  </div>
+      <div class="card" data-file="Howe_Carmel_et_al_bioRxiv2025.json">
+        <div class="card-image">
+          <img src="../img/Howe_Carmel_et_al_bioRxiv2025.svg" alt="Howe & Carmel et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Howe & Carmel et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Howe_Carmel_et_al_bioRxiv2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli & Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli & Leyla et al. (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
 
   <script>
     function importExample(filename) {
