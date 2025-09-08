@@ -12,7 +12,9 @@ import {
     logComponentInfo,
     hideSelectedComponent,
     showSelectedComponent,
-    showAllComponents
+    showAllComponents,
+    importSchematicFromJSON,
+    exportSchematicToJSON
 } from './componentManager.js';
 import { startDrag, showHitbox } from './interactionHandler.js';
 import { showArrowForComponent, removeArrowFromComponent } from './arrows.js';
@@ -33,6 +35,9 @@ export function initApp() {
     
     // Set up UI event listeners
     setupUIEventListeners();
+    
+    // Check for imported examples from gallery
+    checkForImportedExample();
 }
 
 // Set up global document event listeners
@@ -255,5 +260,53 @@ window.addComponent = function(type) {
     selectComponent(element, id, false); // showMenu = false for automatic selection
 };
 
+// Global function to save canvas and navigate (called from HTML links)
+window.saveCanvasAndNavigate = function(url) {
+    try {
+        const currentSchematic = exportSchematicToJSON();
+        sessionStorage.setItem('savedCanvas', JSON.stringify(currentSchematic));
+        window.location.href = url;
+    } catch (err) {
+        console.error('Failed to save canvas state:', err);
+        // Navigate anyway
+        window.location.href = url;
+    }
+};
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', initApp);
+
+// Check for imported examples from gallery
+async function checkForImportedExample() {
+    const importedFile = sessionStorage.getItem('importExample');
+    if (importedFile) {
+        sessionStorage.removeItem('importExample'); // Clear the stored value
+        
+        try {
+            const response = await fetch(`examples/${importedFile}`);
+            if (!response.ok) throw new Error('File not found: ' + importedFile);
+            const schematic = await response.json();
+            
+            // Import the schematic
+            await importSchematicFromJSON(schematic);
+            console.log('Successfully imported example:', importedFile);
+        } catch (err) {
+            console.error('Failed to load example schematic:', err);
+            alert('Failed to load example: ' + err.message);
+        }
+    } else {
+        // Check for saved canvas state from gallery navigation
+        const savedCanvas = sessionStorage.getItem('savedCanvas');
+        if (savedCanvas) {
+            sessionStorage.removeItem('savedCanvas'); // Clear the stored value
+            
+            try {
+                const schematic = JSON.parse(savedCanvas);
+                await importSchematicFromJSON(schematic);
+                console.log('Successfully restored previous canvas state');
+            } catch (err) {
+                console.error('Failed to restore canvas state:', err);
+            }
+        }
+    }
+}

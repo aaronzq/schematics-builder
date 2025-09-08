@@ -1,0 +1,237 @@
+:root{
+  --bg: #f6f8fb;
+  --card: #ffffff;
+  --muted: #6b7280;
+  --accent: #0f62fe;
+  --accent-600: #0b53d6;
+  --glass: rgba(15,98,254,0.06);
+  --radius: 10px;
+  --max: 1200px;
+  --shadow: 0 6px 24px rgba(16,24,40,0.06);
+  font-synthesis: none;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--bg);
+  color:#0f172a;
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  line-height:1.45;
+  padding:28px;
+}
+
+.g-header{
+  margin-bottom:18px;
+}
+.g-header-inner{
+  max-width:var(--max);
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  gap:16px;
+}
+.g-back{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  color:var(--accent-600);
+  text-decoration:none;
+  font-weight:600;
+}
+.g-title{
+  flex:1;
+  margin:0;
+  font-size:1.15rem;
+  text-align:center;
+}
+.g-nav a{
+  color:var(--muted);
+  text-decoration:none;
+  margin-left:12px;
+  font-size:0.95rem;
+}
+
+.g-main{
+  max-width:var(--max);
+  margin:0 auto;
+  display:grid;
+  gap:24px;
+  grid-template-columns:1fr;
+}
+
+/* hero */
+.g-hero{
+  display:flex;
+  gap:20px;
+  align-items:center;
+  background:linear-gradient(180deg,var(--card),#fff);
+  padding:20px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+.g-hero .muted{color:var(--muted)}
+.cta-row{margin-top:14px; display:flex; gap:10px}
+.btn{
+  display:inline-block;
+  padding:8px 14px;
+  border-radius:8px;
+  text-decoration:none;
+  font-weight:600;
+  font-size:0.95rem;
+  border:1px solid transparent;
+}
+.btn.primary{
+  background:var(--accent);
+  color:white;
+  box-shadow:0 6px 18px rgba(15,98,254,0.12);
+}
+.btn.ghost{
+  background:white;
+  color:var(--accent-600);
+  border-color:rgba(15,98,254,0.08);
+}
+
+/* examples grid */
+.g-examples{
+  background:var(--card);
+  padding:20px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+
+.examples-grid{
+  display:grid;
+  gap:20px;
+  grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.example-card{
+  background:var(--bg);
+  border-radius:var(--radius);
+  overflow:hidden;
+  box-shadow:0 4px 16px rgba(16,24,40,0.04);
+  transition:all 0.3s ease;
+  cursor:pointer;
+}
+
+.example-card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(16,24,40,0.12);
+}
+
+.example-card img{
+  width:100%;
+  height:200px;
+  object-fit:contain;
+  background:white;
+  border-bottom:1px solid #e1e5e9;
+}
+
+.example-info{
+  padding:16px;
+}
+
+.example-info h3{
+  margin:0 0 8px 0;
+  font-size:1.1rem;
+  color:#0f172a;
+}
+
+.example-info p{
+  margin:0 0 12px 0;
+  color:var(--muted);
+  font-size:0.9rem;
+}
+
+.import-btn{
+  background:var(--accent);
+  color:white;
+  border:none;
+  padding:8px 16px;
+  border-radius:6px;
+  font-weight:600;
+  font-size:0.9rem;
+  cursor:pointer;
+  transition:all 0.2s ease;
+  width:100%;
+}
+
+.import-btn:hover{
+  background:var(--accent-600);
+  transform:translateY(-1px);
+}
+
+/* usage info */
+.g-usage-info{
+  background:var(--card);
+  padding:20px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+}
+
+.g-usage-info h4{
+  margin:0 0 16px 0;
+  color:#0f172a;
+  text-align:center;
+}
+
+.usage-grid{
+  display:grid;
+  gap:16px;
+  grid-template-columns:repeat(auto-fit, minmax(250px, 1fr));
+}
+
+.usage-item{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+  padding:12px;
+  background:var(--bg);
+  border-radius:8px;
+}
+
+.usage-icon{
+  font-size:1.5rem;
+  flex-shrink:0;
+}
+
+.usage-item h5{
+  margin:0 0 4px 0;
+  color:#0f172a;
+  font-size:0.95rem;
+}
+
+.usage-item p{
+  margin:0;
+  color:var(--muted);
+  font-size:0.85rem;
+}
+
+/* footer */
+.g-footer{
+  max-width:var(--max);
+  margin:18px auto 0 auto;
+  text-align:center;
+  color:var(--muted);
+  font-size:0.95rem;
+}
+
+/* responsive */
+@media (max-width:880px){
+  .g-hero{flex-direction:column; text-align:center}
+  .g-hero .hero-illustration{order:-1}
+  .g-title{text-align:left}
+  .examples-grid{grid-template-columns:1fr}
+  .usage-grid{grid-template-columns:1fr}
+}
+
+@media (max-width:600px){
+  body{padding:16px}
+  .g-header-inner{flex-direction:column; align-items:flex-start; gap:8px}
+  .g-title{text-align:left; font-size:1rem}
+  .g-nav{margin-top:8px}
+}

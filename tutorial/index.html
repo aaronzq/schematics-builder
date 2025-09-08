@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Quick Tutorial — Optical Schematic Builder</title>
+
+  <!-- Inter font (local network load from Google) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="t-header">
+    <div class="t-header-inner">
+      <a class="t-back" href="../index.html" aria-label="Back to Builder">
+        <!-- lightweight inline icon -->
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Back to Builder
+      </a>
+      <h1 class="t-title">Quick Tutorial</h1>
+      <nav class="t-nav">
+        <a href="../index.html">Open Builder</a>
+        <a href="../gallery/index.html">Gallery</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="t-main">
+    <section class="t-hero">
+      <div>
+        <h2>Get productive fast</h2>
+        <p class="muted">Add components, place the spawn arrow, trace rays and export your schematic. This short guide covers the essentials.</p>
+        <div class="cta-row">
+          <a class="btn primary" href="../index.html">Open Builder</a>
+          <a class="btn ghost" href="#steps">See Steps</a>
+        </div>
+      </div>
+      <div class="hero-illustration" aria-hidden>
+        <!-- simple schematic-style illustration -->
+        <svg viewBox="0 0 200 120" width="280" height="168">
+          <rect x="6" y="18" width="188" height="84" rx="8" fill="#f6fbff"/>
+          <g stroke="#1f6feb" stroke-width="2" fill="none">
+            <line x1="24" y1="60" x2="84" y2="60"/>
+            <path d="M110 48 q14 12 0 24" stroke-linecap="round"/>
+            <circle cx="90" cy="60" r="6" fill="#1f6feb"/>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <section id="steps" class="t-steps">
+      <article class="step">
+        <h3>1. Add components</h3>
+        <p>Use the left sidebar in the Builder to add lenses, mirrors, planes and other items. Left click any component button to add it to the canvas. New items spawn at the arrow position.</p>
+      </article>
+
+      <article class="step">
+        <h3>2. Position & navigate</h3>
+        <p><strong>Left-click:</strong> Select component. <strong>Right-click and drag:</strong> Pan the canvas. <strong>Mouse wheel:</strong> Zoom in/out for precise placement. The arrow indicates where the next component will be placed - adjust its position as needed.</p>
+      </article>
+
+      <article class="step">
+        <h3>3. Trace rays</h3>
+        <p>Toggle trace lines and rays from the top toolbar. Change ray shape, color and overlay multiple rays in the ray menu to compare different light paths through your optical system.</p>
+      </article>
+
+      <article class="step">
+        <h3>4. Edit & organize</h3>
+        <p>Select an element to flip horizontally/vertically, hide or delete it. Use component actions in the toolbar: Flip X, Flip Y, Hide Selected, Show Selected, or Show All Components to restore hidden items.</p>
+      </article>
+
+      <article class="step">
+        <h3>5. Export & save</h3>
+        <p>Export as SVG for figures or JSON to save/load complete schematics. Use the example gallery on the main page to import pre-built optical setups and learn from them.</p>
+      </article>
+    </section>
+
+    <section class="t-detailed-controls">
+      <h4>Detailed Controls</h4>
+      <div class="control-grid">
+        <div class="control-item">
+          <h5>Mouse Controls</h5>
+          <ul>
+            <li><strong>Left click:</strong> Select component or add from sidebar</li>
+            <li><strong>Right click + drag:</strong> Pan the canvas view</li>
+            <li><strong>Mouse wheel:</strong> Zoom in/out</li>
+            <li><strong>Click arrow:</strong> Reposition spawn point for new components</li>
+          </ul>
+        </div>
+        <div class="control-item">
+          <h5>Component Actions</h5>
+          <ul>
+            <li><strong>Delete Selected:</strong> Remove chosen component</li>
+            <li><strong>Flip X/Y:</strong> Mirror component orientation</li>
+            <li><strong>Hide/Show:</strong> Toggle component visibility</li>
+            <li><strong>Show All:</strong> Reveal all hidden components</li>
+          </ul>
+        </div>
+        <div class="control-item">
+          <h5>Render Options</h5>
+          <ul>
+            <li><strong>Hide Trace Line:</strong> Toggle ray path visibility</li>
+            <li><strong>Hide Rays:</strong> Toggle ray beam display</li>
+            <li><strong>Both Rays:</strong> Show multiple ray types</li>
+            <li><strong>Hide Grid:</strong> Toggle alignment grid</li>
+          </ul>
+        </div>
+        <div class="control-item">
+          <h5>Export/Import</h5>
+          <ul>
+            <li><strong>Export SVG:</strong> Save as vector image</li>
+            <li><strong>Export JSON:</strong> Save complete schematic</li>
+            <li><strong>Import JSON:</strong> Load saved schematic</li>
+            <li><strong>Gallery:</strong> Import example layouts</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="t-pro-tips">
+      <h4>Pro tips</h4>
+      <ul>
+        <li>Use Plane components and Hide Component feature to draw focus points between optical elements.</li>
+        <li>Flip components horizontally/vertically to quickly test different orientations.</li>
+        <li>Hide background elements when exporting images for clean presentations.</li>
+        <li>Position the spawn arrow strategically before adding components to maintain proper spacing.</li>
+        <li>Use the grid for precise alignment, then hide it for clean exports.</li>
+      </ul>
+    </section>
+  </main>
+
+  <footer class="t-footer">
+    <p>Built by <a href="https://github.com/aaronzq/schematics-builder" target="_blank" rel="noopener">aaronzq</a></p>
+  </footer>
+</body>
+</html>
