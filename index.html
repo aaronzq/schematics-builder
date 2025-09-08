@@ -21,11 +21,15 @@
   <div class="main-layout">
     <header class="title-row">
       <h1>Optical Schematic Builder</h1>
+      <nav class="header-nav">
+        <a href="gallery/index.html" class="nav-link">Gallery</a>
+        <a href="tutorial/index.html" class="nav-link">Tutorial</a>
+      </nav>
     </header>
     <div class="content-row">
       <aside class="sidebar">
-        <div class="toolbar">
-          <p class="toolbar-title">Add Component</p>
+        <div class="component-menu">
+          <p class="component-menu-title">Add Component</p>
           <button onclick="addComponent('point')">Point</button>
           <button onclick="addComponent('plane')">Plane</button>
           <button onclick="addComponent('objective')">Objective</button>
@@ -49,20 +53,22 @@
         </div>
       </aside>
       <main class="workspace-area">
-        <div class="canvas-toolbar">
-          <div class="toolbar-left">
-            <p class="toolbar-label">Render Actions</p>
+        <div class="action-toolbar">
+          <div class="action-row">
+            <p class="action-label">Render Actions</p>
             <button id="reset-canvas-btn">Reset Canvas</button>
             <button id="trace-btn">Hide Trace Line</button>
             <button id="rays-btn">Hide Rays</button>
             <button id="solid-rays-btn">Both Rays</button>
-            <p class="toolbar-label">Export/Import</p>
+          </div>
+          <div class="action-row">
+            <p class="action-label">Export/Import</p>
             <button id="export-svg-btn">Export SVG</button>  
             <button id="export-schematic-btn">Export JSON</button>
             <button id="import-schematic-btn">Import JSON</button>
           </div>
-          <div class="toolbar-right">
-            <p class="toolbar-label">Component Actions</p>
+          <div class="action-row">
+            <p class="action-label">Component Actions</p>
             <button id="delete-btn">Delete Selected</button>
             <button id="flip-horizontal-btn">Flip X</button>
             <button id="flip-vertical-btn">Flip Y</button>            
@@ -85,39 +91,17 @@
         </div>
       </main>
     </div>
-
-
-    <div class="gallery-instructions-row">
-      <section class="instructions-row" style="flex:0 0 35%; min-width:220px; box-sizing:border-box;">
-        <h2>How to Use (with a mouse)</h2>
-        <ol>
-          <li>Left click a component from the left sidebar to add it to the canvas.</li>
-          <li>Arrow indicates the position to spawn next component. Adjust arrow if needed.</li>
-          <li>Left click: Select component. Right click: Pan the canvas. Wheel: Zoom in/out.</li>
-          <li>Change ray shape, color and overlay multiple rays in the ray menu.</li>
-          <li>Tips: use Plane and Hide Component to draw focus point between components</li>
-        </ol>
-      </section>
-      <section class="gallery-row" style="flex:0 0 65%; min-width:320px; max-width:none; box-sizing:border-box; padding:24px 8px 24px 8px;">
-        <h2 style="text-align:center;">Example Gallery (Click to import)</h2>
-        <div id="gallery-container" style="display:flex; align-items:center; justify-content:flex-start; width:100%;">
-          <div id="gallery-images" style="display:flex; gap:0.5em; overflow:hidden; width:100%; justify-content:flex-start;">
-            <!-- Gallery images will be rendered by gallery.js -->
-          </div>
-        </div>
-      </section>
-    </div>
+    <footer class="footer">
+      <p>
+        Developed by &nbsp 
+        <a href="https://github.com/aaronzq/schematics-builder" target="_blank" rel="noopener">
+          <img src="img/github-mark.svg" alt="GitHub">
+          aaronzq
+        </a>
+      </p>
+    </footer>
   </div>
 
-  <footer style="text-align:center; margin-top:2em; color:#888; font-size:0.95em;">
-    <p>
-      Developed by &nbsp 
-      <a href="https://github.com/aaronzq/schematics-builder" style="color:rgb(0, 0, 0); text-decoration:none;" target="_blank" rel="noopener">
-        <img src="img/github-mark.svg" alt="GitHub" style="height:1em; vertical-align:middle; margin-right:4px;">
-        aaronzq
-      </a>
-    </p>
-  </footer>
   <script type="module" src="scripts/main.js"></script>
 </body>
 </html>

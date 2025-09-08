@@ -192,7 +192,7 @@ export function showRayShapeMenu(component) {
             radiusSlider.className = 'radius-slider';
             // Value display
             const valueDisplay = document.createElement('span');
-            valueDisplay.textContent = currentRadius.toFixed(2);
+            valueDisplay.textContent = currentRadius.toFixed(1);
             valueDisplay.className = 'value-display';
             // Add the slider elements to the row
             row.appendChild(sliderLabel);
@@ -216,7 +216,7 @@ export function showRayShapeMenu(component) {
             
             radiusSlider.addEventListener('input', e => {
                 const newRadius = parseFloat(radiusSlider.value);
-                valueDisplay.textContent = newRadius.toFixed(2);
+                valueDisplay.textContent = newRadius.toFixed(1);
                 // Update aperture radius and aperture points directly
                 state.dimensions.apertureRadius = newRadius;
                 const up = state.dimensions.upVector;
