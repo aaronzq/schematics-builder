@@ -82,6 +82,10 @@ schematics-builder/
 
 This project is largerly implemented by coding copilots using LLM. 
 
+## Contribution
+
+Components and gallery.
+
 ## Contact
 
 Drop me a message if you are interested in this project.
