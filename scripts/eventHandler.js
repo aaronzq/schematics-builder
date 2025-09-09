@@ -1,4 +1,3 @@
-
 // Event handlers and application initialization
 // Centralized event management and application startup
 
@@ -281,6 +280,7 @@ async function checkForImportedExample() {
     const importedFile = sessionStorage.getItem('importExample');
     if (importedFile) {
         sessionStorage.removeItem('importExample'); // Clear the stored value
+        sessionStorage.removeItem('savedCanvas'); // ← ADD THIS: Clear saved canvas when importing
         
         try {
             const response = await fetch(`examples/${importedFile}`);
