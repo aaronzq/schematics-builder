@@ -78,14 +78,35 @@ schematics-builder/
 └── index.html                          # Main HTML file, sets up the UI layout and loads scripts
 ``` -->
 
+## Contribution
+
+### Contribute to the gallery
+To contribute to the gallery, please use the following template and steps:
+
+1. **Create your schematic** using the web app and export SVG and JSON file.
+    - Place your JSON file in the `examples/` folder.
+    - Place your SVG file in the `img/` folder.
+2. **Add the example to the gallery** by modifying **gallery/index.html**:
+    
+    ```javascript
+      <div class="card" data-file="template.json">
+        <div class="card-image">
+          <img src="../img/template.svg" alt="Template" loading="lazy" style="display:block;margin:0 auto;max-width:none;max-height:none;width:auto;height:auto;transform-origin:center center;transform:scale(0.6);">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Template</h3>
+          <button class="import-btn" onclick="importExample('template.json')">Import</button>
+        </div>
+      </div>
+    ```
+
+### Contribute to the component library
+
+### Contribute to the xxx
+
 ## LLM usage
 
 This project is largerly implemented by coding copilots using LLM. 
 
-## Contribution
-
-Components and gallery.
-
 ## Contact
-
-Drop me a message if you are interested in this project.
+[Drop me a message](mailto:zqwang9@ucla.edu) if you are interested in this project.
