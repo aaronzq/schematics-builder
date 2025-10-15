@@ -15,8 +15,20 @@ export const componentDimensions = {
     objective: { 
         width: 129, 
         height: 60, 
-        offsetX: 0,
+        offsetX: 0,                   // Used in hitbox calculation
         centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
+    objective2: { 
+        width: 138, 
+        height: 66, 
+        offsetX: 0,
+        centerPoint: { x: -30, y: 0 },  // Center at component origin
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
         forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
         apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
@@ -27,6 +39,18 @@ export const componentDimensions = {
     lens: { 
         width: 10, 
         height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
+    "lens-transparent": {
+        width: 10,
+        height: 60,
         offsetX: 0,
         centerPoint: { x: 0, y: 0 },  // Center at component origin
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
@@ -263,7 +287,32 @@ export const componentDimensions = {
         coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }  
-    }    
+    },
+    "polygon-scanner": {
+        width: 146, 
+        height: 168, 
+        offsetX: 73,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }   
+    },
+    "photo-diode": {
+        width: 15, 
+        height: 30, 
+        offsetX: 7.5,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }   
+    },
+
 };
 
 // Component drawing functions
@@ -279,6 +328,22 @@ export const components = {
             lens.setAttribute("stroke-width", "1.5");
             lens.setAttribute("fill", "#145ec0");
             lens.setAttribute("fill-opacity", "0.3");
+            g.appendChild(lens);
+            return g;
+        }
+    },
+
+    "lens-transparent": {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            // Double convex lens shape
+            const lens = document.createElementNS(ns, "path");
+            lens.setAttribute("d", "M 0 -30 C 6 -27 6 27 0 30 C -6 27 -6 -27 0 -30");
+            lens.setAttribute("stroke", "black");
+            lens.setAttribute("stroke-width", "1.5");
+            lens.setAttribute("fill", "#145ec0");
+            lens.setAttribute("fill-opacity", "0.0");
             g.appendChild(lens);
             return g;
         }
@@ -368,6 +433,82 @@ export const components = {
             endCap.setAttribute("width", 8);
             endCap.setAttribute("height", 42);
             endCap.setAttribute("fill", "#686868");
+            endCap.setAttribute("fill-opacity", "1");
+            endCap.setAttribute("stroke", "black");
+            endCap.setAttribute("stroke-width", "1.5");
+            g.appendChild(endCap);
+
+            return g;
+        }
+    },
+
+    objective2: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            // Tip
+            const tip = document.createElementNS(ns, "path");
+            tip.setAttribute("d", "M -69 -10 L -69 10 L -65 14 L -65 -14 Z ");
+            tip.setAttribute("fill", "#ffffff");
+            tip.setAttribute("stroke", "black");
+            tip.setAttribute("stroke-width", "1.5");
+            g.appendChild(tip);
+            
+
+            const cone = document.createElementNS(ns, "path");
+            cone.setAttribute("d", "M -65 -14 L -65 14 L -53 26 L -53 -26 Z");
+            cone.setAttribute("fill", "#ffffff");
+            cone.setAttribute("stroke", "black");
+            cone.setAttribute("stroke-width", "1.5");
+            g.appendChild(cone);
+
+            
+            const barrel1 = document.createElementNS(ns, "rect");
+            barrel1.setAttribute("x", "-53");
+            barrel1.setAttribute("y", "-27");
+            barrel1.setAttribute("width", 10);
+            barrel1.setAttribute("height", 54);
+            barrel1.setAttribute("fill", "#ffffff");
+            barrel1.setAttribute("stroke", "black");
+            barrel1.setAttribute("stroke-width", "1.5");
+            g.appendChild(barrel1);
+
+            const barrel2 = document.createElementNS(ns, "rect");
+            barrel2.setAttribute("x", "-43");
+            barrel2.setAttribute("y", "-30");
+            barrel2.setAttribute("width", 10);
+            barrel2.setAttribute("height", 60);
+            barrel2.setAttribute("fill", "#ffffff");
+            barrel2.setAttribute("stroke", "black");
+            barrel2.setAttribute("stroke-width", "1.5");
+            g.appendChild(barrel2);
+
+            // Ring
+            const Ring = document.createElementNS(ns, "rect");
+            Ring.setAttribute("x", "-33");
+            Ring.setAttribute("y", -30);
+            Ring.setAttribute("width", 3);
+            Ring.setAttribute("height", 60);
+            Ring.setAttribute("fill", "#ffffff");
+            Ring.setAttribute("stroke", "black");
+            Ring.setAttribute("stroke-width", "1.5");
+            g.appendChild(Ring);
+
+            // Rear barrel
+            const rearBarrel = document.createElementNS(ns, "rect");
+            rearBarrel.setAttribute("x", "-30");
+            rearBarrel.setAttribute("y", -30);
+            rearBarrel.setAttribute("width", 90);
+            rearBarrel.setAttribute("height", 60);
+            rearBarrel.setAttribute("fill", "#ffffff");
+            rearBarrel.setAttribute("stroke", "black");
+            rearBarrel.setAttribute("stroke-width", "1.5");
+            g.appendChild(rearBarrel);
+
+            // End cap
+            const endCap = document.createElementNS(ns, "path");
+            endCap.setAttribute("d", "M 60 -30 L 63 -33 L 69 -33 L 69 33 L 63 33 L 60 30 Z");
+            endCap.setAttribute("fill", "#ffffff");
             endCap.setAttribute("fill-opacity", "1");
             endCap.setAttribute("stroke", "black");
             endCap.setAttribute("stroke-width", "1.5");
@@ -834,6 +975,84 @@ export const components = {
 
             return g;
         }
-    }
+    },
 
+"polygon-scanner": {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            const border = 1.5;
+
+            const baseplate = document.createElementNS(ns, "path");
+            baseplate.setAttribute("d", "M 0 -42 L 0 42 L 73 83 L 146 42 L 146 -42 L 73 -83 Z");
+            baseplate.setAttribute("stroke", "black");
+            baseplate.setAttribute("stroke-width", border);
+            baseplate.setAttribute("fill", "#a8a8a8");
+            g.appendChild(baseplate);
+
+            // Rotation indicator - 240 degree arc
+            const rotationArc = document.createElementNS(ns, "path");
+            const centerX = 73;
+            const centerY = 0;
+            const radius = 25;
+            
+            // Calculate start and end points for 240-degree arc (starting from top)
+            const startAngle = -Math.PI/2; // Start at top (-90 degrees)
+            const endAngle = startAngle + (240 * Math.PI / 180); // Add 240 degrees
+            
+            const startX = centerX + radius * Math.cos(startAngle);
+            const startY = centerY + radius * Math.sin(startAngle);
+            const endX = centerX + radius * Math.cos(endAngle);
+            const endY = centerY + radius * Math.sin(endAngle);
+            
+            rotationArc.setAttribute("d", `M ${startX} ${startY} A ${radius} ${radius} 0 1 1 ${endX} ${endY}`);
+            rotationArc.setAttribute("stroke", "black");
+            rotationArc.setAttribute("stroke-width", "1.5");
+            rotationArc.setAttribute("fill", "none");
+            g.appendChild(rotationArc);
+
+            // Arrow at the end of the arc
+            const arrowSize = 6;
+            const arrowAngle = endAngle + Math.PI/6 - Math.PI/2; // Slightly ahead for arrow direction
+            
+            // Arrow tip points
+            const arrowTip1X = endX + arrowSize * Math.cos(arrowAngle);
+            const arrowTip1Y = endY + arrowSize * Math.sin(arrowAngle);
+            const arrowTip2X = endX + arrowSize * Math.cos(arrowAngle - Math.PI/3);
+            const arrowTip2Y = endY + arrowSize * Math.sin(arrowAngle - Math.PI/3);
+            
+            const arrow = document.createElementNS(ns, "path");
+            arrow.setAttribute("d", `M ${endX} ${endY} L ${arrowTip1X} ${arrowTip1Y} M ${endX} ${endY} L ${arrowTip2X} ${arrowTip2Y}`);
+            arrow.setAttribute("stroke", "black");
+            arrow.setAttribute("stroke-width", "1.5");
+            arrow.setAttribute("stroke-linecap", "round");
+            g.appendChild(arrow);
+
+            return g;
+        }
+    },
+
+"photo-diode": {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            const body = document.createElementNS(ns, "path");
+            body.setAttribute("d", "M 0 -15 L 0 15 A 1 1 0 0 0 0 -15");
+            body.setAttribute("fill", "#cccccc");
+            body.setAttribute("stroke", "#000000");
+            body.setAttribute("stroke-width", "1.5");
+            g.appendChild(body);   
+            
+            const plane = document.createElementNS(ns, "line");
+            plane.setAttribute("x1", "0");
+            plane.setAttribute("y1", "-16");
+            plane.setAttribute("x2", "0");
+            plane.setAttribute("y2", "16");
+            plane.setAttribute("stroke", "black");
+            plane.setAttribute("stroke-width", "1.5");
+            g.appendChild(plane);
+
+            return g;
+        }
+    }
 };
