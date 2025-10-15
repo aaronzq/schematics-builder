@@ -204,6 +204,18 @@ export const componentDimensions = {
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); } 
     },
+    'wedge-prism2': {
+        width: 30, 
+        height: 60, 
+        offsetX: 0,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); } 
+    },
     grating: {
         width: 10,
         height: 60,
@@ -687,6 +699,24 @@ export const components = {
 
             const prism = document.createElementNS(ns, "path");
             prism.setAttribute("d", 'M -10 -30 L -10 30 L 15 30 L 5 -30 Z');
+            prism.setAttribute("fill", "#145ec0");
+            prism.setAttribute("fill-opacity", "0.3");
+            prism.setAttribute("stroke", "black");
+            prism.setAttribute("stroke-width", border);
+            g.appendChild(prism);
+
+            return g;
+        }
+    },
+
+    'wedge-prism2': {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            const border = 1.5;
+
+            const prism = document.createElementNS(ns, "path");
+            prism.setAttribute("d", 'M 0 -30 L 0 30 L 15 30 Z');
             prism.setAttribute("fill", "#145ec0");
             prism.setAttribute("fill-opacity", "0.3");
             prism.setAttribute("stroke", "black");
