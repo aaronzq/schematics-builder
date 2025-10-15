@@ -1,8 +1,8 @@
 // Component hierarchy management
 // Handles parent-child relationships and hierarchy operations
 
-import { showTraceLines, drawTraceLines } from '../traceLines.js';
-import { showApertureRays } from '../rays.js';
+import { showTraceLines, drawCenterTraceLines } from '../traceLines.js';
+import { showApertureRays, drawApertureRays } from '../rays.js';
 
 /**
  * Update component hierarchy when adding a new component
@@ -20,18 +20,24 @@ export function updateComponentHierarchy(compId, selectedComponent, componentSta
         
         console.log(`Component ${compId} (${componentState[compId].type}) added as child of Component ${parentId} (${componentState[parentId].type})`);
         
-        // Update trace lines if they're enabled
+        // Update trace lines and rays independently
         if (showTraceLines) {
-            drawTraceLines();
+            drawCenterTraceLines();
+        }
+        if (showApertureRays) {
+            drawApertureRays();
         }
     } else {
         // First component or no selection - this is a root component
         componentState[compId].parentId = null;
         console.log(`Component ${compId} (${componentState[compId].type}) created as root component (no parent)`);
         
-        // Update trace lines if they're enabled
+        // Update trace lines and rays independently
         if (showTraceLines) {
-            drawTraceLines();
+            drawCenterTraceLines();
+        }
+        if (showApertureRays) {
+            drawApertureRays();
         }
     }
 }
@@ -70,8 +76,11 @@ export function cleanupComponentHierarchy(compIdNum, componentState) {
 
     console.log(`Component ${compIdNum} (${componentToRemove.type}) removed from hierarchy`);
     
-    // Update trace lines if they're enabled
+    // Update trace lines and rays independently
     if (showTraceLines) {
-        drawTraceLines();
+        drawCenterTraceLines();
+    }
+    if (showApertureRays) {
+        drawApertureRays();
     }
 }
