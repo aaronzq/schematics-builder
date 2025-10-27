@@ -154,6 +154,19 @@ export async function importSchematicFromJSON(schematic) {
                     hideComponent(result.element);
                 }
             }
+            // Handle flip states
+            if (compData.flipX !== undefined) {
+                state.flipX = compData.flipX;
+                result.element.setAttribute('data-flipped-h', state.flipX ? 'true' : 'false');
+            }
+            if (compData.flipY !== undefined) {
+                state.flipY = compData.flipY;
+                result.element.setAttribute('data-flipped-v', state.flipY ? 'true' : 'false');
+            }
+            // Apply flip transform immediately if any flip states were set
+            if ((compData.flipX !== undefined && compData.flipX) || (compData.flipY !== undefined && compData.flipY)) {
+                reapplyComponentTransform(result.element);
+            }
             if (compData.arrowX !== undefined) {
                 state.arrowX = compData.arrowX;
             }
@@ -228,6 +241,8 @@ export function exportSchematicToJSON() {
             parentId: state.parentId,
             children: state.children,
             visible: state.visible,
+            flipX: state.flipX,
+            flipY: state.flipY,
             dimensions: state.dimensions,
             rayPolygonColor: Array.isArray(state.rayPolygonColor) ? state.rayPolygonColor.slice() : [state.rayPolygonColor],
             rayPolygonColor2: Array.isArray(state.rayPolygonColor2) ? state.rayPolygonColor2.slice() : [state.rayPolygonColor2 || '#ff00ff'],
@@ -270,14 +285,19 @@ export function flipSelectedComponentSVG(direction = 'horizontal') {
         console.log('No component selected to flip');
         return;
     }
+    
+    const compId = component.getAttribute('data-id');
+    const state = componentState[compId];
+    if (!state) return;
+    
     if (direction === 'horizontal') {
-        // Toggle data-flipped-h
-        const isFlippedH = component.getAttribute('data-flipped-h') === 'true';
-        component.setAttribute('data-flipped-h', isFlippedH ? 'false' : 'true');
+        // Toggle flipX state and update DOM attribute
+        state.flipX = !state.flipX;
+        component.setAttribute('data-flipped-h', state.flipX ? 'true' : 'false');
     } else if (direction === 'vertical') {
-        // Toggle data-flipped-v
-        const isFlippedV = component.getAttribute('data-flipped-v') === 'true';
-        component.setAttribute('data-flipped-v', isFlippedV ? 'false' : 'true');
+        // Toggle flipY state and update DOM attribute
+        state.flipY = !state.flipY;
+        component.setAttribute('data-flipped-v', state.flipY ? 'true' : 'false');
     }
     // Reapply transform to update flip
     reapplyComponentTransform(component);
@@ -287,14 +307,17 @@ export function flipSelectedComponentSVG(direction = 'horizontal') {
 function getFlipTransform(component) {
     const compId = component.getAttribute('data-id');
     const state = componentState[compId];
-    const dims = (state && state.dimensions) ? state.dimensions : componentDimensions[component.getAttribute('data-type')];
+    if (!state) return '';
+    
+    const dims = state.dimensions || componentDimensions[component.getAttribute('data-type')];
     const cx = dims.centerPoint.x;
     const cy = dims.centerPoint.y;
     let transform = '';
-    if (component.getAttribute('data-flipped-h') === 'true') {
+    
+    if (state.flipX) {
         transform += ` translate(${cx},${cy}) scale(-1,1) translate(${-cx},${-cy})`;
     }
-    if (component.getAttribute('data-flipped-v') === 'true') {
+    if (state.flipY) {
         transform += ` translate(${cx},${cy}) scale(1,-1) translate(${-cx},${-cy})`;
     }
     return transform;
@@ -420,6 +443,8 @@ export function addComponent(type) {
         arrowY: arrowEndpoint.y,
         selected: false,
         visible: true,  // Track visibility state
+        flipX: false,   // Track horizontal flip state
+        flipY: false,   // Track vertical flip state
         type: type,
         dimensions: dims,
         parentId: null,
@@ -590,7 +615,7 @@ export function logComponentInfo(compId) {
     console.log(`  Hierarchy: ${parentInfo}, ${childrenInfo}`);
     console.log(`  Center: (${centerX.toFixed(1)}, ${centerY.toFixed(1)}) | Rotation: ${(state.rotation || 0).toFixed(1)}°`);
     console.log(`  Arrow: (${state.arrowX.toFixed(1)}, ${state.arrowY.toFixed(1)})`);
-    console.log(`  Visibility: ${state.visible ? 'Visible' : 'Hidden'}`);
+    console.log(`  Visibility: ${state.visible ? 'Visible' : 'Hidden'} | FlipX: ${state.flipX ? 'Yes' : 'No'} | FlipY: ${state.flipY ? 'Yes' : 'No'}`);
     
     // Log upVector and forwardVector
     if (state.dimensions) {
