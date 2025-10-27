@@ -1,6 +1,7 @@
 import { downloadSchematicJSON, promptImportSchematicJSON } from './componentManager.js';
 import { enableCanvasPan, enableCanvasZoom } from './viewportManager.js';
 import { galleryJsonPaths, renderGallery } from './gallery.js';
+import { initComponentPreview } from './componentPreview.js';
 // import { resetCanvas } from './componentManager.js';
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -21,6 +22,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
 	// Render gallery images dynamically
 	renderGallery();
+
+	// Initialize component preview tooltips
+	initComponentPreview();
 
 	// Add click listeners to gallery images for schematic import
 	const galleryDiv = document.getElementById('gallery-images');

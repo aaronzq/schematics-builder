@@ -524,3 +524,40 @@ input[type="range"].single-knob {
   font-weight: bold;
   cursor: pointer;
 }
+
+/* Component Preview Tooltip */
+.component-preview-tooltip {
+  position: absolute;
+  background: white;
+  border: 2px solid #333;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  padding: 8px;
+  z-index: 1000;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.component-preview-tooltip.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.component-preview-tooltip svg {
+  display: block;
+  width: 80px;
+  height: 60px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.component-preview-tooltip .tooltip-title {
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  margin: 4px 0 0 0;
+  color: #333;
+}
