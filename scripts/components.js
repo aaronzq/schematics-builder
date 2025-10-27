@@ -36,6 +36,18 @@ export const componentDimensions = {
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
+    objective3: { 
+        width: 76, 
+        height: 60, 
+        offsetX: 0,                   // Used in hitbox calculation
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
     lens: { 
         width: 10, 
         height: 60, 
@@ -217,9 +229,9 @@ export const componentDimensions = {
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     'wedge-prism': {
-        width: 32, 
+        width: 25, 
         height: 60, 
-        offsetX: 0,
+        offsetX: 2.5,
         centerPoint: { x: 0, y: 0 },  // Center at component origin
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
         forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
@@ -229,9 +241,21 @@ export const componentDimensions = {
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); } 
     },
     'wedge-prism2': {
+        width: 15, 
+        height: 60, 
+        offsetX: 7.5,
+        centerPoint: { x: 0, y: 0 },  // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); } 
+    },
+    'right-angle-prism': {
         width: 30, 
         height: 60, 
-        offsetX: 0,
+        offsetX: -15,
         centerPoint: { x: 0, y: 0 },  // Center at component origin
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
         forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
@@ -299,6 +323,18 @@ export const componentDimensions = {
         coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }   
+    },
+    "voice-coil-mirror": { 
+        width: 19, 
+        height: 60, 
+        offsetX: 6.5,
+        centerPoint: { x: -3, y: 0 }, // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
     "photo-diode": {
         width: 15, 
@@ -410,7 +446,7 @@ export const components = {
             greenRing.setAttribute("y", -30);
             greenRing.setAttribute("width", 5);
             greenRing.setAttribute("height", 60);
-            greenRing.setAttribute("fill", "green");
+            greenRing.setAttribute("fill", "#d9d9d9");
             greenRing.setAttribute("stroke", "black");
             greenRing.setAttribute("stroke-width", "1");
             g.appendChild(greenRing);
@@ -518,6 +554,55 @@ export const components = {
         }
     },
 
+    objective3: {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            // Conical front (tapered head)
+            const cone = document.createElementNS(ns, "path");
+            cone.setAttribute("d", "M -26 -30 L -28 -30 L -38 -22 L -38 22 L -28 30 L -26 30 Z");
+            cone.setAttribute("fill", "#d9d9d9");
+            cone.setAttribute("stroke", "black");
+            cone.setAttribute("stroke-width", "1.5");
+            g.appendChild(cone);
+
+            // Front barrel (dark gray)
+            const frontBarrel = document.createElementNS(ns, "rect");
+            frontBarrel.setAttribute("x", "-28");
+            frontBarrel.setAttribute("y", -30);
+            frontBarrel.setAttribute("width", 10);
+            frontBarrel.setAttribute("height", 60);
+            frontBarrel.setAttribute("fill", "#5a5a5a");
+            frontBarrel.setAttribute("stroke", "black");
+            frontBarrel.setAttribute("stroke-width", "1.5");
+            g.appendChild(frontBarrel);
+
+            // Green ring
+            const greenRing = document.createElementNS(ns, "rect");
+            greenRing.setAttribute("x", "-18");
+            greenRing.setAttribute("y", -30);
+            greenRing.setAttribute("width", 5);
+            greenRing.setAttribute("height", 60);
+            greenRing.setAttribute("fill", "#d9d9d9");
+            greenRing.setAttribute("stroke", "black");
+            greenRing.setAttribute("stroke-width", "1");
+            g.appendChild(greenRing);
+
+            // Rear barrel
+            const rearBarrel = document.createElementNS(ns, "rect");
+            rearBarrel.setAttribute("x", "-13");
+            rearBarrel.setAttribute("y", -30);
+            rearBarrel.setAttribute("width", 51);
+            rearBarrel.setAttribute("height", 60);
+            rearBarrel.setAttribute("fill", "#888888");
+            rearBarrel.setAttribute("stroke", "black");
+            rearBarrel.setAttribute("stroke-width", "1.5");
+            g.appendChild(rearBarrel);
+
+            return g;
+        }
+    },
+
     mirror: {
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
@@ -527,8 +612,8 @@ export const components = {
             mirror.setAttribute("d", "M -3 -30 L 3 -30 L 3 30 L -3 30 Z");
             mirror.setAttribute("stroke", "black");
             mirror.setAttribute("stroke-width", "1.5");
-            mirror.setAttribute("fill", "#145ec0");
-            mirror.setAttribute("fill-opacity", "0.4");
+            mirror.setAttribute("fill", "#8caed6");
+            mirror.setAttribute("fill-opacity", "1");
             g.appendChild(mirror);
 
             const backsurface = document.createElementNS(ns, "line");
@@ -868,6 +953,24 @@ export const components = {
         }
     },
 
+    'right-angle-prism': {
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            const border = 1.5;
+
+            const prism = document.createElementNS(ns, "path");
+            prism.setAttribute("d", 'M 0 -30 L 0 30 L -30 0 Z');
+            prism.setAttribute("fill", "#145ec0");
+            prism.setAttribute("fill-opacity", "0.3");
+            prism.setAttribute("stroke", "black");
+            prism.setAttribute("stroke-width", border);
+            g.appendChild(prism);
+
+            return g;
+        }
+    },
+
     grating: {
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
@@ -1032,7 +1135,54 @@ export const components = {
         }
     },
 
-"photo-diode": {
+    "voice-coil-mirror": {
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            // Mirror line
+            const mirror = document.createElementNS(ns, "path");
+            mirror.setAttribute("d", "M -3 -20 L 3 -20 L 3 20 L -3 20 Z");
+            mirror.setAttribute("stroke", "black");
+            mirror.setAttribute("stroke-width", "1.5");
+            mirror.setAttribute("fill", "#145ec0");
+            mirror.setAttribute("fill-opacity", "0.4");
+            g.appendChild(mirror);
+
+            const backsurface = document.createElementNS(ns, "line");
+            backsurface.setAttribute("x1", "-3");
+            backsurface.setAttribute("y1", "-20.75");
+            backsurface.setAttribute("x2", "-3");
+            backsurface.setAttribute("y2", "20.75");
+            backsurface.setAttribute("stroke", "black");
+            backsurface.setAttribute("stroke-width", "2");
+            g.appendChild(backsurface);
+
+            const actuator = document.createElementNS(ns, "rect");
+            actuator.setAttribute("x", "3");
+            actuator.setAttribute("y", "-8");
+            actuator.setAttribute("width", "5");
+            actuator.setAttribute("height", "16");
+            actuator.setAttribute("fill", "#252525ff");
+            actuator.setAttribute("stroke", "black");
+            actuator.setAttribute("stroke-width", "1.5");
+            g.appendChild(actuator);
+
+            const base = document.createElementNS(ns, "rect");
+            base.setAttribute("x", "8");
+            base.setAttribute("y", "-30");
+            base.setAttribute("width", "8");
+            base.setAttribute("height", "60");
+            base.setAttribute("fill", "#828282");
+            base.setAttribute("stroke", "black");
+            base.setAttribute("stroke-width", "1.5");
+            g.appendChild(base);
+
+            return g;
+        }
+    },
+
+    "photo-diode": {
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
 
