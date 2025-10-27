@@ -336,6 +336,18 @@ export const componentDimensions = {
         rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
         get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
     },
+    "voice-coil-mirror2": { 
+        width: 31, 
+        height: 60, 
+        offsetX: 0.5,
+        centerPoint: { x: -3, y: 0 }, // Center at component origin
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        get aperturePoints() { return calculateAperturePoints(this.centerPoint, this.upVector, this.apertureRadius); }
+    },
     "photo-diode": {
         width: 15, 
         height: 30, 
@@ -1181,7 +1193,52 @@ export const components = {
             return g;
         }
     },
+    "voice-coil-mirror2": {
 
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            // Mirror line
+            const mirror = document.createElementNS(ns, "path");
+            mirror.setAttribute("d", "M -3 -20 L 3 -20 L 3 20 L -3 20 L -3 12 L -15 12 L -3 0 L -15 -12 L -3 -12 Z");
+            mirror.setAttribute("stroke", "black");
+            mirror.setAttribute("stroke-width", "1.5");
+            mirror.setAttribute("fill", "#145ec0");
+            mirror.setAttribute("fill-opacity", "0.4");
+            g.appendChild(mirror);
+
+            const backsurface = document.createElementNS(ns, "line");
+            backsurface.setAttribute("x1", "-3");
+            backsurface.setAttribute("y1", "-20.75");
+            backsurface.setAttribute("x2", "-3");
+            backsurface.setAttribute("y2", "20.75");
+            backsurface.setAttribute("stroke", "black");
+            backsurface.setAttribute("stroke-width", "2");
+            g.appendChild(backsurface);
+
+            const actuator = document.createElementNS(ns, "rect");
+            actuator.setAttribute("x", "3");
+            actuator.setAttribute("y", "-8");
+            actuator.setAttribute("width", "5");
+            actuator.setAttribute("height", "16");
+            actuator.setAttribute("fill", "#252525ff");
+            actuator.setAttribute("stroke", "black");
+            actuator.setAttribute("stroke-width", "1.5");
+            g.appendChild(actuator);
+
+            const base = document.createElementNS(ns, "rect");
+            base.setAttribute("x", "8");
+            base.setAttribute("y", "-30");
+            base.setAttribute("width", "8");
+            base.setAttribute("height", "60");
+            base.setAttribute("fill", "#828282");
+            base.setAttribute("stroke", "black");
+            base.setAttribute("stroke-width", "1.5");
+            g.appendChild(base);
+
+            return g;
+        }
+    },
     "photo-diode": {
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
