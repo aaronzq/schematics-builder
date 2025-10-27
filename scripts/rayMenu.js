@@ -22,7 +22,7 @@ import { hexToRgb, rgbToHex, rgbToHsl, hslToRgb } from './utils/colorUtils.js';
 
 // Flag to prevent menu re-rendering during slider interactions
 let isSliderActive = false;
-import { changeComponentRayShape, getValidRayShapes, setConeAngle } from './modules/componentUtils.js';
+import { changeComponentRayShape, getValidRayShapes, setConeAngle, setApertureRadius } from './modules/componentUtils.js';
 import { calculateOptimalAperture, recursivelyUpdateChildrenApertures, autoScaleForComponentDragRotation } from './modules/componentAperture.js';
 import { updateAperturePointDrawings } from './modules/componentRenderer.js';
 
@@ -217,20 +217,8 @@ export function showRayShapeMenu(component) {
             radiusSlider.addEventListener('input', e => {
                 const newRadius = parseFloat(radiusSlider.value);
                 valueDisplay.textContent = newRadius.toFixed(1);
-                // Update aperture radius and aperture points directly
-                state.dimensions.apertureRadius = newRadius;
-                const up = state.dimensions.upVector;
-                const center = state.dimensions.centerPoint;
-                state.dimensions.aperturePoints = {
-                    upper: {
-                        x: center.x + up.x * newRadius,
-                        y: center.y + up.y * newRadius
-                    },
-                    lower: {
-                        x: center.x - up.x * newRadius,
-                        y: center.y - up.y * newRadius
-                    }
-                };
+                // Update aperture radius and aperture points using utility function
+                state.dimensions = setApertureRadius(state.dimensions, newRadius);
                 // Now update cone angle using main logic, but preserve the radius and points
                 const parentId = state.parentId;
                 const parentState = parentId !== null ? componentState[parentId] : null;

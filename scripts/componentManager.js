@@ -339,7 +339,7 @@ function reapplyComponentTransform(component) {
 // Handles adding, removing, and state management of components using focused modules
 
 import { componentDimensions } from './components.js';
-import { flipUpVector } from './modules/componentUtils.js';
+import { flipUpVector, setApertureRadius } from './modules/componentUtils.js';
 import { updateTraceLines } from './traceLines.js';
 import { validateComponentType } from './utils/validators.js';
 import { HIDDEN_COMPONENT_OPACITY, VISIBLE_COMPONENT_OPACITY, GRID_SIZE, ROTATION_SNAP_INCREMENT } from './constants.js';
@@ -413,6 +413,10 @@ export function addComponent(type) {
     // Calculate placement
     const placement = calculateComponentPlacement(type, selectedComponent, componentState, { x: nextX, y: nextY });
     let dims = componentDimensions[type];
+    
+    // Convert template object to plain object to avoid getter-only property issues
+    // This ensures aperturePoints is a regular property that can be modified
+    dims = setApertureRadius(dims, dims.apertureRadius);
     
     // Auto-scale aperture radius to match parent's projection (if component has a parent)
     if (selectedComponent) {
