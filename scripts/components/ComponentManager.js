@@ -14,7 +14,11 @@ export class ComponentManager {
     
     // Set position (use provided or default)
     const pos = position || this.nextPosition;
-    component.setPosition(pos.x, pos.y);
+    
+    // Compensate for centerPoint offset so the actual centerPoint lands at the desired position
+    const centerPoint = component.centerPoint || { x: 0, y: 0 };
+    component.setPosition(pos.x - centerPoint.x, pos.y - centerPoint.y);
+    
     const group = component.render();
     group.setAttribute('data-id', id);
     const schematics = document.getElementById("schematics");
