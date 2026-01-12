@@ -1,4 +1,6 @@
-import { setupComponentButtons } from './events/ComponentButtonHandlers.js';
+import { setupComponentButtons} from './events/ButtonHandlers.js';
+import { setupComponentSelection, setupComponentDragging } from './events/InteractionHandlers.js';
+
 
 export function initializeApp() {
   console.log('🚀 Initializing application...');
@@ -9,7 +11,8 @@ export function initializeApp() {
   }
 
   setupComponentButtons();
-  // setupActionButtons();
+  setupComponentSelection();
+  setupComponentDragging();
 
   console.log('✅ Application initialized');
   

@@ -2,7 +2,7 @@ import { Component } from './Component.js';
 
 export class ComponentManager {
   constructor() {
-    // this.components = new Map();
+    this.components = new Map();
     this.idCounter = 0;
     this.selectedId = null;
     this.nextPosition = { x: 400, y: 300 };
@@ -27,13 +27,71 @@ export class ComponentManager {
     }
     schematics.appendChild(group);
 
-
-    // Store component
-    // this.components.set(id, component);
+    this.components.set(id, component);
     
     console.log(`✅ ComponentManager: Added ${type} [ID: ${id}] at (${pos.x}, ${pos.y})`);
     
     return { id, component };
+  }
+
+  selectComponent(id) {
+    if (this.selectedId !== null) {
+      const prevElement = document.querySelector(`[data-id="${this.selectedId}"]`);
+      if (prevElement) {
+        prevElement.classList.remove('selected');
+      }
+    }
+
+    this.selectedId = id;
+    const element = document.querySelector(`[data-id="${id}"]`);
+    if (element) {
+      element.classList.add('selected');
+    }
+
+    console.log(`✅ Selected component [ID: ${id}]`);
+  }
+
+  getSelectedComponent() {
+    if (this.selectedId === null) return null;
+    const component = this.components.get(this.selectedId);
+    return component ? { id: this.selectedId, component } : null;
+  }
+
+  getComponent(id) {
+    return this.components.get(id);
+  }
+
+  updateComponentPosition(id, x, y) {
+    const component = this.components.get(id);
+    if (!component) return false;
+
+    component.setPosition(x, y);
+
+    console.log(`✅ Updated position of component [ID: ${id}] to (${x}, ${y})`);
+
+    return true;
+  }
+
+  updateComponentRotation(id, angle) {
+    const component = this.components.get(id);
+    if (!component) return false;
+
+    component.setRotation(angle);
+
+    console.log(`✅ Updated rotation of component [ID: ${id}] to ${angle} degrees`);
+
+    return true;
+  }
+
+  updateComponentScale(id, scale) {
+    const component = this.components.get(id);
+    if (!component) return false;
+
+    component.setScale(scale);
+
+    console.log(`✅ Updated scale of component [ID: ${id}] to ${scale}`);
+
+    return true;
   }
 
 }

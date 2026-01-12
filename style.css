@@ -443,6 +443,16 @@ input[type="range"].single-knob {
   z-index: 9;
 }
 
+.component.selected {
+  outline: 2px solid #2196F3;
+  outline-offset: 0px;
+}
+
+.component {
+  cursor: pointer;
+  transition: outline 0.05s ease;
+}
+
 /* Gradient Toggle Button */
 .gradient-toggle {
   margin-left: 4px;

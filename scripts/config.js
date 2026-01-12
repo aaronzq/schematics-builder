@@ -24,6 +24,16 @@ export const ROTATION_HANDLE_RADIUS = 5;
 export const ROTATION_HANDLE_COLOR = '#ffe082';
 export const ROTATION_HANDLE_STROKE = '#fbc02d';
 
+// ===== Component scale handle =====
+export const SCALE_HANDLE_DISTANCE = 60;
+export const SCALE_HANDLE_WIDTH = 10;
+export const SCALE_HANDLE_HEIGHT = 10;
+export const SCALE_HANDLE_COLOR = '#81c784';
+export const SCALE_HANDLE_STROKE = '#4caf50';
+export const SCALE_SNAP_INCREMENT = 0.1;
+export const MIN_SCALE = 0.5;
+export const MAX_SCALE = 2.0;
+
 // ===== Ray rendering =====
 export const DEFAULT_SOLID_RAY_COLOR = '#00ffff';
 export const DEFAULT_RAY_POLYGON_OPACITY = 0.2;
