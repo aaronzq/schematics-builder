@@ -114,3 +114,76 @@ export function validateDOMElement(selector) {
     
     return { valid: true, element };
 }
+
+// Component class
+export class Component {
+constructor(typeOrConfig) {
+  // If string is passed, load from library
+  if (typeof typeOrConfig === 'string') {
+    const type = typeOrConfig;
+    const definition = components[type];
+    if (!definition) {
+      throw new Error(`Unknown component type: ${type}`);
+    }
+    
+    // Use library definition as config
+    const config = {
+      type: type,
+      name: definition.name || type,
+      width: definition.width,
+      height: definition.height,
+      centerPoint: definition.centerPoint,
+      upVector: definition.upVector,
+      forwardVector: definition.forwardVector,
+      apertureCenter: definition.apertureCenter,
+      apertureRadius: definition.apertureRadius,
+      coneAngle: definition.coneAngle,
+      rayShape: definition.rayShape,
+      drawFunction: definition.draw
+    };
+    
+    // Initialize with library config
+    this._initializeFromConfig(config);
+  } else {
+    // Original behavior: config object passed
+    this._initializeFromConfig(typeOrConfig);
+  }
+}
+
+_initializeFromConfig(config) {
+  // Validate required properties 
+  if (!config.type) throw new Error('Component type is required');
+  if (!config.drawFunction) throw new Error('Draw function is required');
+
+  // ===== Type and Identity =====
+  this.type = config.type;
+  this.name = config.name || config.type;
+  this.id = config.id || this._generateId();
+
+  // ===== Geometric Properties =====
+  this.width = config.width || 10;
+  this.height = config.height || 60;
+  this.centerPoint = config.centerPoint || { x: 0, y: 0 };
+  this.forwardVector = config.forwardVector || { x: 1, y: 0 };
+  this.apertureCenter = config.apertureCenter || { x: 0, y: 0 };
+  this.upVector = config.upVector || { x: 0, y: -1 };
+  this.apertureRadius = config.apertureRadius || 15;
+  this.coneAngle = config.coneAngle ?? 0;
+  this.rayShape = config.rayShape || 'collimated';
+
+  // ===== Position and Orientation (Instance-specific) =====
+  this.x = 0;
+  this.y = 0;
+  this.rotation = 0;
+  this.scale = 1;
+
+  // ===== Appearance =====
+  this.visible = true;
+  this.flipX = false;
+  this.flipY = false;
+
+  // ===== SVG Element =====
+  this.element = null;
+  this.drawFunction = config.drawFunction;
+}
+}
