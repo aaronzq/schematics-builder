@@ -35,7 +35,7 @@ export function showRotationHandle(componentId) {
   const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   bgCircle.setAttribute('cx', handleX);
   bgCircle.setAttribute('cy', handleY);
-  bgCircle.setAttribute('r', ROTATION_HANDLE_RADIUS * scale);
+  bgCircle.setAttribute('r', ROTATION_HANDLE_RADIUS);
   bgCircle.setAttribute('fill', '#ffffff');
   bgCircle.setAttribute('opacity', 0);
   bgCircle.setAttribute('filter', 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))');
@@ -47,7 +47,7 @@ export function showRotationHandle(componentId) {
   icon.setAttribute('text-anchor', 'middle');
   icon.setAttribute('dominant-baseline', 'central');
   icon.setAttribute('font-family', 'Material Symbols Outlined');
-  icon.setAttribute('font-size', 5 * ROTATION_HANDLE_RADIUS * scale);
+  icon.setAttribute('font-size', 5 * ROTATION_HANDLE_RADIUS);
   icon.setAttribute('fill', ROTATION_HANDLE_COLOR);
   icon.textContent = 'autorenew';
   handle.appendChild(icon);
@@ -85,11 +85,11 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
     const component = componentManager.getComponent(componentId);
     const scale = component ? component.getScale() : 1;
     if (circle) {
-      circle.setAttribute('r', 1.5 * ROTATION_HANDLE_RADIUS * scale);
+      circle.setAttribute('r', 1.5 * ROTATION_HANDLE_RADIUS);
     }
     
     if (icon) {
-      icon.setAttribute('font-size', 1.5 * 5 * ROTATION_HANDLE_RADIUS * scale);
+      icon.setAttribute('font-size', 1.5 * 5 * ROTATION_HANDLE_RADIUS);
     }
 
     document.addEventListener('mousemove', handleDrag);
@@ -127,13 +127,13 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
     if (circle) {
       circle.setAttribute('cx', handleX);
       circle.setAttribute('cy', handleY);
-      circle.setAttribute('r', 1.5 * ROTATION_HANDLE_RADIUS * scale);
+      circle.setAttribute('r', 1.5 * ROTATION_HANDLE_RADIUS);
     }
     
     if (icon) {
       icon.setAttribute('x', handleX);
       icon.setAttribute('y', handleY);
-      icon.setAttribute('font-size', 1.5 * 5 * ROTATION_HANDLE_RADIUS * scale);
+      icon.setAttribute('font-size', 1.5 * 5 * ROTATION_HANDLE_RADIUS);
     }
 
     showScaleHandle(componentId);

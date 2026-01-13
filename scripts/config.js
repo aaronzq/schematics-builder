@@ -26,9 +26,9 @@ export const ROTATION_HANDLE_COLOR = '#ffba0c';
 // ===== Component scale handle =====
 export const SCALE_HANDLE_DISTANCE = 50;
 export const SCALE_HANDLE_RADIUS = 5;
-export const SCALE_HANDLE_COLOR = '#2196F3';
+export const SCALE_HANDLE_COLOR = '#ffba0c';
 export const SCALE_SNAP_INCREMENT = 0.1;
-export const MIN_SCALE = 0.5;
+export const MIN_SCALE = 0.8;
 export const MAX_SCALE = 2.0;
 
 // ===== Ray rendering =====

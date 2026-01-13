@@ -36,7 +36,7 @@ export function showScaleHandle(componentId) {
   const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   bgCircle.setAttribute('cx', handleX);
   bgCircle.setAttribute('cy', handleY);
-  bgCircle.setAttribute('r', SCALE_HANDLE_RADIUS * scale);
+  bgCircle.setAttribute('r', SCALE_HANDLE_RADIUS);
   bgCircle.setAttribute('fill', '#ffffff');
   bgCircle.setAttribute('opacity', 0);
   bgCircle.setAttribute('filter', 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))');
@@ -48,7 +48,7 @@ export function showScaleHandle(componentId) {
   icon.setAttribute('text-anchor', 'middle');
   icon.setAttribute('dominant-baseline', 'central');
   icon.setAttribute('font-family', 'Material Symbols Outlined');
-  icon.setAttribute('font-size', 5 * SCALE_HANDLE_RADIUS * scale);
+  icon.setAttribute('font-size', 5 * SCALE_HANDLE_RADIUS);
   icon.setAttribute('fill', SCALE_HANDLE_COLOR);
   icon.textContent = 'height';
   handle.appendChild(icon);
@@ -97,8 +97,7 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
     pt.y = e.clientY;
     const svgPt = pt.matrixTransform(svgElement.getScreenCTM().inverse());
 
-    const dy = svgPt.y - centerY;
-    initialDistance = Math.sqrt(dy * dy);
+    initialDistance = svgPt.y;
 
     const componentAfter = componentManager.getComponent(componentId);
     if (componentAfter) {
@@ -109,11 +108,11 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
     const icon = handle.querySelector('text');
     
     if (circle) {
-        circle.setAttribute('r', 1.5 * SCALE_HANDLE_RADIUS * initialScale);
+        circle.setAttribute('r', 1.5 * SCALE_HANDLE_RADIUS );
     }
 
     if (icon) {
-        icon.setAttribute('font-size', 1.5 * 5 * SCALE_HANDLE_RADIUS * initialScale);
+        icon.setAttribute('font-size', 1.5 * 5 * SCALE_HANDLE_RADIUS );
     }
 
     document.addEventListener('mousemove', handleDrag);
@@ -129,11 +128,10 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
     pt.y = e.clientY;
     const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
-    const dy = svgPt.y - centerY;
-    const currentDistance = Math.sqrt(dy * dy);
+    const currentDistance = svgPt.y;
 
-    const scaleFactor = currentDistance / initialDistance;
-    let newScale = initialScale * scaleFactor;
+    const deltaY = currentDistance - initialDistance;
+    let newScale = initialScale + (deltaY * (-0.01));
 
     newScale = Math.round(newScale / SCALE_SNAP_INCREMENT) * SCALE_SNAP_INCREMENT;
     newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
@@ -153,13 +151,13 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
       if (circle) {
         circle.setAttribute('cx', handleX);
         circle.setAttribute('cy', handleY);
-        circle.setAttribute('r', SCALE_HANDLE_RADIUS * newScale);
+        circle.setAttribute('r', 1.5 * SCALE_HANDLE_RADIUS );
       }
 
       if (icon) {
         icon.setAttribute('x', handleX);
         icon.setAttribute('y', handleY);
-        icon.setAttribute('font-size', 5 * SCALE_HANDLE_RADIUS * newScale);
+        icon.setAttribute('font-size', 1.5 * 5 * SCALE_HANDLE_RADIUS );
       }
       
       showRotationHandle(componentId);
