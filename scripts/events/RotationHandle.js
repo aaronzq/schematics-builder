@@ -3,7 +3,6 @@ import {
   ROTATION_HANDLE_DISTANCE,
   ROTATION_HANDLE_RADIUS,
   ROTATION_HANDLE_COLOR,
-  ROTATION_HANDLE_STROKE,
   ROTATION_SNAP_INCREMENT
 } from '../config.js';
 import { showScaleHandle } from './ScaleHandle.js';
@@ -28,22 +27,29 @@ export function showRotationHandle(componentId) {
   const handle = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   handle.setAttribute('id', `rotation-handle-${componentId}`);
   handle.style.cursor = 'grab';
+  handle.style.userSelect = 'none';
+  handle.style.webkitUserSelect = 'none';
+  handle.style.pointerEvents = 'all';
 
-  const iconSize = 8 * scale;
   
   const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   bgCircle.setAttribute('cx', handleX);
   bgCircle.setAttribute('cy', handleY);
-  bgCircle.setAttribute('r', iconSize);
-  bgCircle.setAttribute('opacity', '0');
-  bgCircle.setAttribute('stroke-width', 2 * scale);
+  bgCircle.setAttribute('r', ROTATION_HANDLE_RADIUS * scale);
+  bgCircle.setAttribute('fill', '#ffffff');
+  bgCircle.setAttribute('opacity', 0);
   bgCircle.setAttribute('filter', 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))');
   handle.appendChild(bgCircle);
 
-  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  icon.setAttribute('d', 'M15.55 5.55L11 1v3.07C7.06 4.56 4 7.92 4 12s3.05 7.44 7 7.93v-2.02c-2.84-.48-5-2.94-5-5.91s2.16-5.43 5-5.91V10l4.55-4.45zM19.93 11c-.17-1.39-.72-2.73-1.62-3.89l-1.42 1.42c.54.75.88 1.6 1.02 2.47h2.02zM13 17.9v2.02c1.39-.17 2.74-.71 3.9-1.61l-1.44-1.44c-.75.54-1.59.89-2.46 1.03zm3.89-2.42l1.42 1.41c.9-1.16 1.45-2.5 1.62-3.89h-2.02c-.14.87-.48 1.72-1.02 2.48z');
-  icon.setAttribute('fill', '#fbc02d');
-  icon.setAttribute('transform', `translate(${handleX - 12 * scale}, ${handleY - 12 * scale}) scale(${scale})`);
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  icon.setAttribute('x', handleX);
+  icon.setAttribute('y', handleY);
+  icon.setAttribute('text-anchor', 'middle');
+  icon.setAttribute('dominant-baseline', 'central');
+  icon.setAttribute('font-family', 'Material Symbols Outlined');
+  icon.setAttribute('font-size', 5 * ROTATION_HANDLE_RADIUS * scale);
+  icon.setAttribute('fill', ROTATION_HANDLE_COLOR);
+  icon.textContent = 'autorenew';
   handle.appendChild(icon);
 
   schematics.appendChild(handle);
@@ -66,6 +72,26 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
     e.stopPropagation();
     isDragging = true;
     handle.style.cursor = 'grabbing';
+    const svg = document.getElementById('canvas');
+    if (svg) svg.style.setProperty('cursor', 'grabbing', 'important');
+    document.body.style.setProperty('cursor', 'grabbing', 'important');
+    
+    document.querySelectorAll('.component').forEach(comp => {
+      comp.style.setProperty('cursor', 'grabbing', 'important');
+    });
+  
+    const circle = handle.querySelector('circle');
+    const icon = handle.querySelector('text');
+    const component = componentManager.getComponent(componentId);
+    const scale = component ? component.getScale() : 1;
+    if (circle) {
+      circle.setAttribute('r', 1.5 * ROTATION_HANDLE_RADIUS * scale);
+    }
+    
+    if (icon) {
+      icon.setAttribute('font-size', 1.5 * 5 * ROTATION_HANDLE_RADIUS * scale);
+    }
+
     document.addEventListener('mousemove', handleDrag);
     document.addEventListener('mouseup', handleEnd);
   });
@@ -95,19 +121,19 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
     const handleX = centerX + ROTATION_HANDLE_DISTANCE * scale * Math.cos(angleRad - Math.PI/2);
     const handleY = centerY + ROTATION_HANDLE_DISTANCE * scale * Math.sin(angleRad - Math.PI/2);
     
-    const iconSize = 8 * scale;
     const circle = handle.querySelector('circle');
-    const icon = handle.querySelector('path');
+    const icon = handle.querySelector('text');
     
     if (circle) {
       circle.setAttribute('cx', handleX);
       circle.setAttribute('cy', handleY);
-      circle.setAttribute('r', iconSize);
-      circle.setAttribute('stroke-width', 2 * scale);
+      circle.setAttribute('r', 1.5 * ROTATION_HANDLE_RADIUS * scale);
     }
     
     if (icon) {
-      icon.setAttribute('transform', `translate(${handleX - 12 * scale}, ${handleY - 12 * scale}) scale(${scale})`);
+      icon.setAttribute('x', handleX);
+      icon.setAttribute('y', handleY);
+      icon.setAttribute('font-size', 1.5 * 5 * ROTATION_HANDLE_RADIUS * scale);
     }
 
     showScaleHandle(componentId);
@@ -116,6 +142,15 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
   function handleEnd() {
     isDragging = false;
     handle.style.cursor = 'grab';
+    
+    const svg = document.getElementById('canvas');
+    if (svg) svg.style.cursor = '';
+    document.body.style.cursor = '';
+    
+    document.querySelectorAll('.component').forEach(comp => {
+      comp.style.cursor = '';
+    });
+    
     document.removeEventListener('mousemove', handleDrag);
     document.removeEventListener('mouseup', handleEnd);
     

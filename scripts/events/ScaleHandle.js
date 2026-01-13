@@ -1,10 +1,8 @@
 import { componentManager } from '../components/ComponentManager.js';
 import {
   SCALE_HANDLE_DISTANCE,
-  SCALE_HANDLE_WIDTH,
-  SCALE_HANDLE_HEIGHT,
+  SCALE_HANDLE_RADIUS,
   SCALE_HANDLE_COLOR,
-  SCALE_HANDLE_STROKE,
   SCALE_SNAP_INCREMENT,
   MIN_SCALE,
   MAX_SCALE
@@ -21,46 +19,41 @@ export function showScaleHandle(componentId) {
   const rotation = component.getRotation();
   const scale = component.getScale();
 
-  const width = component.width * scale;
-  const height = component.height * scale;
-  const outlineOffset = 2;
-  const handleOffset = 6;
-
   const angleRad = rotation * Math.PI / 180;
-  const cos = Math.cos(angleRad);
-  const sin = Math.sin(angleRad);
-
-  const localX = width / 2 + outlineOffset + handleOffset;
-  const localY = -height / 2 - outlineOffset - handleOffset;
-
-  const handleX = pos.x + localX * cos - localY * sin;
-  const handleY = pos.y + localX * sin + localY * cos;
+  const handleX = pos.x + SCALE_HANDLE_DISTANCE * scale * Math.cos(angleRad + Math.PI/2);
+  const handleY = pos.y + SCALE_HANDLE_DISTANCE * scale * Math.sin(angleRad + Math.PI/2);
 
   const schematics = document.getElementById('schematics');
   if (!schematics) return;
 
   const handle = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   handle.setAttribute('id', `scale-handle-${componentId}`);
-
-  const handleSize = 8 * scale;
-  const iconSize = 3 * scale;
+  handle.style.cursor = 'ns-resize';
+  handle.style.userSelect = 'none';
+  handle.style.webkitUserSelect = 'none';
+  handle.style.pointerEvents = 'all';
 
   const bgCircle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   bgCircle.setAttribute('cx', handleX);
   bgCircle.setAttribute('cy', handleY);
-  bgCircle.setAttribute('r', handleSize);
-  bgCircle.setAttribute('opacity', '0');
-  bgCircle.setAttribute('stroke-width', 2 * scale);
+  bgCircle.setAttribute('r', SCALE_HANDLE_RADIUS * scale);
+  bgCircle.setAttribute('fill', '#ffffff');
+  bgCircle.setAttribute('opacity', 0);
   bgCircle.setAttribute('filter', 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))');
   handle.appendChild(bgCircle);
 
-  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-  icon.setAttribute('d', 'M21 11V3h-8l3.29 3.29-10 10L3 13v8h8l-3.29-3.29 10-10z');
-  icon.setAttribute('fill', '#fbc02d');
-  icon.setAttribute('transform', `translate(${handleX - 12 * scale}, ${handleY - 12 * scale}) scale(${scale})`);
+  const icon = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  icon.setAttribute('x', handleX);
+  icon.setAttribute('y', handleY);
+  icon.setAttribute('text-anchor', 'middle');
+  icon.setAttribute('dominant-baseline', 'central');
+  icon.setAttribute('font-family', 'Material Symbols Outlined');
+  icon.setAttribute('font-size', 5 * SCALE_HANDLE_RADIUS * scale);
+  icon.setAttribute('fill', SCALE_HANDLE_COLOR);
+  icon.textContent = 'height';
   handle.appendChild(icon);
 
-  handle.style.cursor = 'nwse-resize';
+  handle.style.cursor = 'ns-resize';
 
   schematics.appendChild(handle);
 
@@ -83,22 +76,45 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
   handle.addEventListener('mousedown', (e) => {
     e.stopPropagation();
     isDragging = true;
-    handle.style.cursor = 'nwse-resize';
+    handle.style.cursor = 'ns-resize';
+    
+    const svg = document.getElementById('canvas');
+    if (svg) svg.style.setProperty('cursor', 'ns-resize', 'important');
+    document.body.style.setProperty('cursor', 'ns-resize', 'important');
+    
+    document.querySelectorAll('.component').forEach(comp => {
+      comp.style.setProperty('cursor', 'ns-resize', 'important');
+    });
 
     const component = componentManager.getComponent(componentId);
     if (component) {
       initialScale = component.getScale();
     }
 
-    const svg = document.getElementById('canvas');
-    const pt = svg.createSVGPoint();
+    const svgElement = document.getElementById('canvas');
+    const pt = svgElement.createSVGPoint();
     pt.x = e.clientX;
     pt.y = e.clientY;
-    const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const svgPt = pt.matrixTransform(svgElement.getScreenCTM().inverse());
 
-    const dx = svgPt.x - centerX;
     const dy = svgPt.y - centerY;
-    initialDistance = Math.sqrt(dx * dx + dy * dy);
+    initialDistance = Math.sqrt(dy * dy);
+
+    const componentAfter = componentManager.getComponent(componentId);
+    if (componentAfter) {
+      initialScale = componentAfter.getScale();
+    }
+
+    const circle = handle.querySelector('circle');
+    const icon = handle.querySelector('text');
+    
+    if (circle) {
+        circle.setAttribute('r', 1.5 * SCALE_HANDLE_RADIUS * initialScale);
+    }
+
+    if (icon) {
+        icon.setAttribute('font-size', 1.5 * 5 * SCALE_HANDLE_RADIUS * initialScale);
+    }
 
     document.addEventListener('mousemove', handleDrag);
     document.addEventListener('mouseup', handleEnd);
@@ -113,9 +129,8 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
     pt.y = e.clientY;
     const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
-    const dx = svgPt.x - centerX;
     const dy = svgPt.y - centerY;
-    const currentDistance = Math.sqrt(dx * dx + dy * dy);
+    const currentDistance = Math.sqrt(dy * dy);
 
     const scaleFactor = currentDistance / initialDistance;
     let newScale = initialScale * scaleFactor;
@@ -128,35 +143,23 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
     const component = componentManager.getComponent(componentId);
     if (component) {
       const rotation = component.getRotation();
-      const width = component.width * newScale;
-      const height = component.height * newScale;
-      const outlineOffset = 2;
-      const handleOffset = 6;
-
       const angleRad = rotation * Math.PI / 180;
-      const cos = Math.cos(angleRad);
-      const sin = Math.sin(angleRad);
-
-      const localX = width / 2 + outlineOffset + handleOffset;
-      const localY = -height / 2 - outlineOffset - handleOffset;
-
-      const handleX = centerX + localX * cos - localY * sin;
-      const handleY = centerY + localX * sin + localY * cos;
-
-      const handleSize = 8 * newScale;
+      const handleX = centerX + SCALE_HANDLE_DISTANCE * newScale * Math.cos(angleRad + Math.PI/2);
+      const handleY = centerY + SCALE_HANDLE_DISTANCE * newScale * Math.sin(angleRad + Math.PI/2);
 
       const circle = handle.querySelector('circle');
-      const icon = handle.querySelector('path');
+      const icon = handle.querySelector('text');
       
       if (circle) {
         circle.setAttribute('cx', handleX);
         circle.setAttribute('cy', handleY);
-        circle.setAttribute('r', handleSize);
-        circle.setAttribute('stroke-width', 2 * newScale);
+        circle.setAttribute('r', SCALE_HANDLE_RADIUS * newScale);
       }
 
       if (icon) {
-        icon.setAttribute('transform', `translate(${handleX - 12 * newScale}, ${handleY - 12 * newScale}) scale(${newScale})`);
+        icon.setAttribute('x', handleX);
+        icon.setAttribute('y', handleY);
+        icon.setAttribute('font-size', 5 * SCALE_HANDLE_RADIUS * newScale);
       }
       
       showRotationHandle(componentId);
@@ -165,7 +168,16 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
 
   function handleEnd() {
     isDragging = false;
-    handle.style.cursor = 'nwse-resize';
+    handle.style.cursor = 'ns-resize';
+    
+    const svg = document.getElementById('canvas');
+    if (svg) svg.style.cursor = '';
+    document.body.style.cursor = '';
+    
+    document.querySelectorAll('.component').forEach(comp => {
+      comp.style.cursor = '';
+    });
+    
     document.removeEventListener('mousemove', handleDrag);
     document.removeEventListener('mouseup', handleEnd);
 

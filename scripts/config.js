@@ -19,17 +19,14 @@ export const ARROW_TIP_SNAP_SIZE = 2.5;
 
 // ===== Component rotation handle =====
 export const ROTATION_SNAP_INCREMENT = 2.5;
-export const ROTATION_HANDLE_DISTANCE = 40;
+export const ROTATION_HANDLE_DISTANCE = 50;
 export const ROTATION_HANDLE_RADIUS = 5;
-export const ROTATION_HANDLE_COLOR = '#ffe082';
-export const ROTATION_HANDLE_STROKE = '#fbc02d';
+export const ROTATION_HANDLE_COLOR = '#ffba0c';
 
 // ===== Component scale handle =====
-export const SCALE_HANDLE_DISTANCE = 60;
-export const SCALE_HANDLE_WIDTH = 10;
-export const SCALE_HANDLE_HEIGHT = 10;
-export const SCALE_HANDLE_COLOR = '#81c784';
-export const SCALE_HANDLE_STROKE = '#4caf50';
+export const SCALE_HANDLE_DISTANCE = 50;
+export const SCALE_HANDLE_RADIUS = 5;
+export const SCALE_HANDLE_COLOR = '#2196F3';
 export const SCALE_SNAP_INCREMENT = 0.1;
 export const MIN_SCALE = 0.5;
 export const MAX_SCALE = 2.0;
