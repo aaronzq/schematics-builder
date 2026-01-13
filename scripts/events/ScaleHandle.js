@@ -8,6 +8,7 @@ import {
   MAX_SCALE
 } from '../config.js';
 import { showRotationHandle } from './RotationHandle.js';
+import { showValueDisplay, hideValueDisplay } from './ValueDisplay.js';
 
 export function showScaleHandle(componentId) {
   removeScaleHandle();
@@ -137,6 +138,8 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
     newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
 
     componentManager.updateComponentScale(componentId, newScale);
+    
+    showValueDisplay(centerX, centerY, newScale, 'x');
 
     const component = componentManager.getComponent(componentId);
     if (component) {
@@ -175,6 +178,8 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
     document.querySelectorAll('.component').forEach(comp => {
       comp.style.cursor = '';
     });
+    
+    hideValueDisplay();
     
     document.removeEventListener('mousemove', handleDrag);
     document.removeEventListener('mouseup', handleEnd);

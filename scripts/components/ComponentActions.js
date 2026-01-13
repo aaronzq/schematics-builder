@@ -6,7 +6,7 @@ export function addComponent(type) {
     componentManager.addComponent(type);
     return null;
   } catch (error) {
-    console.error(`❌ Failed to add component: ${error.message}`);
+    console.error(`Failed to add component: ${error.message}`);
     return null;
   }
 }

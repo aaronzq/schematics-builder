@@ -29,7 +29,7 @@ export class ComponentManager {
 
     this.components.set(id, component);
     
-    console.log(`✅ ComponentManager: Added ${type} [ID: ${id}] at (${pos.x}, ${pos.y})`);
+    console.log(`ComponentManager: Added ${type} [ID: ${id}] at (${pos.x}, ${pos.y})`);
     
     return { id, component };
   }
@@ -48,7 +48,7 @@ export class ComponentManager {
       element.classList.add('selected');
     }
 
-    console.log(`✅ Selected component [ID: ${id}]`);
+    console.log(`Selected component [ID: ${id}]`);
   }
 
   getSelectedComponent() {
@@ -67,7 +67,7 @@ export class ComponentManager {
 
     component.setPosition(x, y);
 
-    console.log(`✅ Updated position of component [ID: ${id}] to (${x}, ${y})`);
+    console.log(`Updated position of component [ID: ${id}] to (${x}, ${y})`);
 
     return true;
   }
@@ -78,7 +78,7 @@ export class ComponentManager {
 
     component.setRotation(angle);
 
-    console.log(`✅ Updated rotation of component [ID: ${id}] to ${angle} degrees`);
+    console.log(`Updated rotation of component [ID: ${id}] to ${angle} degrees`);
 
     return true;
   }
@@ -89,7 +89,7 @@ export class ComponentManager {
 
     component.setScale(scale);
 
-    console.log(`✅ Updated scale of component [ID: ${id}] to ${scale}`);
+    console.log(`Updated scale of component [ID: ${id}] to ${scale}`);
 
     return true;
   }

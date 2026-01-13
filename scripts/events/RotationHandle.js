@@ -6,6 +6,7 @@ import {
   ROTATION_SNAP_INCREMENT
 } from '../config.js';
 import { showScaleHandle } from './ScaleHandle.js';
+import { showValueDisplay, hideValueDisplay } from './ValueDisplay.js';
 
 export function showRotationHandle(componentId) {
   removeRotationHandle();
@@ -113,6 +114,8 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
 
 
     componentManager.updateComponentRotation(componentId, angle);
+    
+    showValueDisplay(centerX, centerY, angle, '°');
 
     const component = componentManager.getComponent(componentId);
     const scale = component ? component.getScale() : 1;
@@ -150,6 +153,8 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
     document.querySelectorAll('.component').forEach(comp => {
       comp.style.cursor = '';
     });
+    
+    hideValueDisplay();
     
     document.removeEventListener('mousemove', handleDrag);
     document.removeEventListener('mouseup', handleEnd);
