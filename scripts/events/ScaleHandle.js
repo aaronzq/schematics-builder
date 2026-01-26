@@ -29,7 +29,7 @@ export function showScaleHandle(componentId) {
 
   const handle = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   handle.setAttribute('id', `scale-handle-${componentId}`);
-  handle.style.cursor = 'ns-resize';
+  handle.style.cursor = 'grab';
   handle.style.userSelect = 'none';
   handle.style.webkitUserSelect = 'none';
   handle.style.pointerEvents = 'all';
@@ -51,10 +51,11 @@ export function showScaleHandle(componentId) {
   icon.setAttribute('font-family', 'Material Symbols Outlined');
   icon.setAttribute('font-size', 5 * SCALE_HANDLE_RADIUS);
   icon.setAttribute('fill', SCALE_HANDLE_COLOR);
+  icon.setAttribute('transform', `rotate(${rotation} ${handleX} ${handleY})`);
   icon.textContent = 'height';
   handle.appendChild(icon);
 
-  handle.style.cursor = 'ns-resize';
+  handle.style.cursor = 'grab';
 
   schematics.appendChild(handle);
 
@@ -77,14 +78,14 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
   handle.addEventListener('mousedown', (e) => {
     e.stopPropagation();
     isDragging = true;
-    handle.style.cursor = 'ns-resize';
+    handle.style.cursor = 'grabbing';
     
     const svg = document.getElementById('canvas');
-    if (svg) svg.style.setProperty('cursor', 'ns-resize', 'important');
-    document.body.style.setProperty('cursor', 'ns-resize', 'important');
+    if (svg) svg.style.setProperty('cursor', 'grabbing', 'important');
+    document.body.style.setProperty('cursor', 'grabbing', 'important');
     
     document.querySelectorAll('.component').forEach(comp => {
-      comp.style.setProperty('cursor', 'ns-resize', 'important');
+      comp.style.setProperty('cursor', 'grabbing', 'important');
     });
 
     const component = componentManager.getComponent(componentId);
@@ -98,7 +99,10 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
     pt.y = e.clientY;
     const svgPt = pt.matrixTransform(svgElement.getScreenCTM().inverse());
 
-    initialDistance = svgPt.y;
+    // Calculate initial distance from mouse to component center
+    const dx = svgPt.x - centerX;
+    const dy = svgPt.y - centerY;
+    initialDistance = Math.sqrt(dx * dx + dy * dy);
 
     const componentAfter = componentManager.getComponent(componentId);
     if (componentAfter) {
@@ -129,10 +133,14 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
     pt.y = e.clientY;
     const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
 
-    const currentDistance = svgPt.y;
+    // Calculate current distance from mouse to component center
+    const dx = svgPt.x - centerX;
+    const dy = svgPt.y - centerY;
+    const currentDistance = Math.sqrt(dx * dx + dy * dy);
 
-    const deltaY = currentDistance - initialDistance;
-    let newScale = initialScale + (deltaY * (-0.01));
+    // Calculate scale based on distance ratio
+    const distanceRatio = currentDistance / initialDistance;
+    let newScale = initialScale * distanceRatio;
 
     newScale = Math.round(newScale / SCALE_SNAP_INCREMENT) * SCALE_SNAP_INCREMENT;
     newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
@@ -161,6 +169,7 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
         icon.setAttribute('x', handleX);
         icon.setAttribute('y', handleY);
         icon.setAttribute('font-size', 1.5 * 5 * SCALE_HANDLE_RADIUS );
+        icon.setAttribute('transform', `rotate(${rotation} ${handleX} ${handleY})`);
       }
       
       showRotationHandle(componentId);
@@ -169,7 +178,7 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
 
   function handleEnd() {
     isDragging = false;
-    handle.style.cursor = 'ns-resize';
+    handle.style.cursor = 'grab';
     
     const svg = document.getElementById('canvas');
     if (svg) svg.style.cursor = '';
