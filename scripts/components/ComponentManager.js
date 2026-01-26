@@ -1,11 +1,12 @@
 import { Component } from './Component.js';
+import { autoCenter } from '../Canvas.js';
 
 export class ComponentManager {
   constructor() {
     this.components = new Map();
     this.idCounter = 0;
     this.selectedId = null;
-    this.nextPosition = { x: 400, y: 300 };
+    this.nextPosition = { x: 0, y: 0 };
   }
 
   addComponent(type, position = null) {
@@ -30,6 +31,9 @@ export class ComponentManager {
     this.components.set(id, component);
     
     console.log(`ComponentManager: Added ${type} [ID: ${id}] at (${pos.x}, ${pos.y})`);
+    
+    // Auto-center the canvas to show all components
+    autoCenter();
     
     return { id, component };
   }
@@ -68,6 +72,9 @@ export class ComponentManager {
     component.setPosition(x, y);
 
     console.log(`Updated position of component [ID: ${id}] to (${x}, ${y})`);
+
+    // // Auto-center the canvas to show all components
+    // autoCenter();
 
     return true;
   }
