@@ -1,5 +1,8 @@
 import { Component } from './Component.js';
 import { autoCenter } from '../Canvas.js';
+import { showRotationHandle } from '../events/RotationHandle.js';
+import { showScaleHandle } from '../events/ScaleHandle.js';
+import { showArrowHandle } from '../events/ArrowHandle.js';
 
 export class ComponentManager {
   constructor() {
@@ -20,6 +23,25 @@ export class ComponentManager {
     const centerPoint = component.centerPoint || { x: 0, y: 0 };
     component.setPosition(pos.x - centerPoint.x, pos.y - centerPoint.y);
     
+    // Align new component's forward vector with the previously selected component's arrow vector
+    if (this.selectedId !== null) {
+      const previousComponent = this.components.get(this.selectedId);
+      if (previousComponent) {
+        const arrowVector = previousComponent.getArrowVector();
+        // Calculate angle from arrow vector
+        const angle = Math.atan2(arrowVector.y, arrowVector.x) * 180 / Math.PI;
+        component.setRotation(angle);
+        
+        // Update arrow vector to follow the rotated forward vector
+        const angleRad = angle * Math.PI / 180;
+        const arrowLength = Math.sqrt(component.arrowVector.x ** 2 + component.arrowVector.y ** 2);
+        component.setArrowVector(
+          Math.cos(angleRad) * arrowLength,
+          Math.sin(angleRad) * arrowLength
+        );
+      }
+    }
+    
     const group = component.render();
     group.setAttribute('data-id', id);
     const schematics = document.getElementById("schematics");
@@ -32,6 +54,11 @@ export class ComponentManager {
     
     console.log(`ComponentManager: Added ${type} [ID: ${id}] at (${pos.x}, ${pos.y})`);
     
+    // Select the newly added component
+    this.selectComponent(id);
+    showRotationHandle(id);
+    showScaleHandle(id);
+    showArrowHandle(id);
     // Auto-center the canvas to show all components
     autoCenter();
     
@@ -51,6 +78,9 @@ export class ComponentManager {
     if (element) {
       element.classList.add('selected');
     }
+
+    // Update nextPosition to arrow tip
+    this.updateNextPositionFromComponent(id);
 
     console.log(`Selected component [ID: ${id}]`);
   }
@@ -97,6 +127,18 @@ export class ComponentManager {
     component.setScale(scale);
 
     console.log(`Updated scale of component [ID: ${id}] to ${scale}`);
+
+    return true;
+  }
+
+  updateNextPositionFromComponent(id) {
+    const component = this.components.get(id);
+    if (!component) return false;
+
+    const endpoint = component.getArrowEndpoint();
+    this.nextPosition = { x: endpoint.x, y: endpoint.y };
+
+    console.log(`Next position updated to arrow tip: (${endpoint.x}, ${endpoint.y})`);
 
     return true;
   }

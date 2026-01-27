@@ -205,3 +205,96 @@ export function getViewBox(element) {
 export function setViewBox(element, x, y, width, height) {
   element.setAttribute('viewBox', `${x} ${y} ${width} ${height}`);
 }
+
+/**
+ * Ensure SVG defs element exists
+ * @param {SVGElement} svg - The SVG element
+ * @returns {SVGElement} The defs element
+ */
+export function ensureDefs(svg) {
+  let defs = svg.querySelector('defs');
+  if (!defs) {
+    defs = createSVGElement('defs');
+    svg.insertBefore(defs, svg.firstChild);
+  }
+  return defs;
+}
+
+/**
+ * Ensure arrowhead marker exists in SVG defs
+ * @param {SVGElement} svg - The SVG element
+ */
+export function ensureArrowheadMarker(svg) {
+  const defs = ensureDefs(svg);
+  
+  // Check if arrowhead marker already exists
+  if (!svg.querySelector('#arrowhead')) {
+    const marker = createSVGElement('marker', {
+      id: 'arrowhead',
+      markerWidth: '10',
+      markerHeight: '7',
+      refX: '10',
+      refY: '3.5',
+      orient: 'auto',
+      markerUnits: 'strokeWidth'
+    });
+    
+    const path = createSVGElement('path', {
+      d: 'M0,0 L10,3.5 L0,7 Z',
+      fill: '#2196F3'
+    });
+    
+    marker.appendChild(path);
+    defs.appendChild(marker);
+  }
+}
+
+/**
+ * Ensure all debug vector markers exist in SVG defs
+ * @param {SVGElement} svg - The SVG element
+ */
+export function ensureDebugMarkers(svg) {
+  const defs = ensureDefs(svg);
+  
+  // Up vector arrow marker (green)
+  if (!svg.querySelector('#upVectorArrow')) {
+    const marker = createSVGElement('marker', {
+      id: 'upVectorArrow',
+      markerWidth: '8',
+      markerHeight: '6',
+      refX: '8',
+      refY: '3',
+      orient: 'auto',
+      markerUnits: 'userSpaceOnUse'
+    });
+    
+    const path = createSVGElement('path', {
+      d: 'M0,0 L8,3 L0,6 Z',
+      fill: 'green'
+    });
+    
+    marker.appendChild(path);
+    defs.appendChild(marker);
+  }
+  
+  // Forward vector arrow marker (blue)
+  if (!svg.querySelector('#forwardVectorArrow')) {
+    const marker = createSVGElement('marker', {
+      id: 'forwardVectorArrow',
+      markerWidth: '8',
+      markerHeight: '6',
+      refX: '8',
+      refY: '3',
+      orient: 'auto',
+      markerUnits: 'userSpaceOnUse'
+    });
+    
+    const path = createSVGElement('path', {
+      d: 'M0,0 L8,3 L0,6 Z',
+      fill: 'blue'
+    });
+    
+    marker.appendChild(path);
+    defs.appendChild(marker);
+  }
+}

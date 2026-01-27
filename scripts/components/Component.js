@@ -1,4 +1,14 @@
 import { components as componentLibrary } from './ComponentLibrary.js';
+import { 
+  ARROW_LENGTH,
+  SHOW_DEBUG_DRAWING,
+  UP_VECTOR_LENGTH,
+  FORWARD_VECTOR_LENGTH,
+  CENTER_MARKER_RADIUS,
+  APERTURE_POINT_RADIUS,
+  LOWER_APERTURE_POINT_RADIUS
+} from '../config.js';
+import { ensureDebugMarkers } from '../utils/svgUtils.js';
 
 export class Component {
   constructor(typeOrConfig) {
@@ -49,6 +59,12 @@ export class Component {
     this.coneAngle = config.coneAngle ?? 0;
     this.rayShape = config.rayShape || 'collimated';
 
+    // Arrow vector for positioning handle - defaults to forwardVector * ARROW_LENGTH
+    this.arrowVector = config.arrowVector || {
+      x: this.forwardVector.x * ARROW_LENGTH,
+      y: this.forwardVector.y * ARROW_LENGTH
+    };
+
     this.x = 0;
     this.y = 0;
     this.rotation = 0;
@@ -67,7 +83,9 @@ export class Component {
     const numPoints = 2;
     
     for (let i = 0; i < numPoints; i++) {
-      const t = (i / (numPoints - 1)) * 2 - 1;
+      // Reverse t so index 0 is visually upper (positive upVector direction)
+      // and higher indices are visually lower (negative upVector direction)
+      const t = 1 - (i / (numPoints - 1)) * 2;
       
       points.push({
         x: this.apertureCenter.x + this.upVector.x * t * this.apertureRadius,
@@ -155,6 +173,22 @@ export class Component {
     this.rayShape = shape;
   }
 
+  setArrowVector(x, y) {
+    this.arrowVector = { x, y };
+  }
+
+  getArrowVector() {
+    return this.arrowVector;
+  }
+
+  getArrowEndpoint() {
+    // Returns the absolute position of the arrow endpoint in world coordinates
+    return {
+      x: this.x + this.arrowVector.x,
+      y: this.y + this.arrowVector.y
+    };
+  }
+
   getProperties() {
     return {
       width: this.width,
@@ -194,6 +228,11 @@ export class Component {
     const shape = this.drawFunction(ns);
     group.appendChild(shape);
 
+    // Add debug elements if enabled
+    if (SHOW_DEBUG_DRAWING) {
+      this._addDebugElements(group, ns);
+    }
+
     // Apply position and rotation transform
     this._updateTransform(group);
 
@@ -205,6 +244,71 @@ export class Component {
     this.element = group;
 
     return group;
+  }
+
+  _addDebugElements(group, ns) {
+    // Ensure debug markers exist in SVG
+    const svg = document.getElementById('canvas');
+    if (svg) {
+      ensureDebugMarkers(svg);
+    }
+
+    // Center marker (red dot)
+    const centerMarker = document.createElementNS(ns, 'circle');
+    centerMarker.setAttribute('cx', this.centerPoint.x);
+    centerMarker.setAttribute('cy', this.centerPoint.y);
+    centerMarker.setAttribute('r', CENTER_MARKER_RADIUS);
+    centerMarker.setAttribute('fill', 'red');
+    centerMarker.setAttribute('pointer-events', 'none');
+    group.appendChild(centerMarker);
+
+    // Up vector (green arrow)
+    const upLine = document.createElementNS(ns, 'line');
+    upLine.setAttribute('x1', this.centerPoint.x);
+    upLine.setAttribute('y1', this.centerPoint.y);
+    upLine.setAttribute('x2', this.centerPoint.x + this.upVector.x * UP_VECTOR_LENGTH);
+    upLine.setAttribute('y2', this.centerPoint.y + this.upVector.y * UP_VECTOR_LENGTH);
+    upLine.setAttribute('stroke', 'green');
+    upLine.setAttribute('stroke-width', '1');
+    upLine.setAttribute('marker-end', 'url(#upVectorArrow)');
+    upLine.setAttribute('pointer-events', 'none');
+    group.appendChild(upLine);
+
+    // Forward vector (blue arrow)
+    const forwardLine = document.createElementNS(ns, 'line');
+    forwardLine.setAttribute('x1', this.centerPoint.x);
+    forwardLine.setAttribute('y1', this.centerPoint.y);
+    forwardLine.setAttribute('x2', this.centerPoint.x + this.forwardVector.x * FORWARD_VECTOR_LENGTH);
+    forwardLine.setAttribute('y2', this.centerPoint.y + this.forwardVector.y * FORWARD_VECTOR_LENGTH);
+    forwardLine.setAttribute('stroke', 'blue');
+    forwardLine.setAttribute('stroke-width', '1');
+    forwardLine.setAttribute('marker-end', 'url(#forwardVectorArrow)');
+    forwardLine.setAttribute('pointer-events', 'none');
+    group.appendChild(forwardLine);
+
+    // Aperture points (blue dots)
+    const aperturePoints = this._getAperturePoints();
+    if (aperturePoints && aperturePoints.length >= 2) {
+      // Upper aperture point
+      const upperPoint = document.createElementNS(ns, 'circle');
+      upperPoint.setAttribute('cx', aperturePoints[0].x);
+      upperPoint.setAttribute('cy', aperturePoints[0].y);
+      upperPoint.setAttribute('r', APERTURE_POINT_RADIUS);
+      upperPoint.setAttribute('fill', 'blue');
+      upperPoint.setAttribute('pointer-events', 'none');
+      upperPoint.setAttribute('data-aperture-type', 'upper');
+      group.appendChild(upperPoint);
+
+      // Lower aperture point
+      const lowerPoint = document.createElementNS(ns, 'circle');
+      lowerPoint.setAttribute('cx', aperturePoints[1].x);
+      lowerPoint.setAttribute('cy', aperturePoints[1].y);
+      lowerPoint.setAttribute('r', LOWER_APERTURE_POINT_RADIUS);
+      lowerPoint.setAttribute('fill', 'blue');
+      lowerPoint.setAttribute('pointer-events', 'none');
+      lowerPoint.setAttribute('data-aperture-type', 'lower');
+      group.appendChild(lowerPoint);
+    }
   }
 
   getBoundingBox() {

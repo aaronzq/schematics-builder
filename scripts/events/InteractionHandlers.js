@@ -1,6 +1,7 @@
 import { componentManager } from '../components/index.js';
 import { showRotationHandle, removeRotationHandle } from './RotationHandle.js';
 import { showScaleHandle, removeScaleHandle } from './ScaleHandle.js';
+import { showArrowHandle, removeArrowHandle } from './ArrowHandle.js';
 
 export function setupComponentSelection() {
   const schematics = document.getElementById('schematics');
@@ -13,9 +14,11 @@ export function setupComponentSelection() {
       componentManager.selectComponent(id);
       showRotationHandle(id);
       showScaleHandle(id);
+      showArrowHandle(id);
     } else {
       removeRotationHandle();
       removeScaleHandle();
+      removeArrowHandle();
     }
   });
 
@@ -75,6 +78,7 @@ export function setupComponentDragging() {
     if (selected && selected.id === draggedId) {
       showRotationHandle(draggedId);
       showScaleHandle(draggedId);
+      showArrowHandle(draggedId);
     }
   });
 

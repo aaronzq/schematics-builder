@@ -6,8 +6,8 @@
 // ===== Canvas and viewport =====
 export const MIN_CANVAS_WIDTH = 400;
 export const MIN_CANVAS_HEIGHT = 300;
-export const CANVAS_PADDING_PERCENT = 0.1;
-export const MIN_CANVAS_PADDING = 50;
+export const CANVAS_PADDING_PERCENT = 0.2;
+export const MIN_CANVAS_PADDING = 100;
 
 // ===== Component defaults =====
 export const DEFAULT_APERTURE_RADIUS = 15;  // Default aperture radius for components
@@ -52,7 +52,7 @@ export const VISIBLE_COMPONENT_OPACITY = 1.0;
 export const GRID_EXTEND_FACTOR = 5;
 
 // ===== Debug visualization =====
-export const SHOW_DEBUG_DRAWING = false;
+export const SHOW_DEBUG_DRAWING = true;
 export const UP_VECTOR_LENGTH = 60;
 export const FORWARD_VECTOR_LENGTH = 60;
 export const CENTER_MARKER_RADIUS = 2;
