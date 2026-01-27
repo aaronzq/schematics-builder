@@ -5,7 +5,8 @@ import { showArrowHandle, removeArrowHandle } from './ArrowHandle.js';
 
 export function setupComponentSelection() {
   const schematics = document.getElementById('schematics');
-  if (!schematics) return;
+  const canvas = document.getElementById('canvas');
+  if (!schematics || !canvas) return;
 
   schematics.addEventListener('click', (e) => {
     const componentElement = e.target.closest('[data-id]');
@@ -16,6 +17,17 @@ export function setupComponentSelection() {
       showScaleHandle(id);
       showArrowHandle(id);
     } else {
+      removeRotationHandle();
+      removeScaleHandle();
+      removeArrowHandle();
+    }
+  });
+
+  // Deselect component when clicking on blank canvas
+  canvas.addEventListener('click', (e) => {
+    // Only deselect if clicking directly on the canvas, not on child elements
+    if (e.target === canvas) {
+      componentManager.deselectComponent();
       removeRotationHandle();
       removeScaleHandle();
       removeArrowHandle();

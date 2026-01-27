@@ -85,6 +85,17 @@ export class ComponentManager {
     console.log(`Selected component [ID: ${id}]`);
   }
 
+  deselectComponent() {
+    if (this.selectedId !== null) {
+      const prevElement = document.querySelector(`[data-id="${this.selectedId}"]`);
+      if (prevElement) {
+        prevElement.classList.remove('selected');
+      }
+      console.log(`Deselected component [ID: ${this.selectedId}]`);
+      this.selectedId = null;
+    }
+  }
+
   getSelectedComponent() {
     if (this.selectedId === null) return null;
     const component = this.components.get(this.selectedId);
