@@ -235,25 +235,6 @@ body, html {
   cursor: default;
 }
 
-/* Component Interactions */
-.component {
-  cursor: move;
-}
-
-.component:hover path,
-.component:hover rect,
-.component:hover line,
-.component:hover ellipse {
-  stroke: #555;
-  stroke-width: 2.5;
-}
-
-.component-hit-area {
-  fill: transparent;
-  stroke: none;
-  pointer-events: all;
-}
-
 /* Footer */
 .footer {
   background: #333;
@@ -277,6 +258,25 @@ body, html {
   height: 0.9em;
   vertical-align: middle;
   margin-right: 4px;
+}
+
+/* Component Interactions */
+.component {
+  cursor: move;
+}
+
+.component:hover path,
+.component:hover rect,
+.component:hover line,
+.component:hover ellipse {
+  stroke: #555;
+  stroke-width: 2.5;
+}
+
+.component-hit-area {
+  fill: transparent;
+  stroke: none;
+  pointer-events: all;
 }
 
 /* ==========================================================================
@@ -441,16 +441,6 @@ input[type="range"].single-knob {
 
 .custom-knob:not(.selected) {
   z-index: 9;
-}
-
-.component.selected {
-  outline: 2px solid #2196F3;
-  outline-offset: 0px;
-}
-
-.component {
-  cursor: pointer;
-  transition: outline 0.05s ease;
 }
 
 /* Gradient Toggle Button */

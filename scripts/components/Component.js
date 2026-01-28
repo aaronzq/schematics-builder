@@ -75,6 +75,8 @@ export class Component {
     this.flipY = false;
 
     this.element = null;
+    this.shapeGroup = null;
+    this.debugGroup = null;
     this.drawFunction = config.drawFunction;
   }
 
@@ -132,9 +134,8 @@ export class Component {
 
   setVisible(visible) {
     this.visible = visible;
-    if (this.element) {
-      this.element.style.display = visible ? 'block' : 'none';
-      this.element.style.opacity = visible ? '1' : '0';
+    if (this.shapeGroup) {
+      this.shapeGroup.style.opacity = visible ? '1' : '0';
     }
   }
 
@@ -224,9 +225,12 @@ export class Component {
     group.setAttribute('class', `component component-${this.type}`);
     group.setAttribute('data-type', this.type);
 
-    // Draw the component-specific shape
+    // Wrap shape in its own group for visibility control
+    const shapeGroup = document.createElementNS(ns, 'g');
     const shape = this.drawFunction(ns);
-    group.appendChild(shape);
+    shapeGroup.appendChild(shape);
+    group.appendChild(shapeGroup);
+    this.shapeGroup = shapeGroup;
 
     // Add debug elements if enabled
     if (SHOW_DEBUG_DRAWING) {
@@ -236,10 +240,9 @@ export class Component {
     // Apply position and rotation transform
     this._updateTransform(group);
 
-    // Set visibility
-    group.style.display = this.visible ? 'block' : 'none';
-    group.style.opacity = this.visible ? '1' : '0';
-
+    // Set initial visibility
+    this.shapeGroup.style.opacity = this.visible ? '1' : '0';
+    
     // Store reference
     this.element = group;
 
@@ -253,6 +256,12 @@ export class Component {
       ensureDebugMarkers(svg);
     }
 
+    // Create a group for debug elements with counter-flip transform
+    const debugGroup = document.createElementNS(ns, 'g');
+    this.debugGroup = debugGroup;
+    const counterFlipScale = `scale(${this.flipX ? -1 : 1}, ${this.flipY ? -1 : 1})`;
+    debugGroup.setAttribute('transform', counterFlipScale);
+    
     // Center marker (red dot)
     const centerMarker = document.createElementNS(ns, 'circle');
     centerMarker.setAttribute('cx', this.centerPoint.x);
@@ -260,7 +269,7 @@ export class Component {
     centerMarker.setAttribute('r', CENTER_MARKER_RADIUS);
     centerMarker.setAttribute('fill', 'red');
     centerMarker.setAttribute('pointer-events', 'none');
-    group.appendChild(centerMarker);
+    debugGroup.appendChild(centerMarker);
 
     // Up vector (green arrow)
     const upLine = document.createElementNS(ns, 'line');
@@ -272,7 +281,7 @@ export class Component {
     upLine.setAttribute('stroke-width', '1');
     upLine.setAttribute('marker-end', 'url(#upVectorArrow)');
     upLine.setAttribute('pointer-events', 'none');
-    group.appendChild(upLine);
+    debugGroup.appendChild(upLine);
 
     // Forward vector (blue arrow)
     const forwardLine = document.createElementNS(ns, 'line');
@@ -284,7 +293,7 @@ export class Component {
     forwardLine.setAttribute('stroke-width', '1');
     forwardLine.setAttribute('marker-end', 'url(#forwardVectorArrow)');
     forwardLine.setAttribute('pointer-events', 'none');
-    group.appendChild(forwardLine);
+    debugGroup.appendChild(forwardLine);
 
     // Aperture points (blue dots)
     const aperturePoints = this._getAperturePoints();
@@ -297,7 +306,7 @@ export class Component {
       upperPoint.setAttribute('fill', 'blue');
       upperPoint.setAttribute('pointer-events', 'none');
       upperPoint.setAttribute('data-aperture-type', 'upper');
-      group.appendChild(upperPoint);
+      debugGroup.appendChild(upperPoint);
 
       // Lower aperture point
       const lowerPoint = document.createElementNS(ns, 'circle');
@@ -307,8 +316,10 @@ export class Component {
       lowerPoint.setAttribute('fill', 'blue');
       lowerPoint.setAttribute('pointer-events', 'none');
       lowerPoint.setAttribute('data-aperture-type', 'lower');
-      group.appendChild(lowerPoint);
+      debugGroup.appendChild(lowerPoint);
     }
+    
+    group.appendChild(debugGroup);
   }
 
   getBoundingBox() {
@@ -337,6 +348,12 @@ export class Component {
     transforms.push(`scale(${this.scale * (this.flipX ? -1 : 1)}, ${this.scale * (this.flipY ? -1 : 1)})`);
 
     element.setAttribute('transform', transforms.join(' '));
+    
+    // Update debug group counter-flip transform if it exists
+    if (this.debugGroup) {
+      const counterFlipScale = `scale(${this.flipX ? -1 : 1}, ${this.flipY ? -1 : 1})`;
+      this.debugGroup.setAttribute('transform', counterFlipScale);
+    }
   }
 
   _generateId() {

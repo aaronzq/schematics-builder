@@ -154,6 +154,85 @@ export class ComponentManager {
     return true;
   }
 
+  deleteComponent(id) {
+    const component = this.components.get(id);
+    if (!component) return false;
+
+    // Remove from DOM
+    const element = document.querySelector(`[data-id="${id}"]`);
+    if (element) {
+      element.remove();
+    }
+
+    // Remove from components map
+    this.components.delete(id);
+
+    // Deselect if this was the selected component
+    if (this.selectedId === id) {
+      this.selectedId = null;
+    }
+
+    console.log(`Deleted component [ID: ${id}]`);
+
+    return true;
+  }
+
+  flipComponentHorizontal(id) {
+    const component = this.components.get(id);
+    if (!component) return false;
+
+    component.flipHorizontal();
+
+    console.log(`Flipped component [ID: ${id}] horizontally`);
+
+    return true;
+  }
+
+  flipComponentVertical(id) {
+    const component = this.components.get(id);
+    if (!component) return false;
+
+    component.flipVertical();
+
+    console.log(`Flipped component [ID: ${id}] vertically`);
+
+    return true;
+  }
+
+  hideComponent(id) {
+    const component = this.components.get(id);
+    if (!component) return false;
+
+    component.setVisible(false);
+
+    console.log(`Hid component [ID: ${id}]`);
+
+    return true;
+  }
+
+  showComponent(id) {
+    const component = this.components.get(id);
+    if (!component) return false;
+
+    component.setVisible(true);
+
+    console.log(`Showed component [ID: ${id}]`);
+
+    return true;
+  }
+
+  showAllComponents() {
+    let count = 0;
+    this.components.forEach((component, id) => {
+      component.setVisible(true);
+      count++;
+    });
+
+    console.log(`Showed all components (${count} total)`);
+
+    return count;
+  }
+
 }
 
 // Create singleton instance
