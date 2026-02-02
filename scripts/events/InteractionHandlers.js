@@ -34,6 +34,7 @@ function showHoverBox(id) {
   const { x, y } = component.getPosition();
   const { width, height } = component;
   const rotation = component.getRotation();
+  const scale = component.getScale();
   const centerPoint = component.centerPoint || { x: 0, y: 0 };
   
   // Set box dimensions (relative to origin)
@@ -42,8 +43,8 @@ function showHoverBox(id) {
   hoverBox.setAttribute('width', width);
   hoverBox.setAttribute('height', height);
   
-  // Apply transform: translate to position, then rotate
-  const transform = `translate(${x}, ${y}) rotate(${rotation})`;
+  // Apply transform: translate to position, then rotate and scale
+  const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${scale})`;
   hoverBox.setAttribute('transform', transform);
   
   canvas.appendChild(hoverBox);

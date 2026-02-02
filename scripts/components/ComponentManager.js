@@ -39,6 +39,10 @@ export class ComponentManager {
           Math.cos(angleRad) * arrowLength,
           Math.sin(angleRad) * arrowLength
         );
+        
+        // Set up parent-child relationship
+        component.parent = this.selectedId;
+        previousComponent.children.push(id);
       }
     }
     
@@ -82,7 +86,17 @@ export class ComponentManager {
     // Update nextPosition to arrow tip
     this.updateNextPositionFromComponent(id);
 
-    console.log(`Selected component [ID: ${id}]`);
+    // Log component information
+    const component = this.components.get(id);
+    if (component) {
+      console.log(`   Selected component [ID: ${id}]`);
+      console.log(`   Type: ${component.type}`);
+      console.log(`   Position: (${component.x.toFixed(1)}, ${component.y.toFixed(1)})`);
+      console.log(`   Rotation: ${component.rotation.toFixed(1)}°`);
+      console.log(`   Scale: ${component.scale.toFixed(2)}X`);
+      console.log(`   Parent: ${component.parent !== null ? component.parent : 'none'}`);
+      console.log(`   Children: ${component.children.length > 0 ? '[' + component.children.join(', ') + ']' : 'none'}`);
+    }
   }
 
   deselectComponent() {
@@ -157,6 +171,25 @@ export class ComponentManager {
   deleteComponent(id) {
     const component = this.components.get(id);
     if (!component) return false;
+
+    // Remove from parent's children array
+    if (component.parent !== null) {
+      const parentComponent = this.components.get(component.parent);
+      if (parentComponent) {
+        const index = parentComponent.children.indexOf(id);
+        if (index > -1) {
+          parentComponent.children.splice(index, 1);
+        }
+      }
+    }
+
+    // Update children to have no parent
+    component.children.forEach(childId => {
+      const childComponent = this.components.get(childId);
+      if (childComponent) {
+        childComponent.parent = null;
+      }
+    });
 
     // Remove from DOM
     const element = document.querySelector(`[data-id="${id}"]`);

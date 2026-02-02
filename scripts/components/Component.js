@@ -78,6 +78,10 @@ export class Component {
     this.shapeGroup = null;
     this.debugGroup = null;
     this.drawFunction = config.drawFunction;
+    
+    // Parent-child relationships
+    this.parent = null;
+    this.children = [];
   }
 
   _getAperturePoints() {
