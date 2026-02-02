@@ -3,7 +3,9 @@ import {
   MIN_CANVAS_WIDTH,
   MIN_CANVAS_HEIGHT,
   CANVAS_PADDING_PERCENT,
-  MIN_CANVAS_PADDING
+  MIN_CANVAS_PADDING,
+  GRID_SIZE,
+  GRID_EXTEND_FACTOR
 } from './config.js';
 
 export class CanvasManager {
@@ -13,8 +15,15 @@ export class CanvasManager {
       throw new Error('Canvas element (#canvas) not found');
     }
     
+    this.gridGroup = document.getElementById('grid');
+    if (!this.gridGroup) {
+      console.warn('Grid group (#grid) not found');
+    }
+    
+    this.gridVisible = true;
     this.currentViewBox = { x: -200, y: -150, width: 400, height: 300 };
     this.updateViewBox();
+    this.drawGrid();
   }
 
   calculateComponentsBounds() {
@@ -86,6 +95,9 @@ export class CanvasManager {
     const viewBox = `${this.currentViewBox.x} ${this.currentViewBox.y} ${this.currentViewBox.width} ${this.currentViewBox.height}`;
     this.canvas.setAttribute('viewBox', viewBox);
     
+    // Redraw grid when viewBox changes
+    this.drawGrid();
+    
     console.log(`Canvas: Updated viewBox to ${viewBox}`);
   }
 
@@ -124,6 +136,91 @@ export class CanvasManager {
 
     this.updateViewBox();
   }
+
+  drawGrid() {
+    if (!this.gridGroup) return;
+
+    // Clear previous grid
+    while (this.gridGroup.firstChild) {
+      this.gridGroup.removeChild(this.gridGroup.firstChild);
+    }
+
+    // If grid is not visible, just clear and return
+    if (!this.gridVisible) return;
+
+    // Get current viewBox
+    const vbX = this.currentViewBox.x;
+    const vbY = this.currentViewBox.y;
+    const vbWidth = this.currentViewBox.width;
+    const vbHeight = this.currentViewBox.height;
+
+    // Grid size in SVG units
+    const gridSize = GRID_SIZE * 20;
+    const extend = GRID_EXTEND_FACTOR;
+
+    // Extend grid to cover (1 + 2*extend)x the viewBox in all directions
+    const gridAreaX = vbX - vbWidth * extend;
+    const gridAreaY = vbY - vbHeight * extend;
+    const gridAreaWidth = vbWidth * (1 + 2 * extend);
+    const gridAreaHeight = vbHeight * (1 + 2 * extend);
+
+    const firstGridX = Math.floor(gridAreaX / gridSize) * gridSize;
+    const firstGridY = Math.floor(gridAreaY / gridSize) * gridSize;
+    const lastGridX = Math.ceil((gridAreaX + gridAreaWidth) / gridSize) * gridSize;
+    const lastGridY = Math.ceil((gridAreaY + gridAreaHeight) / gridSize) * gridSize;
+
+    const ns = 'http://www.w3.org/2000/svg';
+
+    // Draw vertical grid lines
+    for (let x = firstGridX; x <= lastGridX; x += gridSize) {
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', x);
+      line.setAttribute('y1', gridAreaY);
+      line.setAttribute('x2', x);
+      line.setAttribute('y2', gridAreaY + gridAreaHeight);
+      line.setAttribute('stroke', '#e0e0e0');
+      line.setAttribute('stroke-width', '1');
+      this.gridGroup.appendChild(line);
+    }
+
+    // Draw horizontal grid lines
+    for (let y = firstGridY; y <= lastGridY; y += gridSize) {
+      const line = document.createElementNS(ns, 'line');
+      line.setAttribute('x1', gridAreaX);
+      line.setAttribute('y1', y);
+      line.setAttribute('x2', gridAreaX + gridAreaWidth);
+      line.setAttribute('y2', y);
+      line.setAttribute('stroke', '#e0e0e0');
+      line.setAttribute('stroke-width', '1');
+      this.gridGroup.appendChild(line);
+    }
+  }
+
+  toggleGrid() {
+    this.gridVisible = !this.gridVisible;
+    this.drawGrid();
+    
+    // Update button text if it exists
+    const toggleBtn = document.getElementById('toggle-grid-btn');
+    if (toggleBtn) {
+      toggleBtn.textContent = this.gridVisible ? 'Hide Grid' : 'Show Grid';
+    }
+    
+    return this.gridVisible;
+  }
+
+  hideGrid() {
+    if (this.gridGroup) {
+      this.gridGroup.style.display = 'none';
+    }
+  }
+
+  showGrid() {
+    if (this.gridGroup && this.gridVisible) {
+      this.gridGroup.style.display = '';
+    }
+  }
+
 }
 
 // Create singleton instance

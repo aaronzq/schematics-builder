@@ -5,6 +5,7 @@ import {
 import { removeRotationHandle } from './RotationHandle.js';
 import { removeScaleHandle } from './ScaleHandle.js';
 import { removeArrowHandle } from './ArrowHandle.js';
+import { canvas } from '../Canvas.js';
 
 export function setupComponentButtons() {
   const componentMenu = document.querySelector('.component-menu');
@@ -85,6 +86,14 @@ export function setupActionButtons() {
   if (showAllComponentsBtn) {
     showAllComponentsBtn.addEventListener('click', () => {
       componentManager.showAllComponents();
+    });
+  }
+
+  // Toggle grid button
+  const toggleGridBtn = document.getElementById('toggle-grid-btn');
+  if (toggleGridBtn) {
+    toggleGridBtn.addEventListener('click', () => {
+      canvas.toggleGrid();
     });
   }
 

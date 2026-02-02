@@ -8,13 +8,9 @@ export const MIN_CANVAS_WIDTH = 400;
 export const MIN_CANVAS_HEIGHT = 300;
 export const CANVAS_PADDING_PERCENT = 0.2;
 export const MIN_CANVAS_PADDING = 150;
-
-// ===== Component defaults =====
-export const DEFAULT_APERTURE_RADIUS = 15;  // Default aperture radius for components
-export const DEFAULT_CONE_ANGLE = 0;        // Default cone angle in degrees (0 = collimated)
+export const GRID_SIZE = 2.5;
 
 // ===== Component spacing and positioning =====
-export const GRID_SIZE = 2.5;
 export const COMPONENT_SPACING = 150;
 
 // ===== Arrow/positioning handle configuration =====
@@ -37,6 +33,10 @@ export const SCALE_HANDLE_COLOR = '#ffba0c';
 export const SCALE_SNAP_INCREMENT = 0.1;
 export const MIN_SCALE = 0.8;
 export const MAX_SCALE = 2.0;
+
+// ===== Component defaults =====
+export const DEFAULT_APERTURE_RADIUS = 15;  // Default aperture radius for components
+export const DEFAULT_CONE_ANGLE = 0;        // Default cone angle in degrees (0 = collimated)
 
 // ===== Ray rendering =====
 export const DEFAULT_SOLID_RAY_COLOR = '#00ffff';
