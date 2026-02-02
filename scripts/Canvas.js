@@ -115,8 +115,10 @@ export class CanvasManager {
     const newWidth = this.currentViewBox.width / zoomFactor;
     const newHeight = this.currentViewBox.height / zoomFactor;
 
-    this.currentViewBox.x = centerX - newWidth / 2;
-    this.currentViewBox.y = centerY - newHeight / 2;
+    // Keep the center point fixed by adjusting the viewBox position
+    // The point under the cursor should remain at the same position after zoom
+    this.currentViewBox.x = centerX - (centerX - this.currentViewBox.x) / zoomFactor;
+    this.currentViewBox.y = centerY - (centerY - this.currentViewBox.y) / zoomFactor;
     this.currentViewBox.width = newWidth;
     this.currentViewBox.height = newHeight;
 

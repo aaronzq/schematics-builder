@@ -7,7 +7,7 @@
 export const MIN_CANVAS_WIDTH = 400;
 export const MIN_CANVAS_HEIGHT = 300;
 export const CANVAS_PADDING_PERCENT = 0.2;
-export const MIN_CANVAS_PADDING = 100;
+export const MIN_CANVAS_PADDING = 150;
 
 // ===== Component defaults =====
 export const DEFAULT_APERTURE_RADIUS = 15;  // Default aperture radius for components

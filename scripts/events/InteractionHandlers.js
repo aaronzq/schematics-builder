@@ -180,3 +180,153 @@ export function setupComponentDragging() {
 
   console.log('Component dragging initialized');
 }
+
+export function setupCanvasPanning() {
+  const canvas = document.getElementById('canvas');
+  if (!canvas) return;
+
+  let isPanning = false;
+  let startX = 0;
+  let startY = 0;
+
+  canvas.addEventListener('mousedown', (e) => {
+    // Right mouse button (button === 2)
+    if (e.button === 2) {
+      // Only pan if clicking on the canvas itself, not on components
+      if (e.target === canvas) {
+        isPanning = true;
+        startX = e.clientX;
+        startY = e.clientY;
+        canvas.style.cursor = 'grabbing';
+        e.preventDefault();
+      }
+    }
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!isPanning) return;
+
+    const deltaScreenX = e.clientX - startX;
+    const deltaScreenY = e.clientY - startY;
+
+    // Convert screen space delta to SVG space
+    const svg = document.getElementById('canvas');
+    const CTM = svg.getScreenCTM();
+    const scale = CTM.a; // Get the scale factor from the CTM
+    
+    // Calculate delta in SVG coordinates
+    const deltaX = -deltaScreenX / scale;
+    const deltaY = -deltaScreenY / scale;
+
+    // Import and use the canvas manager
+    import('../Canvas.js').then(module => {
+      module.canvas.pan(deltaX, deltaY);
+    });
+
+    startX = e.clientX;
+    startY = e.clientY;
+  });
+
+  document.addEventListener('mouseup', (e) => {
+    if (e.button === 2 && isPanning) {
+      isPanning = false;
+      canvas.style.cursor = 'default';
+    }
+  });
+
+  // Prevent context menu on right-click
+  canvas.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+  });
+
+  console.log('Canvas panning initialized');
+}
+
+export function setupCanvasZoom() {
+  const canvas = document.getElementById('canvas');
+  if (!canvas) return;
+
+  // Detect if device is Mac
+  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+
+  // Track if a gesture is in progress (Mac only)
+  let isGesturing = false;
+
+  // Handle mouse wheel and trackpad zoom
+  canvas.addEventListener('wheel', (e) => {
+    // On Mac, only respond to wheel events during explicit pinch (e.ctrlKey) or if gesture is active
+    // This prevents two-finger scroll from triggering zoom
+    if (isMac && !e.ctrlKey && !isGesturing) {
+      return; // Ignore regular scroll on Mac trackpad
+    }
+
+    // Prevent default scrolling behavior
+    e.preventDefault();
+
+    // Get mouse position in SVG coordinates
+    const svg = document.getElementById('canvas');
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgPoint = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+    // Determine zoom factor
+    let zoomFactor;
+    
+    if (isMac && e.ctrlKey) {
+      // Trackpad pinch on Mac - deltaY values are smaller and more granular
+      zoomFactor = 1 - (e.deltaY * 0.01);
+    } else {
+      // Mouse wheel (external mouse on Mac or any device on Windows/Linux)
+      if (e.deltaY < 0) {
+        zoomFactor = 1.1;
+      } else {
+        zoomFactor = 0.9;
+      }
+    }
+
+    // Import and use the canvas manager
+    import('../Canvas.js').then(module => {
+      module.canvas.zoom(zoomFactor, { x: svgPoint.x, y: svgPoint.y });
+    });
+  }, { passive: false });
+
+  // Add Safari-specific gesture events for Mac (more reliable for trackpad pinch)
+  if (isMac) {
+    let lastScale = 1;
+    
+    canvas.addEventListener('gesturestart', (e) => {
+      e.preventDefault();
+      isGesturing = true;
+      lastScale = 1;
+    }, { passive: false });
+
+    canvas.addEventListener('gesturechange', (e) => {
+      e.preventDefault();
+      
+      // Get mouse position in SVG coordinates
+      const svg = document.getElementById('canvas');
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const svgPoint = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+      // Calculate zoom factor based on scale change
+      const zoomFactor = e.scale / lastScale;
+      lastScale = e.scale;
+
+      // Import and use the canvas manager
+      import('../Canvas.js').then(module => {
+        module.canvas.zoom(zoomFactor, { x: svgPoint.x, y: svgPoint.y });
+      });
+    }, { passive: false });
+
+    canvas.addEventListener('gestureend', (e) => {
+      e.preventDefault();
+      lastScale = 1;
+      isGesturing = false;
+    }, { passive: false });
+  }
+
+  console.log('Canvas zoom initialized');
+}
