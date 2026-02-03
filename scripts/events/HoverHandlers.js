@@ -83,6 +83,46 @@ export function removeHoverBox() {
   }
 }
 
+/**
+ * Show hover boxes for multiple selected components
+ * @param {Array} componentIds - Array of component IDs to show hover boxes for
+ */
+export function showMultipleHoverBoxes(componentIds) {
+  const canvas = document.getElementById('canvas');
+  if (!canvas) return;
+
+  // Remove existing hover boxes
+  removeHoverBox();
+  clearSelectionHoverBoxes();
+
+  // Create hover boxes for all specified components
+  componentIds.forEach(id => {
+    const component = componentManager.getComponent(id);
+    if (component) {
+      const box = createHoverBox();
+      
+      // Get component properties
+      const { x, y } = component.getPosition();
+      const { width, height } = component;
+      const rotation = component.getRotation();
+      const scale = component.getScale();
+      
+      // Set box dimensions (relative to origin)
+      box.setAttribute('x', -width / 2);
+      box.setAttribute('y', -height / 2);
+      box.setAttribute('width', width);
+      box.setAttribute('height', height);
+      
+      // Apply transform: translate to position, then rotate and scale
+      const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${scale})`;
+      box.setAttribute('transform', transform);
+      
+      canvas.appendChild(box);
+      addSelectionHoverBox(id, box);
+    }
+  });
+}
+
 export function clearSelectionHoverBoxes() {
   selectionHoverBoxes.forEach(box => box.remove());
   selectionHoverBoxes.clear();
@@ -112,9 +152,45 @@ export function forEachSelectionHoverBox(callback) {
  * Setup hover event listeners for components
  * @param {Function} isSelectionActive - Function that returns whether selection box is active
  */
-export function setupHoverListeners(isSelectionActive) {
+export function setupHoverListeners(isSelectionActive, getUnifiedBoundsFn, getSelectedIdsFn) {
   const schematics = document.getElementById('schematics');
-  if (!schematics) return;
+  const canvas = document.getElementById('canvas');
+  if (!schematics || !canvas) return;
+
+  // Track if we're hovering over unified bbox
+  canvas.addEventListener('mousemove', (e) => {
+    // Don't show hover during selection box drawing
+    if (isSelectionActive()) return;
+
+    // Check if there's a multiselection
+    const selectedIds = getSelectedIdsFn();
+    if (selectedIds.length < 2) return;
+
+    // Check if hovering over a specific component
+    const componentElement = e.target.closest('[data-id]');
+    if (componentElement) return; // Let component-specific hover handle it
+
+    // Check if cursor is within unified bounds
+    const bounds = getUnifiedBoundsFn();
+    if (!bounds) return;
+
+    const svg = canvas;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+    // Check if point is within bounds
+    if (svgPt.x >= bounds.x && svgPt.x <= bounds.x + bounds.width &&
+        svgPt.y >= bounds.y && svgPt.y <= bounds.y + bounds.height) {
+      // Show hover boxes for all selected components
+      showMultipleHoverBoxes(selectedIds);
+    } else {
+      // Clear hover boxes if outside bounds
+      removeHoverBox();
+      clearSelectionHoverBoxes();
+    }
+  });
 
   schematics.addEventListener('mouseover', (e) => {
     // Don't show hover box during selection box drawing
@@ -123,6 +199,8 @@ export function setupHoverListeners(isSelectionActive) {
     const componentElement = e.target.closest('[data-id]');
     if (componentElement) {
       const id = parseInt(componentElement.getAttribute('data-id'));
+      // Clear any multi-hover boxes first
+      clearSelectionHoverBoxes();
       showHoverBox(id);
     }
   });

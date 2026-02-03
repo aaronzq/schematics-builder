@@ -112,12 +112,26 @@ function removeUnifiedBoundingBox() {
 
 export { showUnifiedBoundingBox, removeUnifiedBoundingBox };
 
+/**
+ * Get the bounds of the current unified bounding box
+ * @returns {Object|null} Bounds object with x, y, width, height or null if no unified bbox
+ */
+export function getUnifiedBoundingBoxBounds() {
+  const selectedComponents = componentManager.getSelectedComponents();
+  if (!selectedComponents || selectedComponents.length < 2) return null;
+  return calculateUnifiedBounds(selectedComponents);
+}
+
 export function setupComponentSelection() {
   const canvas = document.getElementById('canvas');
   if (!canvas) return;
 
-  // Setup hover listeners with callback to check selection box state
-  setupHoverListeners(() => isSelectionBoxActive);
+  // Setup hover listeners with callbacks
+  setupHoverListeners(
+    () => isSelectionBoxActive,
+    getUnifiedBoundingBoxBounds,
+    () => Array.from(componentManager.selectedIds)
+  );
 
   // Deselect component when clicking on blank canvas
   canvas.addEventListener('click', (e) => {
