@@ -203,29 +203,6 @@ export function setupComponentSelection() {
   const canvas = document.getElementById('canvas');
   if (!schematics || !canvas) return;
 
-  schematics.addEventListener('click', (e) => {
-    const componentElement = e.target.closest('[data-id]');
-    if (componentElement) {
-      const id = parseInt(componentElement.getAttribute('data-id'));
-      
-      // Select only the clicked component
-      componentManager.selectComponent(id);
-      
-      // Show handles for the single selected component
-      showRotationHandle(id);
-      showScaleHandle(id);
-      showArrowHandle(id);
-      
-      // Remove unified bounding box
-      removeUnifiedBoundingBox();
-    } else {
-      removeRotationHandle();
-      removeScaleHandle();
-      removeArrowHandle();
-      removeUnifiedBoundingBox();
-    }
-  });
-
   // Add hover listeners
   schematics.addEventListener('mouseover', (e) => {
     // Don't show hover box during selection box drawing
@@ -285,6 +262,7 @@ export function setupComponentDragging() {
   if (!schematics) return;
 
   let isDragging = false;
+  let hasMoved = false;
   let draggedId = null;
   let startX = 0;
   let startY = 0;
@@ -296,20 +274,17 @@ export function setupComponentDragging() {
     if (!componentElement) return;
 
     isDragging = true;
+    hasMoved = false;
     draggedId = parseInt(componentElement.getAttribute('data-id'));
     
     const component = componentManager.getComponent(draggedId);
     if (!component) return;
 
-    // Clear multi-selection and select only the dragged component
-    componentManager.selectedIds.clear();
+    // Select component immediately for dragging
     componentManager.selectComponent(draggedId);
     
-    // Remove unified bounding box and show handles for the dragged component
+    // Show handles immediately
     removeUnifiedBoundingBox();
-    removeRotationHandle();
-    removeScaleHandle();
-    removeArrowHandle();
     showRotationHandle(draggedId);
     showScaleHandle(draggedId);
     showArrowHandle(draggedId);
@@ -325,6 +300,8 @@ export function setupComponentDragging() {
 
   document.addEventListener('mousemove', (e) => {
     if (!isDragging || draggedId === null) return;
+
+    hasMoved = true;
 
     const svg = document.getElementById('canvas');
     const pt = svg.createSVGPoint();
@@ -362,6 +339,7 @@ export function setupComponentDragging() {
   document.addEventListener('mouseup', () => {
     if (isDragging) {
       isDragging = false;
+      hasMoved = false;
       draggedId = null;
     }
   });
