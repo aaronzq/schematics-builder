@@ -324,11 +324,11 @@ export function setupCanvasZoom() {
 
   // Handle mouse wheel and trackpad zoom
   canvas.addEventListener('wheel', (e) => {
-    // On Mac, only respond to wheel events during explicit pinch (e.ctrlKey) or if gesture is active
-    // This prevents two-finger scroll from triggering zoom
-    if (isMac && !e.ctrlKey && !isGesturing) {
-      return; // Ignore regular scroll on Mac trackpad
-    }
+    // // On Mac, only respond to wheel events during explicit pinch (e.ctrlKey) or if gesture is active
+    // // This prevents two-finger scroll from triggering zoom
+    // if (isMac && !e.ctrlKey && !isGesturing) {
+    //   return; // Ignore regular scroll on Mac trackpad
+    // }
 
     // Prevent default scrolling behavior
     e.preventDefault();
