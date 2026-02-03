@@ -1,5 +1,5 @@
 import { setupComponentButtons, setupActionButtons } from './events/ButtonHandlers.js';
-import { setupComponentSelection, setupComponentDragging, setupCanvasPanning, setupCanvasZoom } from './events/InteractionHandlers.js';
+import { setupComponentSelection, setupComponentDragging, setupCanvasPanning, setupCanvasZoom, setupSelectionBox } from './events/InteractionHandlers.js';
 
 
 export function initializeApp() {
@@ -16,6 +16,7 @@ export function initializeApp() {
   setupComponentDragging();
   setupCanvasPanning();
   setupCanvasZoom();
+  setupSelectionBox();
 
   console.log('Application initialized');
   

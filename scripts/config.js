@@ -8,10 +8,10 @@ export const MIN_CANVAS_WIDTH = 400;
 export const MIN_CANVAS_HEIGHT = 300;
 export const CANVAS_PADDING_PERCENT = 0.2;
 export const MIN_CANVAS_PADDING = 150;
-export const GRID_SIZE = 2.5;
 
-// ===== Component spacing and positioning =====
-export const COMPONENT_SPACING = 150;
+// ===== Grid configuration =====
+export const GRID_SIZE = 2.5;
+export const GRID_EXTEND_FACTOR = 5;
 
 // ===== Arrow/positioning handle configuration =====
 export const ARROW_LENGTH = 150;
@@ -19,6 +19,9 @@ export const ARROW_COLOR = '#2196F3';
 export const ARROW_STROKE_WIDTH = 2;
 export const ARROW_HANDLE_RADIUS = 3;
 export const ARROW_TIP_SNAP_SIZE = 2.5;
+
+// ===== Component positioning =====
+export const DRAGGING_SNAP_INCREMENT = 2.5;
 
 // ===== Component rotation handle =====
 export const ROTATION_SNAP_INCREMENT = 2.5;
@@ -46,13 +49,26 @@ export const DEFAULT_RAY_POLYGON_OPACITY = 0.2;
 export const HIDDEN_COMPONENT_OPACITY = 0;
 export const VISIBLE_COMPONENT_OPACITY = 1.0;
 
+// ===== Selection box configuration =====
+export const SELECTION_BOX_FILL = 'rgba(33, 150, 243, 0.1)';
+export const SELECTION_BOX_STROKE = '#2196F3';
+export const SELECTION_BOX_STROKE_WIDTH = 2;
+export const SELECTION_BOX_STROKE_DASHARRAY = '5,5';
+
+// ===== Unified bounding box configuration =====
+export const UNIFIED_BBOX_FILL = 'rgba(33, 150, 243, 0.05)';
+export const UNIFIED_BBOX_STROKE = '#2196F3';
+export const UNIFIED_BBOX_STROKE_WIDTH = 2.5;
+export const UNIFIED_BBOX_STROKE_DASHARRAY = '10,5';
+export const UNIFIED_BBOX_PADDING = 10;
 
 
-// ===== Grid configuration =====
-export const GRID_EXTEND_FACTOR = 5;
+
+
+
 
 // ===== Debug visualization =====
-export const SHOW_DEBUG_DRAWING = true;
+export const SHOW_DEBUG_DRAWING = false;
 export const UP_VECTOR_LENGTH = 60;
 export const FORWARD_VECTOR_LENGTH = 60;
 export const CENTER_MARKER_RADIUS = 2;

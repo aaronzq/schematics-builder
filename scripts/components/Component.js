@@ -82,6 +82,10 @@ export class Component {
     // Parent-child relationships
     this.parent = null;
     this.children = [];
+    
+    // Group relationships for multi-selection grouping
+    this.isGrouped = false;
+    this.groupMembers = new Set();
   }
 
   _getAperturePoints() {
@@ -362,5 +366,16 @@ export class Component {
 
   _generateId() {
     return `${this.type}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  // Group management methods
+  setGroupMembers(ids) {
+    this.isGrouped = true;
+    this.groupMembers = new Set(ids);
+  }
+
+  clearGroup() {
+    this.isGrouped = false;
+    this.groupMembers.clear();
   }
 }

@@ -8,8 +8,9 @@ export class ComponentManager {
   constructor() {
     this.components = new Map();
     this.idCounter = 0;
-    this.selectedId = null;
+    this.selectedIds = new Set();
     this.nextPosition = { x: 0, y: 0 };
+    this.ignoreNextCanvasClick = false;
   }
 
   addComponent(type, position = null) {
@@ -24,8 +25,9 @@ export class ComponentManager {
     component.setPosition(pos.x - centerPoint.x, pos.y - centerPoint.y);
     
     // Align new component's forward vector with the previously selected component's arrow vector
-    if (this.selectedId !== null) {
-      const previousComponent = this.components.get(this.selectedId);
+    if (this.selectedIds.size > 0) {
+      const previousId = Array.from(this.selectedIds)[0];
+      const previousComponent = this.components.get(previousId);
       if (previousComponent) {
         const arrowVector = previousComponent.getArrowVector();
         // Calculate angle from arrow vector
@@ -41,7 +43,7 @@ export class ComponentManager {
         );
         
         // Set up parent-child relationship
-        component.parent = this.selectedId;
+        component.parent = previousId;
         previousComponent.children.push(id);
       }
     }
@@ -70,24 +72,32 @@ export class ComponentManager {
   }
 
   selectComponent(id) {
-    if (this.selectedId !== null) {
-      const prevElement = document.querySelector(`[data-id="${this.selectedId}"]`);
+    // Clear previous selections
+    this.selectedIds.forEach(prevId => {
+      const prevElement = document.querySelector(`[data-id="${prevId}"]`);
       if (prevElement) {
         prevElement.classList.remove('selected');
       }
-    }
+    });
+    this.selectedIds.clear();
 
-    this.selectedId = id;
+    // Set new selection
+    this.selectedIds.add(id);
     const element = document.querySelector(`[data-id="${id}"]`);
     if (element) {
       element.classList.add('selected');
+    }
+
+    // Check if this component is grouped and auto-select all group members
+    const component = this.components.get(id);
+    if (component && component.isGrouped && component.groupMembers.size > 0) {
+      this.selectMultiple([id, ...component.groupMembers]);
     }
 
     // Update nextPosition to arrow tip
     this.updateNextPositionFromComponent(id);
 
     // Log component information
-    const component = this.components.get(id);
     if (component) {
       console.log(`   Selected component [ID: ${id}]`);
       console.log(`   Type: ${component.type}`);
@@ -96,24 +106,38 @@ export class ComponentManager {
       console.log(`   Scale: ${component.scale.toFixed(2)}X`);
       console.log(`   Parent: ${component.parent !== null ? component.parent : 'none'}`);
       console.log(`   Children: ${component.children.length > 0 ? '[' + component.children.join(', ') + ']' : 'none'}`);
+      if (component.isGrouped) {
+        console.log(`   Group members: [${Array.from(component.groupMembers).join(', ')}]`);
+      }
     }
   }
 
   deselectComponent() {
-    if (this.selectedId !== null) {
-      const prevElement = document.querySelector(`[data-id="${this.selectedId}"]`);
-      if (prevElement) {
-        prevElement.classList.remove('selected');
+    if (this.selectedIds.size === 0) return;
+    
+    // Deselect all selected components
+    this.selectedIds.forEach(id => {
+      const element = document.querySelector(`[data-id="${id}"]`);
+      if (element) {
+        element.classList.remove('selected');
       }
-      console.log(`Deselected component [ID: ${this.selectedId}]`);
-      this.selectedId = null;
+    });
+    
+    const idsArray = Array.from(this.selectedIds);
+    if (idsArray.length === 1) {
+      console.log(`Deselected component [ID: ${idsArray[0]}]`);
+    } else {
+      console.log(`Deselected multiple components: [${idsArray.join(', ')}]`);
     }
+    
+    this.selectedIds.clear();
   }
 
   getSelectedComponent() {
-    if (this.selectedId === null) return null;
-    const component = this.components.get(this.selectedId);
-    return component ? { id: this.selectedId, component } : null;
+    if (this.selectedIds.size === 0) return null;
+    const id = Array.from(this.selectedIds)[0];
+    const component = this.components.get(id);
+    return component ? { id, component } : null;
   }
 
   getComponent(id) {
@@ -200,10 +224,8 @@ export class ComponentManager {
     // Remove from components map
     this.components.delete(id);
 
-    // Deselect if this was the selected component
-    if (this.selectedId === id) {
-      this.selectedId = null;
-    }
+    // Remove from selection if selected
+    this.selectedIds.delete(id);
 
     console.log(`Deleted component [ID: ${id}]`);
 
@@ -264,6 +286,109 @@ export class ComponentManager {
     console.log(`Showed all components (${count} total)`);
 
     return count;
+  }
+
+  // Multi-selection methods
+  selectMultiple(ids) {
+    // Clear previous selections
+    this.selectedIds.forEach(id => {
+      const element = document.querySelector(`[data-id="${id}"]`);
+      if (element) {
+        element.classList.remove('selected');
+      }
+    });
+
+    // Set new selections
+    this.selectedIds = new Set(ids);
+    this.selectedIds.forEach(id => {
+      const element = document.querySelector(`[data-id="${id}"]`);
+      if (element) {
+        element.classList.add('selected');
+      }
+    });
+
+    console.log(`Selected multiple components: [${Array.from(this.selectedIds).join(', ')}]`);
+  }
+
+  addToSelection(id) {
+    this.selectedIds.add(id);
+    const element = document.querySelector(`[data-id="${id}"]`);
+    if (element) {
+      element.classList.add('selected');
+    }
+
+    console.log(`Added component [ID: ${id}] to selection`);
+  }
+
+  removeFromSelection(id) {
+    this.selectedIds.delete(id);
+    const element = document.querySelector(`[data-id="${id}"]`);
+    if (element) {
+      element.classList.remove('selected');
+    }
+
+    console.log(`Removed component [ID: ${id}] from selection`);
+  }
+
+  getSelectedComponents() {
+    const selected = [];
+    this.selectedIds.forEach(id => {
+      const component = this.components.get(id);
+      if (component) {
+        selected.push({ id, component });
+      }
+    });
+    return selected;
+  }
+
+  createGroup() {
+    if (this.selectedIds.size < 2) {
+      console.log('Need at least 2 components selected to create a group');
+      return false;
+    }
+
+    const memberIds = Array.from(this.selectedIds);
+    
+    // Set group relationships on all selected components
+    memberIds.forEach(id => {
+      const component = this.components.get(id);
+      if (component) {
+        // Each component stores all other members (excluding itself)
+        const otherMembers = memberIds.filter(memberId => memberId !== id);
+        component.setGroupMembers(otherMembers);
+      }
+    });
+
+    console.log(`Created group with components: [${memberIds.join(', ')}]`);
+    return true;
+  }
+
+  ungroupComponents() {
+    if (this.selectedIds.size === 0) {
+      console.log('No components selected to ungroup');
+      return false;
+    }
+
+    let ungroupedCount = 0;
+    this.selectedIds.forEach(id => {
+      const component = this.components.get(id);
+      if (component && component.isGrouped) {
+        // Collect all group members before clearing
+        const allGroupMembers = new Set([id, ...component.groupMembers]);
+        
+        // Clear group for this component and all its group members
+        allGroupMembers.forEach(memberId => {
+          const memberComponent = this.components.get(memberId);
+          if (memberComponent && memberComponent.isGrouped) {
+            memberComponent.clearGroup();
+            ungroupedCount++;
+          }
+        });
+      }
+    });
+
+    console.log(`Ungrouped ${ungroupedCount} component(s)`);
+    return ungroupedCount > 0;
   }
 
 }

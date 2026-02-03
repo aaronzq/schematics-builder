@@ -90,6 +90,7 @@ function setupArrowDragging(handle, line, componentId, centerX, centerY) {
 
   handle.addEventListener('mousedown', (e) => {
     isDragging = true;
+    componentManager.ignoreNextCanvasClick = true;
     e.stopPropagation(); // Prevent component dragging
     e.preventDefault();
   });
@@ -129,6 +130,7 @@ function setupArrowDragging(handle, line, componentId, centerX, centerY) {
   document.addEventListener('mouseup', () => {
     if (isDragging) {
       isDragging = false;
+      componentManager.ignoreNextCanvasClick = true;
       // Update nextPosition to the arrow tip after dragging
       componentManager.updateNextPositionFromComponent(componentId);
       console.log(`Arrow handle dragging completed for component [ID: ${componentId}]`);
