@@ -492,6 +492,38 @@ export class ComponentManager {
     });
   }
 
+  /**
+   * Scale multiple components around a centroid
+   * @param {Array|Set} ids - Component IDs
+   * @param {Object} centroid - Center point {x, y}
+   * @param {number} scaleFactor - Scale multiplier
+   * @param {Map} initialStates - Initial states from getGroupInitialStates
+   */
+  updateGroupScale(ids, centroid, scaleFactor, initialStates) {
+    const idsArray = Array.isArray(ids) ? ids : Array.from(ids);
+    
+    idsArray.forEach(id => {
+      const component = this.components.get(id);
+      const initialState = initialStates.get(id);
+      if (component && initialState) {
+        // Calculate initial distance from centroid
+        const initialDx = initialState.x - centroid.x;
+        const initialDy = initialState.y - centroid.y;
+        
+        // Calculate new position (scale distance from centroid)
+        const newX = centroid.x + initialDx * scaleFactor;
+        const newY = centroid.y + initialDy * scaleFactor;
+        
+        // Update position
+        component.setPosition(newX, newY);
+        
+        // Update component's own scale
+        const newScale = initialState.scale * scaleFactor;
+        component.setScale(newScale);
+      }
+    });
+  }
+
 }
 
 // Create singleton instance

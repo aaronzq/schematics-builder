@@ -6,7 +6,7 @@ import {
   ROTATION_SNAP_INCREMENT,
   VALUE_DISPLAY_DISTANCE
 } from '../config.js';
-import { showScaleHandle } from './ScaleHandle.js';
+import { showScaleHandle, showGroupScaleHandle } from './ScaleHandle.js';
 import { showValueDisplay, hideValueDisplay } from './ValueDisplay.js';
 import { 
   clearSelectionHoverBoxes, 
@@ -237,6 +237,29 @@ function setupGroupRotationHandleDrag(handle, centroid) {
         }
       }
     });
+    
+    // Update scale handle to rotate around centroid
+    const scaleHandle = document.getElementById('scale-handle-group');
+    if (scaleHandle) {
+      // Calculate scale handle position at opposite side of rotation handle (180 degrees)
+      const scaleAngleRad = angleRad + Math.PI;
+      const scaleHandleX = centroid.x + initialDistance * Math.sin(scaleAngleRad);
+      const scaleHandleY = centroid.y - initialDistance * Math.cos(scaleAngleRad);
+      
+      const scaleCircle = scaleHandle.querySelector('circle');
+      const scaleIcon = scaleHandle.querySelector('text');
+      
+      if (scaleCircle) {
+        scaleCircle.setAttribute('cx', scaleHandleX);
+        scaleCircle.setAttribute('cy', scaleHandleY);
+      }
+      if (scaleIcon) {
+        scaleIcon.setAttribute('x', scaleHandleX);
+        scaleIcon.setAttribute('y', scaleHandleY);
+        // Rotate the scale handle icon to match the group rotation
+        scaleIcon.setAttribute('transform', `rotate(${angleDiff} ${scaleHandleX} ${scaleHandleY})`);
+      }
+    }
   } 
 
   function handleEnd() {
@@ -256,10 +279,11 @@ function setupGroupRotationHandleDrag(handle, centroid) {
     document.removeEventListener('mousemove', handleDrag);
     document.removeEventListener('mouseup', handleEnd);
     
-    // Show unified bounding box after rotation finishes
+    // Show unified bounding box and handles after rotation finishes
     showUnifiedBoundingBox();
     
     showGroupRotationHandle();
+    showGroupScaleHandle();
   }
 }
 

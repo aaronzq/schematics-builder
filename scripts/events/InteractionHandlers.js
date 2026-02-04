@@ -1,6 +1,6 @@
 import { componentManager } from '../components/index.js';
 import { showRotationHandle, removeRotationHandle, showGroupRotationHandle } from './RotationHandle.js';
-import { showScaleHandle, removeScaleHandle } from './ScaleHandle.js';
+import { showScaleHandle, removeScaleHandle, showGroupScaleHandle } from './ScaleHandle.js';
 import { showArrowHandle, removeArrowHandle } from './ArrowHandle.js';
 import { showHoverBox, removeHoverBox, clearSelectionHoverBoxes, setupHoverListeners, createComponentHoverBox, addSelectionHoverBox, removeSelectionHoverBox, hasSelectionHoverBox, forEachSelectionHoverBox } from './HoverHandlers.js';
 import { 
@@ -345,8 +345,9 @@ export function setupComponentDragging() {
       // Update unified bounding box
       showUnifiedBoundingBox();
       
-      // Update rotation handle to follow the group
+      // Update rotation and scale handles to follow the group
       showGroupRotationHandle();
+      showGroupScaleHandle();
 
       // Update hover boxes for all selected components
       // Clear existing hover boxes first
@@ -386,6 +387,7 @@ export function setupComponentDragging() {
           showArrowHandle(draggedId);
         } else if (componentManager.selectedIds.size > 1) {
           showGroupRotationHandle();
+          showGroupScaleHandle();
         }
         
         // Update hover box during drag
@@ -400,9 +402,10 @@ export function setupComponentDragging() {
       if (isGroupDrag) {
         clearSelectionHoverBoxes();
         
-        // Update unified bbox and rotation handle after group drag
+        // Update unified bbox and handles after group drag
         showUnifiedBoundingBox();
         showGroupRotationHandle();
+        showGroupScaleHandle();
       }
 
       // Reset cursor
@@ -790,9 +793,10 @@ export function setupSelectionBox() {
         removeRotationHandle();
         removeScaleHandle();
         removeArrowHandle();
-        // Show unified bounding box and group rotation handle for multiple selections
+        // Show unified bounding box and group handles for multiple selections
         showUnifiedBoundingBox();
         showGroupRotationHandle();
+        showGroupScaleHandle();
       }
     } else {
       // No components selected - deselect everything
