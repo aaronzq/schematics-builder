@@ -402,21 +402,25 @@ export class ComponentManager {
     const idsArray = Array.isArray(ids) ? ids : Array.from(ids);
     if (idsArray.length === 0) return { x: 0, y: 0 };
 
-    let sumX = 0;
-    let sumY = 0;
+    let minX = Infinity;
+    let maxX = -Infinity;
+    let minY = Infinity;
+    let maxY = -Infinity;
     let count = 0;
 
     idsArray.forEach(id => {
       const component = this.components.get(id);
       if (component) {
-        const pos = component.getPosition();
-        sumX += pos.x;
-        sumY += pos.y;
+        const bounds = component.getBoundingBox();
+        if (bounds.minX < minX) minX = bounds.minX;
+        if (bounds.maxX > maxX) maxX = bounds.maxX;
+        if (bounds.minY < minY) minY = bounds.minY;
+        if (bounds.maxY > maxY) maxY = bounds.maxY;
         count++;
       }
     });
 
-    return count > 0 ? { x: sumX / count, y: sumY / count } : { x: 0, y: 0 };
+    return count > 0 ? { x: (minX + maxX) / 2, y: (minY + maxY) / 2 } : { x: 0, y: 0 };
   }
 
   /**
