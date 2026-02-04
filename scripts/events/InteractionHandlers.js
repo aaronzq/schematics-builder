@@ -21,6 +21,7 @@ let isSelectionBoxActive = false;
 let selectionStartPoint = null;
 let selectionBoxJustCompleted = false;
 let unifiedBoundingBox = null; // Unified bounding box for multiple selections
+let isPanning = false; // Track canvas panning state
 
 function calculateUnifiedBounds(components) {
   if (!components || components.length === 0) return null;
@@ -149,8 +150,8 @@ export function setupComponentSelection() {
 
   // Add cursor style for unified bbox area
   canvas.addEventListener('mousemove', (e) => {
-    // Skip during selection box drawing
-    if (isSelectionBoxActive) return;
+    // Skip during selection box drawing or canvas panning
+    if (isSelectionBoxActive || isPanning) return;
 
     // Check if hovering over a component
     const componentElement = e.target.closest('[data-id]');
@@ -427,39 +428,25 @@ export function setupCanvasPanning() {
   const canvas = document.getElementById('canvas');
   if (!canvas) return;
 
-  let isPanning = false;
   let startX = 0;
   let startY = 0;
 
   canvas.addEventListener('mousedown', (e) => {
     // Right mouse button (button === 2)
     if (e.button === 2) {
-      // Only pan if clicking on the canvas itself, not on components
-      if (e.target === canvas) {
-        // Don't pan if clicking inside unified bbox area
-        if (componentManager.selectedIds.size > 1) {
-          const svg = canvas;
-          const pt = svg.createSVGPoint();
-          pt.x = e.clientX;
-          pt.y = e.clientY;
-          const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
-          
-          if (isPointInUnifiedBbox(svgPt.x, svgPt.y)) {
-            return; // Don't start panning
-          }
-        }
-        
-        isPanning = true;
-        startX = e.clientX;
-        startY = e.clientY;
-        canvas.style.cursor = 'grabbing';
-        e.preventDefault();
-      }
+      isPanning = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      canvas.style.cursor = 'grabbing';
+      e.preventDefault();
     }
   });
 
   document.addEventListener('mousemove', (e) => {
     if (!isPanning) return;
+
+    // Maintain grabbing cursor during panning
+    canvas.style.cursor = 'grabbing';
 
     const deltaScreenX = e.clientX - startX;
     const deltaScreenY = e.clientY - startY;
