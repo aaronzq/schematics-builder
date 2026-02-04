@@ -5,7 +5,11 @@ import {
   CANVAS_PADDING_PERCENT,
   MIN_CANVAS_PADDING,
   GRID_SIZE,
-  GRID_EXTEND_FACTOR
+  GRID_EXTEND_FACTOR,
+  MIN_VIEWBOX_WIDTH,
+  MIN_VIEWBOX_HEIGHT,
+  MAX_VIEWBOX_WIDTH,
+  MAX_VIEWBOX_HEIGHT
 } from './config.js';
 
 export class CanvasManager {
@@ -127,12 +131,21 @@ export class CanvasManager {
     const newWidth = this.currentViewBox.width / zoomFactor;
     const newHeight = this.currentViewBox.height / zoomFactor;
 
+    // Apply zoom limits by constraining the viewBox dimensions
+    const clampedWidth = Math.max(MIN_VIEWBOX_WIDTH, Math.min(MAX_VIEWBOX_WIDTH, newWidth));
+    const clampedHeight = Math.max(MIN_VIEWBOX_HEIGHT, Math.min(MAX_VIEWBOX_HEIGHT, newHeight));
+
+    // Calculate actual zoom factor based on clamped dimensions
+    const actualZoomFactorX = this.currentViewBox.width / clampedWidth;
+    const actualZoomFactorY = this.currentViewBox.height / clampedHeight;
+    const actualZoomFactor = Math.min(actualZoomFactorX, actualZoomFactorY);
+
     // Keep the center point fixed by adjusting the viewBox position
     // The point under the cursor should remain at the same position after zoom
-    this.currentViewBox.x = centerX - (centerX - this.currentViewBox.x) / zoomFactor;
-    this.currentViewBox.y = centerY - (centerY - this.currentViewBox.y) / zoomFactor;
-    this.currentViewBox.width = newWidth;
-    this.currentViewBox.height = newHeight;
+    this.currentViewBox.x = centerX - (centerX - this.currentViewBox.x) / actualZoomFactor;
+    this.currentViewBox.y = centerY - (centerY - this.currentViewBox.y) / actualZoomFactor;
+    this.currentViewBox.width = clampedWidth;
+    this.currentViewBox.height = clampedHeight;
 
     this.updateViewBox();
   }

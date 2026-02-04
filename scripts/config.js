@@ -9,6 +9,12 @@ export const MIN_CANVAS_HEIGHT = 300;
 export const CANVAS_PADDING_PERCENT = 0.2;
 export const MIN_CANVAS_PADDING = 150;
 
+// ===== Zoom/ViewBox limits =====
+export const MIN_VIEWBOX_WIDTH = 50;
+export const MIN_VIEWBOX_HEIGHT = 37.5;
+export const MAX_VIEWBOX_WIDTH = 4000;
+export const MAX_VIEWBOX_HEIGHT = 3000;
+
 // ===== Grid configuration =====
 export const GRID_SIZE = 2.5;
 export const GRID_EXTEND_FACTOR = 5;
@@ -116,3 +122,5 @@ export const CANVAS_CONFIG = {
   ZOOM_STEP: 0.1,
   PAN_SPEED: 1.0
 };
+
+

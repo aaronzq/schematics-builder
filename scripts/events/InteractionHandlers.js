@@ -191,9 +191,23 @@ export function setupComponentSelection() {
       return;
     }
     
-    // Deselect if not clicking on a component
+    // Deselect if not clicking on a component or unified bbox area
     const componentElement = e.target.closest('[data-id]');
     if (!componentElement) {
+      // Check if clicking in unified bbox area (don't deselect group)
+      if (componentManager.selectedIds.size > 1) {
+        const svg = canvas;
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+        
+        // If clicking in unified bbox, keep selection
+        if (isPointInUnifiedBbox(svgPt.x, svgPt.y)) {
+          return;
+        }
+      }
+      
       componentManager.deselectComponent();
       removeRotationHandle();
       removeScaleHandle();
@@ -220,6 +234,9 @@ export function setupComponentDragging() {
 
   // Handle mousedown on components (individual component drag)
   schematics.addEventListener('mousedown', (e) => {
+    // Only handle left click (button 0)
+    if (e.button !== 0) return;
+    
     const componentElement = e.target.closest('[data-id]');
     if (!componentElement) return;
 
@@ -255,6 +272,9 @@ export function setupComponentDragging() {
 
   // Handle mousedown in unified bbox area (group drag)
   canvas.addEventListener('mousedown', (e) => {
+    // Only handle left click (button 0)
+    if (e.button !== 0) return;
+    
     // Only handle clicks in unified bbox (not on components, not on blank canvas)
     if (componentManager.selectedIds.size < 2) return;
 
@@ -307,21 +327,26 @@ export function setupComponentDragging() {
     const deltaY = svgPt.y - startSvgPt.y;
 
     if (isGroupDrag) {
-      // Group drag: move all selected components by the same delta
+      // Group drag: snap the centroid delta, then apply to all components
+      // This keeps relative positions exact while snapping the group as a whole
+      const snappedDeltaX = Math.round(deltaX / DRAGGING_SNAP_INCREMENT) * DRAGGING_SNAP_INCREMENT;
+      const snappedDeltaY = Math.round(deltaY / DRAGGING_SNAP_INCREMENT) * DRAGGING_SNAP_INCREMENT;
+      
       componentManager.selectedIds.forEach(id => {
         const initialState = initialPositions.get(id);
         if (initialState) {
-          const newX = initialState.x + deltaX;
-          const newY = initialState.y + deltaY;
-          const snappedX = Math.round(newX / DRAGGING_SNAP_INCREMENT) * DRAGGING_SNAP_INCREMENT;
-          const snappedY = Math.round(newY / DRAGGING_SNAP_INCREMENT) * DRAGGING_SNAP_INCREMENT;
+          const newX = initialState.x + snappedDeltaX;
+          const newY = initialState.y + snappedDeltaY;
           
-          componentManager.updateComponentPosition(id, snappedX, snappedY);
+          componentManager.updateComponentPosition(id, newX, newY);
         }
       });
 
       // Update unified bounding box
       showUnifiedBoundingBox();
+      
+      // Update rotation handle to follow the group
+      showGroupRotationHandle();
 
       // Update hover boxes for all selected components
       // Clear existing hover boxes first
@@ -374,6 +399,10 @@ export function setupComponentDragging() {
       // Clear hover boxes after drag
       if (isGroupDrag) {
         clearSelectionHoverBoxes();
+        
+        // Update unified bbox and rotation handle after group drag
+        showUnifiedBoundingBox();
+        showGroupRotationHandle();
       }
 
       // Reset cursor
@@ -404,6 +433,19 @@ export function setupCanvasPanning() {
     if (e.button === 2) {
       // Only pan if clicking on the canvas itself, not on components
       if (e.target === canvas) {
+        // Don't pan if clicking inside unified bbox area
+        if (componentManager.selectedIds.size > 1) {
+          const svg = canvas;
+          const pt = svg.createSVGPoint();
+          pt.x = e.clientX;
+          pt.y = e.clientY;
+          const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+          
+          if (isPointInUnifiedBbox(svgPt.x, svgPt.y)) {
+            return; // Don't start panning
+          }
+        }
+        
         isPanning = true;
         startX = e.clientX;
         startY = e.clientY;
