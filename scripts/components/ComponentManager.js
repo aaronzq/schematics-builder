@@ -391,6 +391,77 @@ export class ComponentManager {
     return ungroupedCount > 0;
   }
 
+  // Multi-selection group transformation methods
+  
+  /**
+   * Calculate the geometric centroid of multiple components
+   * @param {Array|Set} ids - Component IDs
+   * @returns {Object} Centroid point {x, y}
+   */
+  getGroupCentroid(ids) {
+    const idsArray = Array.isArray(ids) ? ids : Array.from(ids);
+    if (idsArray.length === 0) return { x: 0, y: 0 };
+
+    let sumX = 0;
+    let sumY = 0;
+    let count = 0;
+
+    idsArray.forEach(id => {
+      const component = this.components.get(id);
+      if (component) {
+        const pos = component.getPosition();
+        sumX += pos.x;
+        sumY += pos.y;
+        count++;
+      }
+    });
+
+    return count > 0 ? { x: sumX / count, y: sumY / count } : { x: 0, y: 0 };
+  }
+
+  /**
+   * Get initial states for all components in a group
+   * @param {Array|Set} ids - Component IDs
+   * @returns {Map} Map of id -> {x, y, rotation, scale}
+   */
+  getGroupInitialStates(ids) {
+    const idsArray = Array.isArray(ids) ? ids : Array.from(ids);
+    const states = new Map();
+
+    idsArray.forEach(id => {
+      const component = this.components.get(id);
+      if (component) {
+        const pos = component.getPosition();
+        states.set(id, {
+          x: pos.x,
+          y: pos.y,
+          rotation: component.getRotation(),
+          scale: component.getScale()
+        });
+      }
+    });
+
+    return states;
+  }
+
+  /**
+   * Update positions of multiple components by the same delta
+   * @param {Array|Set} ids - Component IDs
+   * @param {number} deltaX - Change in X
+   * @param {number} deltaY - Change in Y
+   */
+  updateGroupPositions(ids, deltaX, deltaY) {
+    const idsArray = Array.isArray(ids) ? ids : Array.from(ids);
+    
+    idsArray.forEach(id => {
+      const component = this.components.get(id);
+      if (component) {
+        const pos = component.getPosition();
+        component.setPosition(pos.x + deltaX, pos.y + deltaY);
+      }
+    });
+  }
+
 }
 
 // Create singleton instance

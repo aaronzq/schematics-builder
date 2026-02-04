@@ -122,6 +122,20 @@ export function getUnifiedBoundingBoxBounds() {
   return calculateUnifiedBounds(selectedComponents);
 }
 
+/**
+ * Check if a point is within the unified bounding box
+ * @param {number} x - SVG X coordinate
+ * @param {number} y - SVG Y coordinate
+ * @returns {boolean}
+ */
+function isPointInUnifiedBbox(x, y) {
+  const bounds = getUnifiedBoundingBoxBounds();
+  if (!bounds) return false;
+  
+  return x >= bounds.x && x <= bounds.x + bounds.width &&
+         y >= bounds.y && y <= bounds.y + bounds.height;
+}
+
 export function setupComponentSelection() {
   const canvas = document.getElementById('canvas');
   if (!canvas) return;
@@ -132,6 +146,36 @@ export function setupComponentSelection() {
     getUnifiedBoundingBoxBounds,
     () => Array.from(componentManager.selectedIds)
   );
+
+  // Add cursor style for unified bbox area
+  canvas.addEventListener('mousemove', (e) => {
+    // Skip during selection box drawing
+    if (isSelectionBoxActive) return;
+
+    // Check if hovering over a component
+    const componentElement = e.target.closest('[data-id]');
+    if (componentElement) {
+      canvas.style.cursor = '';
+      return;
+    }
+
+    // Check if in unified bbox area (multi-selection mode)
+    if (componentManager.selectedIds.size > 1) {
+      const svg = canvas;
+      const pt = svg.createSVGPoint();
+      pt.x = e.clientX;
+      pt.y = e.clientY;
+      const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+      if (isPointInUnifiedBbox(svgPt.x, svgPt.y)) {
+        canvas.style.cursor = 'move';
+      } else {
+        canvas.style.cursor = '';
+      }
+    } else {
+      canvas.style.cursor = '';
+    }
+  });
 
   // Deselect component when clicking on blank canvas
   canvas.addEventListener('click', (e) => {
@@ -163,16 +207,18 @@ export function setupComponentSelection() {
 
 export function setupComponentDragging() {
   const schematics = document.getElementById('schematics');
-  if (!schematics) return;
+  const canvas = document.getElementById('canvas');
+  if (!schematics || !canvas) return;
 
   let isDragging = false;
   let hasMoved = false;
   let draggedId = null;
   let startX = 0;
   let startY = 0;
-  let initialX = 0;
-  let initialY = 0;
+  let initialPositions = new Map(); // Store initial positions for multi-selection
+  let isGroupDrag = false; // Track if dragging multiple components
 
+  // Handle mousedown on components (individual component drag)
   schematics.addEventListener('mousedown', (e) => {
     const componentElement = e.target.closest('[data-id]');
     if (!componentElement) return;
@@ -184,7 +230,9 @@ export function setupComponentDragging() {
     const component = componentManager.getComponent(draggedId);
     if (!component) return;
 
-    // Select component immediately for dragging
+    // Always treat clicking a component as single component drag
+    // Deselect others and select only this one
+    isGroupDrag = false;
     componentManager.selectComponent(draggedId);
     
     // Show handles immediately
@@ -194,16 +242,53 @@ export function setupComponentDragging() {
     showArrowHandle(draggedId);
 
     const pos = component.getPosition();
-    initialX = pos.x;
-    initialY = pos.y;
+    initialPositions.set(draggedId, {
+      x: pos.x,
+      y: pos.y
+    });
+
     startX = e.clientX;
     startY = e.clientY;
 
     e.preventDefault();
   });
 
+  // Handle mousedown in unified bbox area (group drag)
+  canvas.addEventListener('mousedown', (e) => {
+    // Only handle clicks in unified bbox (not on components, not on blank canvas)
+    if (componentManager.selectedIds.size < 2) return;
+
+    // Check if clicking on canvas directly (not a component)
+    if (e.target !== canvas) return;
+
+    // Get click position in SVG coordinates
+    const svg = canvas;
+    const pt = svg.createSVGPoint();
+    pt.x = e.clientX;
+    pt.y = e.clientY;
+    const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+    // Check if click is within unified bbox
+    if (!isPointInUnifiedBbox(svgPt.x, svgPt.y)) return;
+
+    // Start group drag
+    isDragging = true;
+    hasMoved = false;
+    isGroupDrag = true;
+    
+    // Store initial positions of all selected components
+    initialPositions = componentManager.getGroupInitialStates(componentManager.selectedIds);
+    console.log(`Starting group drag of ${componentManager.selectedIds.size} components`);
+
+    startX = e.clientX;
+    startY = e.clientY;
+
+    canvas.style.cursor = 'move';
+    e.preventDefault();
+  });
+
   document.addEventListener('mousemove', (e) => {
-    if (!isDragging || draggedId === null) return;
+    if (!isDragging) return;
 
     hasMoved = true;
 
@@ -217,34 +302,87 @@ export function setupComponentDragging() {
     const svgPt = pt.matrixTransform(svg.getScreenCTM().inverse());
     const startSvgPt = startPt.matrixTransform(svg.getScreenCTM().inverse());
 
-    // Calculate new position with snapping
-    const newX = svgPt.x - startSvgPt.x + initialX;
-    const newY = svgPt.y - startSvgPt.y + initialY;
-    const snappedX = Math.round(newX / DRAGGING_SNAP_INCREMENT) * DRAGGING_SNAP_INCREMENT;
-    const snappedY = Math.round(newY / DRAGGING_SNAP_INCREMENT) * DRAGGING_SNAP_INCREMENT;
+    // Calculate delta movement
+    const deltaX = svgPt.x - startSvgPt.x;
+    const deltaY = svgPt.y - startSvgPt.y;
 
-    componentManager.updateComponentPosition(
-      draggedId,
-      snappedX,
-      snappedY
-    );
+    if (isGroupDrag) {
+      // Group drag: move all selected components by the same delta
+      componentManager.selectedIds.forEach(id => {
+        const initialState = initialPositions.get(id);
+        if (initialState) {
+          const newX = initialState.x + deltaX;
+          const newY = initialState.y + deltaY;
+          const snappedX = Math.round(newX / DRAGGING_SNAP_INCREMENT) * DRAGGING_SNAP_INCREMENT;
+          const snappedY = Math.round(newY / DRAGGING_SNAP_INCREMENT) * DRAGGING_SNAP_INCREMENT;
+          
+          componentManager.updateComponentPosition(id, snappedX, snappedY);
+        }
+      });
 
-    const selected = componentManager.getSelectedComponent();
-    if (selected && selected.id === draggedId) {
-      showRotationHandle(draggedId);
-      showScaleHandle(draggedId);
-      showArrowHandle(draggedId);
+      // Update unified bounding box
+      showUnifiedBoundingBox();
+
+      // Update hover boxes for all selected components
+      // Clear existing hover boxes first
+      clearSelectionHoverBoxes();
+      
+      const selectedIds = Array.from(componentManager.selectedIds);
+      selectedIds.forEach(id => {
+        const component = componentManager.getComponent(id);
+        if (component) {
+          const box = createComponentHoverBox(component);
+          const canvas = document.getElementById('canvas');
+          if (canvas) {
+            canvas.appendChild(box);
+            addSelectionHoverBox(id, box);
+          }
+        }
+      });
+    } else {
+      // Single component drag
+      const initialState = initialPositions.get(draggedId);
+      if (initialState) {
+        const newX = initialState.x + deltaX;
+        const newY = initialState.y + deltaY;
+        const snappedX = Math.round(newX / DRAGGING_SNAP_INCREMENT) * DRAGGING_SNAP_INCREMENT;
+        const snappedY = Math.round(newY / DRAGGING_SNAP_INCREMENT) * DRAGGING_SNAP_INCREMENT;
+
+        componentManager.updateComponentPosition(
+          draggedId,
+          snappedX,
+          snappedY
+        );
+
+        const selected = componentManager.getSelectedComponent();
+        if (selected && selected.id === draggedId) {
+          showRotationHandle(draggedId);
+          showScaleHandle(draggedId);
+          showArrowHandle(draggedId);
+        }
+        
+        // Update hover box during drag
+        showHoverBox(draggedId);
+      }
     }
-    
-    // Update hover box during drag
-    showHoverBox(draggedId);
   });
 
   document.addEventListener('mouseup', () => {
     if (isDragging) {
+      // Clear hover boxes after drag
+      if (isGroupDrag) {
+        clearSelectionHoverBoxes();
+      }
+
+      // Reset cursor
+      const canvas = document.getElementById('canvas');
+      if (canvas) canvas.style.cursor = '';
+
       isDragging = false;
       hasMoved = false;
       draggedId = null;
+      isGroupDrag = false;
+      initialPositions.clear();
     }
   });
 
@@ -418,6 +556,11 @@ export function setupSelectionBox() {
     pt.x = e.clientX;
     pt.y = e.clientY;
     const svgPoint = pt.matrixTransform(svg.getScreenCTM().inverse());
+
+    // Don't start selection box if clicking in unified bbox area (for group drag)
+    if (componentManager.selectedIds.size > 1 && isPointInUnifiedBbox(svgPoint.x, svgPoint.y)) {
+      return;
+    }
 
     startX = svgPoint.x;
     startY = svgPoint.y;
