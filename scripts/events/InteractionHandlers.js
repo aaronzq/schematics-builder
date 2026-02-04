@@ -1,5 +1,5 @@
 import { componentManager } from '../components/index.js';
-import { showRotationHandle, removeRotationHandle } from './RotationHandle.js';
+import { showRotationHandle, removeRotationHandle, showGroupRotationHandle } from './RotationHandle.js';
 import { showScaleHandle, removeScaleHandle } from './ScaleHandle.js';
 import { showArrowHandle, removeArrowHandle } from './ArrowHandle.js';
 import { showHoverBox, removeHoverBox, clearSelectionHoverBoxes, setupHoverListeners, createComponentHoverBox, addSelectionHoverBox, removeSelectionHoverBox, hasSelectionHoverBox, forEachSelectionHoverBox } from './HoverHandlers.js';
@@ -359,6 +359,8 @@ export function setupComponentDragging() {
           showRotationHandle(draggedId);
           showScaleHandle(draggedId);
           showArrowHandle(draggedId);
+        } else if (componentManager.selectedIds.size > 1) {
+          showGroupRotationHandle();
         }
         
         // Update hover box during drag
@@ -746,8 +748,9 @@ export function setupSelectionBox() {
         removeRotationHandle();
         removeScaleHandle();
         removeArrowHandle();
-        // Show unified bounding box for multiple selections
+        // Show unified bounding box and group rotation handle for multiple selections
         showUnifiedBoundingBox();
+        showGroupRotationHandle();
       }
     } else {
       // No components selected - deselect everything

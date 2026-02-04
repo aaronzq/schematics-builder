@@ -462,6 +462,41 @@ export class ComponentManager {
     });
   }
 
+  /**
+   * Rotate multiple components around a centroid
+   * @param {Array|Set} ids - Component IDs
+   * @param {Object} centroid - Center point {x, y}
+   * @param {number} angle - New angle in degrees
+   * @param {Map} initialStates - Initial states from getGroupInitialStates
+   */
+  updateGroupRotation(ids, centroid, angle, initialStates) {
+    const idsArray = Array.isArray(ids) ? ids : Array.from(ids);
+    
+    idsArray.forEach(id => {
+      const component = this.components.get(id);
+      const initialState = initialStates.get(id);
+      if (component && initialState) {
+        // Calculate initial angle from centroid
+        const initialDx = initialState.x - centroid.x;
+        const initialDy = initialState.y - centroid.y;
+        const initialAngle = Math.atan2(initialDy, initialDx);
+        const distance = Math.sqrt(initialDx * initialDx + initialDy * initialDy);
+        
+        // Calculate new position
+        const angleRad = angle * Math.PI / 180;
+        const newX = centroid.x + distance * Math.cos(initialAngle + angleRad);
+        const newY = centroid.y + distance * Math.sin(initialAngle + angleRad);
+        
+        // Update position
+        component.setPosition(newX, newY);
+        
+        // Update rotation
+        const newRotation = initialState.rotation + angle;
+        component.setRotation(newRotation);
+      }
+    });
+  }
+
 }
 
 // Create singleton instance

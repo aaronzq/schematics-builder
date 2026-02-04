@@ -5,7 +5,8 @@ import {
   SCALE_HANDLE_COLOR,
   SCALE_SNAP_INCREMENT,
   MIN_SCALE,
-  MAX_SCALE
+  MAX_SCALE,
+  VALUE_DISPLAY_DISTANCE
 } from '../config.js';
 import { showRotationHandle } from './RotationHandle.js';
 import { showValueDisplay, hideValueDisplay } from './ValueDisplay.js';
@@ -147,10 +148,11 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
 
     componentManager.updateComponentScale(componentId, newScale);
     
-    showValueDisplay(centerX, centerY, newScale, 'x');
-
     const component = componentManager.getComponent(componentId);
     if (component) {
+      const { width, height } = component;
+      showValueDisplay(centerX, centerY - height / 2 - VALUE_DISPLAY_DISTANCE, newScale, 'x');
+
       const rotation = component.getRotation();
       const angleRad = rotation * Math.PI / 180;
       const handleX = centerX + SCALE_HANDLE_DISTANCE * newScale * Math.cos(angleRad + Math.PI/2);

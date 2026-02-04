@@ -37,6 +37,9 @@ export const SCALE_SNAP_INCREMENT = 0.1;
 export const MIN_SCALE = 0.8;
 export const MAX_SCALE = 2.0;
 
+// ===== Value display =====
+export const VALUE_DISPLAY_DISTANCE = 50;
+
 // ===== Component defaults =====
 export const DEFAULT_APERTURE_RADIUS = 15;  // Default aperture radius for components
 export const DEFAULT_CONE_ANGLE = 0;        // Default cone angle in degrees (0 = collimated)

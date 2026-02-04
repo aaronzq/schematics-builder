@@ -9,7 +9,7 @@ export function showValueDisplay(x, y, value, unit = '°') {
   
   const bg = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
   bg.setAttribute('cx', x);
-  bg.setAttribute('cy', y - 70);
+  bg.setAttribute('cy', y);
   bg.setAttribute('r', '25');
   bg.setAttribute('fill', 'rgba(0, 0, 0, 0.8)');
   bg.setAttribute('stroke', '#fbc02d');
@@ -17,8 +17,8 @@ export function showValueDisplay(x, y, value, unit = '°') {
   display.appendChild(bg);
   
   const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-  text.setAttribute('x', x);
-  text.setAttribute('y', y - 65);
+  text.setAttribute('x', x + 1);
+  text.setAttribute('y', y + 2);
   text.setAttribute('text-anchor', 'middle');
   text.setAttribute('dominant-baseline', 'middle');
   text.setAttribute('font-family', 'Arial, sans-serif');
