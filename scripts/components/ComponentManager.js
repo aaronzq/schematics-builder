@@ -405,11 +405,39 @@ export class ComponentManager {
     idsArray.forEach(id => {
       const component = this.components.get(id);
       if (component) {
-        const bounds = component.getBoundingBox();
-        if (bounds.minX < minX) minX = bounds.minX;
-        if (bounds.maxX > maxX) maxX = bounds.maxX;
-        if (bounds.minY < minY) minY = bounds.minY;
-        if (bounds.maxY > maxY) maxY = bounds.maxY;
+        // Account for rotation and scale when calculating bounds
+        const { x, y } = component.getPosition();
+        const { width, height } = component;
+        const rotation = component.getRotation() * Math.PI / 180;
+        const scale = component.getScale();
+
+        // Calculate the four corners of the component's bounding box
+        const halfWidth = (width * scale) / 2;
+        const halfHeight = (height * scale) / 2;
+
+        const corners = [
+          { x: -halfWidth, y: -halfHeight },
+          { x: halfWidth, y: -halfHeight },
+          { x: halfWidth, y: halfHeight },
+          { x: -halfWidth, y: halfHeight }
+        ];
+
+        // Rotate corners and translate to component position
+        const cos = Math.cos(rotation);
+        const sin = Math.sin(rotation);
+
+        corners.forEach(corner => {
+          const rotatedX = corner.x * cos - corner.y * sin;
+          const rotatedY = corner.x * sin + corner.y * cos;
+          const worldX = x + rotatedX;
+          const worldY = y + rotatedY;
+
+          minX = Math.min(minX, worldX);
+          maxX = Math.max(maxX, worldX);
+          minY = Math.min(minY, worldY);
+          maxY = Math.max(maxY, worldY);
+        });
+        
         count++;
       }
     });
