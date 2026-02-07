@@ -20,17 +20,50 @@
 <body>
 
   <div class="main-layout">
-    <header class="title-row">
-      <h1>Optical Schematic Builder</h1>
-      <nav class="header-nav">
-        <a href="#" onclick="saveCanvasAndNavigate('gallery/index.html'); return false;" class="nav-link">Gallery</a>
-        <a href="#" onclick="saveCanvasAndNavigate('tutorial/index.html'); return false;" class="nav-link">Tutorial</a>
-      </nav>
-    </header>
+    <div class="menubar-container">
+      <div class="app-header-left">
+        <div class="app-icon">
+          <span class="material-symbols-outlined" style="font-size: 40px; color: #3a3a3a;">graph_7</span>
+        </div>
+        <div class="menu-content-wrapper">
+          <div class="filename-container">
+             <span class="filename-text" contenteditable="true">Untitled Schematic</span>
+          </div>
+          <nav class="menubar-nav">
+            <div class="menu-group">
+              <span class="menu-label">File</span>
+              <div class="menu-dropdown">
+                <button id="import-schematic-btn" class="menu-btn">Import JSON</button>
+                <button id="export-schematic-btn" class="menu-btn">Export JSON</button>
+                <div class="menu-separator"></div>
+                <button id="export-svg-btn" class="menu-btn">Export SVG</button>
+              </div>
+            </div>
+            <div class="menu-group">
+              <span class="menu-label">Canvas</span>
+              <div class="menu-dropdown">
+                <button id="reset-canvas-btn" class="menu-btn">Reset Canvas</button>
+                <div class="menu-separator"></div>
+                <button id="toggle-grid-btn" class="menu-btn">Toggle Grid</button>
+                <button id="trace-btn" class="menu-btn">Toggle Trace</button>
+                <button id="rays-toggle-btn" class="menu-btn">Toggle Rays</button>
+              </div>
+            </div>
+            <div class="menu-group">
+              <span class="menu-label" onclick="saveCanvasAndNavigate('gallery/index.html');">Gallery</span>
+            </div>
+            <div class="menu-group">
+              <span class="menu-label" onclick="saveCanvasAndNavigate('tutorial/index.html');">Help</span>
+            </div>
+          </nav>
+        </div>
+      </div>
+    </div>
+    
     <div class="content-row">
       <aside class="sidebar">
         <div class="component-menu">
-          <p class="component-menu-title">Add Component</p>
+          <p class="component-menu-title">Components</p>
           <!-- <button data-component="point">Point</button>
           <button data-component="plane">Plane</button> -->
           <button data-component="objective">Objective 1</button>
@@ -62,66 +95,46 @@
           <button data-component="photo-diode">PD</button> -->
         </div>
       </aside>
-      <main class="workspace-area">
-        <div class="action-toolbar">
-          <div class="action-row">
-            <div class="action-title-column">
-              <p class="action-label">Component Actions</p>
-            </div>
-            <div class="action-buttons-column">
-              <button id="delete-btn">Delete</button>
-              <button id="flip-horizontal-btn">Flip X</button>
-              <button id="flip-vertical-btn">Flip Y</button>            
-              <button id="hide-component-btn">Hide</button>
-              <button id="show-component-btn">Show</button>
-              <button id="show-all-components-btn">Show All</button> 
-              <button id="group-btn">Group</button>
-              <button id="ungroup-btn">Ungroup</button>
-            </div>
-          </div>
-          <div class="action-row">
-            <div class="action-title-column">
-              <p class="action-label">Canvas Actions</p>
-            </div>
-            <div class="action-buttons-column">
-              <button id="reset-canvas-btn">Reset</button>
-              <button id="trace-btn">Hide Trace</button>
-              <button id="rays-toggle-btn">Hide Rays</button>
-              <button id="toggle-grid-btn">Hide Grid</button>
-            </div>
-          </div>
-          <div class="action-row">
-            <div class="action-title-column">
-              <p class="action-label">Export/Import</p>
-            </div>
-            <div class="action-buttons-column">
-              <button id="export-svg-btn">Export SVG</button>  
-              <button id="export-schematic-btn">Export JSON</button>
-              <button id="import-schematic-btn">Import JSON</button>
-            </div>
-          </div>
+      <div class="right-column">
+        <div class="secondary-toolbar">
+           <button id="delete-btn" class="tool-btn" title="Delete"><span class="material-symbols-outlined">delete</span></button>
+           <div class="tool-separator"></div>
+           <button id="flip-horizontal-btn" class="tool-btn" title="Flip Horizontal"><span class="material-symbols-outlined">flip</span></button>
+           <button id="flip-vertical-btn" class="tool-btn" title="Flip Vertical"><span class="material-symbols-outlined" style="transform: rotate(90deg);">flip</span></button>            
+           <div class="tool-separator"></div>
+           <button id="hide-component-btn" class="tool-btn" title="Hide Selection"><span class="material-symbols-outlined">visibility_off</span></button>
+           <button id="show-component-btn" class="tool-btn" title="Show Selection"><span class="material-symbols-outlined">visibility</span></button>
+           <button id="show-all-components-btn" class="tool-btn" title="Show All"><span class="material-symbols-outlined">visibility</span> <sub>ALL</sub></button> 
+           <div class="tool-separator"></div>
+           <button id="group-btn" class="tool-btn" title="Group"><span class="material-symbols-outlined">group</span></button>
+           <button id="ungroup-btn" class="tool-btn" title="Ungroup"><span class="material-symbols-outlined">ungroup</span></button>
         </div>
-        <div class="canvas-container">
-          <!-- <canvas id="grid-canvas" style="position:absolute; left:0; top:0; z-index:0;"></canvas> -->
-          <svg id="canvas" style="position:relative; z-index:1;">
-            <defs>
-              <!-- Component definitions will go here -->
-            </defs>
-            <!-- <circle cx="0" cy="0" r="5" fill="red"/> -->
-            <g id="grid"></g>
-            <g id="schematics"></g>
-          </svg>
-        </div>
-      </main>
+        <main class="workspace-area">
+          <div class="canvas-container">
+            <!-- <canvas id="grid-canvas" style="position:absolute; left:0; top:0; z-index:0;"></canvas> -->
+            <svg id="canvas" style="position:relative; z-index:1;">
+              <defs>
+                <!-- Component definitions will go here -->
+              </defs>
+              <!-- <circle cx="0" cy="0" r="5" fill="red"/> -->
+              <g id="grid"></g>
+              <g id="schematics"></g>
+            </svg>
+          </div>
+        </main>
+      </div>
     </div>
     <footer class="footer">
-      <p>
-        Developed by &nbsp 
-        <a href="https://github.com/aaronzq/schematics-builder" target="_blank" rel="noopener">
-          <img style="filter: invert(100%)" src="img/github-mark.svg" alt="GitHub">
-          aaronzq
-        </a>
-      </p>
+      <div class="footer-content">
+        <p style="margin-bottom: 4px; font-weight: bold; color: #fff;">Optical Schematic Builder</p>
+        <p>
+          Developed by &nbsp; 
+          <a href="https://github.com/aaronzq/schematics-builder" target="_blank" rel="noopener">
+            <img style="filter: invert(100%)" src="img/github-mark.svg" alt="GitHub">
+            aaronzq
+          </a>
+        </p>
+      </div>
     </footer>
   </div>
 

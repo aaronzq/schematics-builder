@@ -7,11 +7,11 @@
 export const MIN_CANVAS_WIDTH = 400;
 export const MIN_CANVAS_HEIGHT = 300;
 export const CANVAS_PADDING_PERCENT = 0.2;
-export const MIN_CANVAS_PADDING = 150;
+export const MIN_CANVAS_PADDING = 200;
 
 // ===== Zoom/ViewBox limits =====
-export const MIN_VIEWBOX_WIDTH = 50;
-export const MIN_VIEWBOX_HEIGHT = 37.5;
+export const MIN_VIEWBOX_WIDTH = 100;
+export const MIN_VIEWBOX_HEIGHT = 75;
 export const MAX_VIEWBOX_WIDTH = 4000;
 export const MAX_VIEWBOX_HEIGHT = 3000;
 

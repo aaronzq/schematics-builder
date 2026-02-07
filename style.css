@@ -1,18 +1,6 @@
 /* ==========================================================================
    OPTICAL SCHEMATIC BUILDER - MAIN PAGE LAYOUT
-   ======================================.action-label {
-  font-family: inherit;
-  font-size: 0.9375rem;
-  font-weight: bold;
-  margin: 0 8px 0 0;
-  padding: 0;
-  color: inherit;
-  display: inline-block;
-  line-height: 1;
-  white-space: nowrap;
-  width: 140px;
-  text-align: left;
-}======================= */
+   ========================================================================== */
 
 /* Base Styles */
 body, html {
@@ -21,7 +9,7 @@ body, html {
   padding: 0;
   box-sizing: border-box;
   font-family: 'Segoe UI', Arial, sans-serif;
-  background: #f4f4f4;
+  background: #ededed;
   overflow: hidden;
 }
 
@@ -32,46 +20,145 @@ body, html {
   height: 100vh;
 }
 
-/* Header */
-.title-row {
-  background: #222;
-  color: #fafafa;
-  padding: 8px 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+/* Header and Menubar */
+.menubar-container {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: row;
   flex-shrink: 0;
+  background: #ededed;
+  padding: 6px 12px; 
+  align-items: center;
+  border-bottom: 1px solid #ddd;
 }
 
-.title-row h1 {
-  margin: 0;
-  font-size: 1.8rem;
-  letter-spacing: 1px;
-}
-
-.header-nav {
+.app-header-left {
   display: flex;
-  gap: 16px;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; 
+  height: 40px;
+}
+
+.menu-content-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.filename-container {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.filename-text {
+  font-size: 1rem;
+  font-weight: 400;
+  color: #333;
+  padding: 2px 4px;
+  border-radius: 2px;
+  cursor: text;
+}
+
+.filename-text:hover {
+  background: #e8e8e8;
+}
+
+.filename-text:focus {
+  background: #fff;
+  outline: 1px solid #1a73e8;
+}
+
+.file-status {
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 400;
+  margin-left: 8px;
+  /* Optional: Make it look like a badge or just text */
+}
+
+/* Override nav styles for new position */
+.menubar-nav {
+  display: flex;
+  background: transparent;
+  border-bottom: none;
+  height: auto;
+  align-items: center;
+  padding: 0;
+  margin-left: -6px; /* Align with filename start */
+}
+
+.menu-group {
+  position: relative;
+  display: flex;
   align-items: center;
 }
 
-.nav-link {
-  background-color: #444;
-  padding: 6px 12px;
+.menu-label {
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #444;
+  line-height: normal;
   border-radius: 4px;
-  text-decoration: none;
-  color: #fafafa;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  border: 1px solid #555;
 }
 
-.nav-link:hover {
-  background-color: #555;
-  border-color: #777;
-  transform: translateY(-1px);
+.menu-group:hover .menu-label {
+  background: #e0e0e0;
+}
+
+/* Keep dropdown styling but ensure it positions correctly */
+.menu-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 220px;
+  background: #fff;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  border: 1px solid #ccc;
+  z-index: 1000;
+  padding: 4px 0;
+  border-radius: 0 4px 4px 4px;
+  transform: translateY(2px);
+}
+
+.menu-group:hover .menu-dropdown {
+  display: block;
+}
+
+.menu-btn, .menu-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 6px 16px;
+  border: none;
+  background: transparent;
+  color: #333;
+  text-decoration: none;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+.menu-btn:hover, .menu-link:hover {
+  background: #f0f0f0;
+  color: #000;
+}
+
+.menu-separator {
+  height: 1px;
+  background: #e0e0e0;
+  margin: 4px 0;
 }
 
 /* Content Area */
@@ -81,17 +168,28 @@ body, html {
   min-height: 0;
   background: #ededed;
   overflow: hidden;
+  gap: 0;
+}
+
+/* Right Column Container */
+.right-column {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: #ededed;
+  padding: 0;
 }
 
 /* Sidebar */
 .sidebar {
-  width: 180px;
-  background: #e0e0e0;
-  border-right: 1px solid #bdbdbd;
+  width: 200px;
+  background: #ededed;
+  border-right: 1px solid #ddd;
   display: flex;
   flex-direction: column;
   padding: 0;
-  min-width: 150px;
+  min-width: 180px;
   overflow-y: auto;
   flex-shrink: 0;
 }
@@ -100,38 +198,91 @@ body, html {
 .component-menu {
   display: flex;
   flex-direction: column;
-  gap: 5px;
-  padding: 5px 12px;
-  background: #fafafa;
-  border-radius: 8px;
-  margin: 12px 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  gap: 2px;
+  padding: 10px;
+  background: transparent;
+  border-radius: 0;
+  margin: 0;
+  box-shadow: none;
 }
 
 .component-menu > p {
   font-family: inherit;
-  font-size: 1rem;
-  font-weight: bold;
-  text-align: center;
-  margin: 0;
-  padding: 0;
-  color: inherit;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: left;
+  margin: 0 0 8px 0;
+  padding: 0 4px;
+  color: #666;
+  text-transform: uppercase;
 }
 
 .component-menu button {
-  padding: 5px 0;
+  padding: 6px 8px;
   cursor: pointer;
-  border: 1px solid #bdbdbd;
-  background: #ededed;
+  border: 1px solid transparent;
+  background: transparent;
   border-radius: 4px;
-  font-size: 1rem;
-  transition: all 0.2s;
+  font-size: 0.8rem;
+  transition: all 0.1s;
+  text-align: left;
+  color: #333;
 }
 
 .component-menu button:hover {
-  background: #bdbdbd;
-  border-color: #222;
-  color: #222;
+  background: #dadada;
+  color: #000;
+}
+
+/* Secondary Toolbar */
+.secondary-toolbar {
+  background: #ededed;
+  border-bottom: 1px solid #ddd;
+  border-radius: 0;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  min-height: 38px;
+}
+
+.tool-btn {
+  background: transparent;
+  border: 1px solid transparent; 
+  border-radius: 4px;
+  padding: 4px 6px;
+  cursor: pointer;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 30px;
+  transition: all 0.1s;
+}
+
+.tool-btn:hover {
+  background: #dadada;
+  border-color: #c0c0c0;
+  color: #000;
+}
+
+/* Icons sizing */
+.tool-btn span.material-symbols-outlined {
+  font-size: 18px;
+}
+.tool-btn sub {
+  font-size: 8px;
+  font-weight: 700;
+  margin-left: 2px;
+}
+
+.tool-separator {
+    width: 1px;
+    height: 22px;
+    background: #ccc;
+    margin: 0 4px;
 }
 
 /* Workspace Area */
@@ -139,74 +290,12 @@ body, html {
   flex: 1;
   display: flex;
   flex-direction: column;
-  padding: 8px 12px;
+  padding: 12px;
   min-width: 0;
-}
-
-/* Workspace Action Toolbar */
-.action-toolbar {
-  display: flex;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-  background: #fafafa;
-  padding: 8px 8px;
-  border-radius: 8px;
-  gap: 8px;
-  align-items: stretch;
-}
-
-.action-row {
-  display: flex;
-  flex-direction: row;
-  gap: 5px;
-  align-items: center;
-  flex: 1;
-  min-width: 500px;
-}
-
-.action-title-column {
-  display: flex;
-  align-items: center;
-  min-width: 150px;
-  flex-shrink: 0;
-}
-
-.action-buttons-column {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-  align-items: center;
-  min-width: 350px;
-  flex: 1;
-}
-
-.action-toolbar button {
-  padding: 5px;
-  font-size: 0.9375rem;
-  border: 1px solid #bdbdbd;
-  background: #ededed;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-  white-space: nowrap;
-}
-
-.action-toolbar button:hover {
-  background: #bdbdbd;
-  border-color: #222;
-  color: #222;
-}
-
-.action-label {
-  font-family: inherit;
-  font-size: 0.9375rem;
-  font-weight: bold;
-  margin: 0;
-  padding: 0;
-  color: inherit;
-  line-height: 1;
-  white-space: nowrap;
-  text-align: center;
+  min-height: 0;
+  background: #eaeaea;
+  border-radius: 0;
+  overflow: hidden;
 }
 
 /* Canvas */
@@ -215,8 +304,9 @@ body, html {
   position: relative;
   display: flex;
   background: #ffffff;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+  border-radius: 15px;
+  box-shadow: none;
+  border: 1px solid #ddd;
   padding: 0;
   min-height: 0;
   min-width: 0;
@@ -229,8 +319,8 @@ body, html {
   max-width: 100%;
   max-height: 100%;
   display: block;
-  border: 1px solid #bdbdbd;
-  border-radius: 8px;
+  border: none;
+  border-radius: 0;
   box-sizing: border-box;
   cursor: default;
 }
@@ -245,8 +335,15 @@ body, html {
   font-size: 0.875rem;
 }
 
-.footer p {
-  margin: 0;
+.footer-content {
+  display: flex;
+  justify-content: center; /* Center elements horizontally */
+  align-items: baseline; /* Align elements to the baseline for better vertical alignment */
+  gap: 20px; /* Add spacing between elements */
+}
+
+.footer-content p {
+  margin: 0; /* Remove default margin */
 }
 
 .footer a {
