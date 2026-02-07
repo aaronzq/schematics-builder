@@ -326,7 +326,22 @@ function setupGroupScaleHandleDrag(handle, centroid) {
 
     // Apply snap increment
     scaleFactor = Math.round(scaleFactor / SCALE_SNAP_INCREMENT) * SCALE_SNAP_INCREMENT;
-    scaleFactor = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scaleFactor));
+    
+    // Calculate dynamic limits based on each component's initial scale
+    // to ensure no component exceeds global MIN_SCALE/MAX_SCALE
+    let minAllowedFactor = 0;
+    let maxAllowedFactor = Infinity;
+
+    initialStates.forEach(state => {
+      const maxFactorForComp = MAX_SCALE / state.scale;
+      const minFactorForComp = MIN_SCALE / state.scale;
+      
+      maxAllowedFactor = Math.min(maxAllowedFactor, maxFactorForComp);
+      minAllowedFactor = Math.max(minAllowedFactor, minFactorForComp);
+    });
+
+    // Clamp the scale factor to the allowed range
+    scaleFactor = Math.max(minAllowedFactor, Math.min(maxAllowedFactor, scaleFactor));
 
     // Update all components
     componentManager.updateGroupScale(
