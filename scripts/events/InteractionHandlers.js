@@ -15,6 +15,7 @@ import {
   UNIFIED_BBOX_PADDING,
   DRAGGING_SNAP_INCREMENT
 } from '../config.js';
+import { updateRays } from '../rays/DrawRays.js';
 
 let selectionBox = null;
 let isSelectionBoxActive = false;
@@ -423,6 +424,7 @@ export function setupComponentDragging() {
         showHoverBox(draggedId);
       }
     }
+    updateRays();
   });
 
   document.addEventListener('mouseup', () => {

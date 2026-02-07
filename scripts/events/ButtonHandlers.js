@@ -6,6 +6,7 @@ import { removeRotationHandle } from './RotationHandle.js';
 import { removeScaleHandle } from './ScaleHandle.js';
 import { removeArrowHandle } from './ArrowHandle.js';
 import { canvas } from '../Canvas.js';
+import { updateRays } from '../rays/DrawRays.js';
 
 export function setupComponentButtons() {
   const componentMenu = document.querySelector('.component-menu');
@@ -33,6 +34,7 @@ export function setupActionButtons() {
         removeRotationHandle();
         removeScaleHandle();
         removeArrowHandle();
+        updateRays();
       }
     });
   }

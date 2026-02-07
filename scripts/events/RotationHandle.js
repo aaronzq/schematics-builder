@@ -14,6 +14,7 @@ import {
   addSelectionHoverBox 
 } from './HoverHandlers.js';
 import { showUnifiedBoundingBox, removeUnifiedBoundingBox, getUnifiedBoundingBoxBounds } from './InteractionHandlers.js';
+import { updateRays } from '../rays/DrawRays.js';
 
 export function showRotationHandle(componentId) {
   removeRotationHandle();
@@ -260,6 +261,7 @@ function setupGroupRotationHandleDrag(handle, centroid) {
         scaleIcon.setAttribute('transform', `rotate(${angleDiff} ${scaleHandleX} ${scaleHandleY})`);
       }
     }
+    updateRays();
   } 
 
   function handleEnd() {
@@ -363,6 +365,7 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
     }
 
     showScaleHandle(componentId);
+    updateRays();
   } 
 
   function handleEnd() {
