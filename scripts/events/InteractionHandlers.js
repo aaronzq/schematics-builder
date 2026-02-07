@@ -415,6 +415,7 @@ export function setupComponentDragging() {
           showRotationHandle(draggedId);
           showScaleHandle(draggedId);
           showArrowHandle(draggedId);
+          componentManager.updateNextPositionFromComponent(componentManager.currentId);
         } else if (componentManager.selectedIds.size > 1) {
           showGroupRotationHandle();
           showGroupScaleHandle();
