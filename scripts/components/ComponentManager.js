@@ -8,12 +8,14 @@ export class ComponentManager {
   constructor() {
     this.components = new Map();
     this.idCounter = 0;
+    this.currentId = null;
     this.selectedIds = new Set();
     this.nextPosition = { x: 0, y: 0 };
     this.ignoreNextCanvasClick = false;
   }
 
   addComponent(type, position = null) {
+
     const id = this.idCounter++;
     const component = new Component(type);
     
@@ -25,28 +27,26 @@ export class ComponentManager {
     component.setPosition(pos.x - centerPoint.x, pos.y - centerPoint.y);
     
     // Align new component's forward vector with the previously selected component's arrow vector
-    if (this.selectedIds.size > 0) {
-      const previousId = Array.from(this.selectedIds)[0];
-      const previousComponent = this.components.get(previousId);
-      if (previousComponent) {
-        const arrowVector = previousComponent.getArrowVector();
-        // Calculate angle from arrow vector
-        const angle = Math.atan2(arrowVector.y, arrowVector.x) * 180 / Math.PI;
-        component.setRotation(angle);
-        
-        // Update arrow vector to follow the rotated forward vector
-        const angleRad = angle * Math.PI / 180;
-        const arrowLength = Math.sqrt(component.arrowVector.x ** 2 + component.arrowVector.y ** 2);
-        component.setArrowVector(
-          Math.cos(angleRad) * arrowLength,
-          Math.sin(angleRad) * arrowLength
-        );
-        
-        // Set up parent-child relationship
-        component.parent = previousId;
-        previousComponent.children.push(id);
-      }
+    const previousId = this.currentId;
+    const previousComponent = this.components.get(previousId);
+    if (previousComponent) {
+      const arrowVector = previousComponent.getArrowVector();
+      // Calculate angle from arrow vector
+      const angle = Math.atan2(arrowVector.y, arrowVector.x) * 180 / Math.PI;
+      component.setRotation(angle);
+      // Update arrow vector to follow the rotated forward vector
+      const angleRad = angle * Math.PI / 180;
+      const arrowLength = Math.sqrt(component.arrowVector.x ** 2 + component.arrowVector.y ** 2);
+      component.setArrowVector(
+        Math.cos(angleRad) * arrowLength,
+        Math.sin(angleRad) * arrowLength
+      );
+      
+      // Set up parent-child relationship
+      component.parent = previousId;
+      previousComponent.children.push(id);
     }
+    
     
     const group = component.render();
     group.setAttribute('data-id', id);
@@ -91,15 +91,18 @@ export class ComponentManager {
     // Check if this component is grouped and auto-select all group members
     const component = this.components.get(id);
     if (component && component.isGrouped && component.groupMembers.size > 0) {
-      this.selectMultiple([id, ...component.groupMembers]);
+      // Use selectMultiple which now handles group expansion logic automatically
+      this.selectMultiple([id]);
     }
 
     // Update nextPosition to arrow tip
+    this.currentId = id;
     this.updateNextPositionFromComponent(id);
 
     // Log component information
     if (component) {
-      console.log(`   Selected component [ID: ${id}]`);
+      console.log(`   Selected component [${Array.from(this.selectedIds).join(', ')}]`);
+      console.log(`   Current ID: ${this.currentId}`);
       console.log(`   Type: ${component.type}`);
       console.log(`   Position: (${component.x.toFixed(1)}, ${component.y.toFixed(1)})`);
       console.log(`   Rotation: ${component.rotation.toFixed(1)}°`);
@@ -298,8 +301,18 @@ export class ComponentManager {
       }
     });
 
+    // Expand selection to include groups for any selected component
+    const expandedIds = new Set(ids);
+    ids.forEach(id => {
+      const component = this.components.get(id);
+      if (component && component.isGrouped) {
+        // Add all group members to the selection
+        component.groupMembers.forEach(memberId => expandedIds.add(memberId));
+      }
+    });
+
     // Set new selections
-    this.selectedIds = new Set(ids);
+    this.selectedIds = expandedIds;
     this.selectedIds.forEach(id => {
       const element = document.querySelector(`[data-id="${id}"]`);
       if (element) {
@@ -307,7 +320,6 @@ export class ComponentManager {
       }
     });
 
-    console.log(`Selected multiple components: [${Array.from(this.selectedIds).join(', ')}]`);
   }
 
   addToSelection(id) {
@@ -447,8 +459,6 @@ export class ComponentManager {
 
   /**
    * Get initial states for all components in a group
-   * @param {Array|Set} ids - Component IDs
-   * @returns {Map} Map of id -> {x, y, rotation, scale}
    */
   getGroupInitialStates(ids) {
     const idsArray = Array.isArray(ids) ? ids : Array.from(ids);
@@ -487,10 +497,6 @@ export class ComponentManager {
 
   /**
    * Rotate multiple components around a centroid
-   * @param {Array|Set} ids - Component IDs
-   * @param {Object} centroid - Center point {x, y}
-   * @param {number} angle - New angle in degrees
-   * @param {Map} initialStates - Initial states from getGroupInitialStates
    */
   updateGroupRotation(ids, centroid, angle, initialStates) {
     const idsArray = Array.isArray(ids) ? ids : Array.from(ids);
@@ -522,10 +528,6 @@ export class ComponentManager {
 
   /**
    * Scale multiple components around a centroid
-   * @param {Array|Set} ids - Component IDs
-   * @param {Object} centroid - Center point {x, y}
-   * @param {number} scaleFactor - Scale multiplier
-   * @param {Map} initialStates - Initial states from getGroupInitialStates
    */
   updateGroupScale(ids, centroid, scaleFactor, initialStates) {
     const idsArray = Array.isArray(ids) ? ids : Array.from(ids);
@@ -550,6 +552,62 @@ export class ComponentManager {
         component.setScale(newScale);
       }
     });
+  }
+
+  /**
+   * Group selected components together
+   */
+  groupSelectedComponents() {
+    const selectedIds = Array.from(this.selectedIds);
+    if (selectedIds.length < 2) {
+      console.log('Cannot group: need at least 2 components selected');
+      return false;
+    }
+
+    // Set group relationship for all selected components
+    selectedIds.forEach(id => {
+      const component = this.components.get(id);
+      if (component) {
+        const otherIds = selectedIds.filter(otherId => otherId !== id);
+        component.setGroupMembers(otherIds);
+      }
+    });
+
+    console.log(`Grouped ${selectedIds.length} components: [${selectedIds.join(', ')}]`);
+    return true;
+  }
+
+  /**
+   * Ungroup all components in the group containing the selected component(s)
+   */
+  ungroupSelectedComponents() {
+    const selectedIds = Array.from(this.selectedIds);
+    const groupedIds = new Set();
+
+    // Collect all components in any group that contains a selected component
+    selectedIds.forEach(id => {
+      const component = this.components.get(id);
+      if (component && component.isGrouped) {
+        groupedIds.add(id);
+        component.groupMembers.forEach(memberId => groupedIds.add(memberId));
+      }
+    });
+
+    // Ungroup all collected components
+    if (groupedIds.size > 0) {
+      groupedIds.forEach(id => {
+        const component = this.components.get(id);
+        if (component) {
+          component.clearGroup();
+        }
+      });
+
+      console.log(`Ungrouped ${groupedIds.size} components: [${Array.from(groupedIds).join(', ')}]`);
+      return true;
+    }
+
+    console.log('No grouped components to ungroup');
+    return false;
   }
 
 }

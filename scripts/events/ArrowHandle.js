@@ -68,7 +68,7 @@ export function showArrowHandle(componentId) {
   // Setup dragging
   setupArrowDragging(handle, line, componentId, centerX, centerY);
 
-  console.log(`Arrow handle shown for component [ID: ${componentId}]`);
+  // console.log(`Arrow handle shown for component [ID: ${componentId}]`);
 }
 
 /**

@@ -199,9 +199,19 @@ export function setupHoverListeners(isSelectionActive, getUnifiedBoundsFn, getSe
     const componentElement = e.target.closest('[data-id]');
     if (componentElement) {
       const id = parseInt(componentElement.getAttribute('data-id'));
+      const component = componentManager.getComponent(id);
+      
       // Clear any multi-hover boxes first
       clearSelectionHoverBoxes();
-      showHoverBox(id);
+      
+      // If component is part of a group, show hover boxes for all group members
+      if (component && component.isGrouped && component.groupMembers.size > 0) {
+        const groupIds = [id, ...Array.from(component.groupMembers)];
+        showMultipleHoverBoxes(groupIds);
+      } else {
+        // Otherwise show single hover box
+        showHoverBox(id);
+      }
     }
   });
 
@@ -215,6 +225,7 @@ export function setupHoverListeners(isSelectionActive, getUnifiedBoundsFn, getSe
       const relatedTarget = e.relatedTarget;
       if (!relatedTarget || !relatedTarget.closest(`[data-id="${componentElement.getAttribute('data-id')}"]`)) {
         removeHoverBox();
+        clearSelectionHoverBoxes();
       }
     }
   });

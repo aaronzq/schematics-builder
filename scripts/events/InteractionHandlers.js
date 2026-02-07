@@ -248,22 +248,48 @@ export function setupComponentDragging() {
     const component = componentManager.getComponent(draggedId);
     if (!component) return;
 
-    // Always treat clicking a component as single component drag
-    // Deselect others and select only this one
-    isGroupDrag = false;
+    // Select the clicked component (and its group if it belongs to one)
     componentManager.selectComponent(draggedId);
     
-    // Show handles immediately
-    removeUnifiedBoundingBox();
-    showRotationHandle(draggedId);
-    showScaleHandle(draggedId);
-    showArrowHandle(draggedId);
+    // Check if we have a multiple selection (group)
+    if (componentManager.selectedIds.size > 1) {
+      isGroupDrag = true;
+      
+      // Show unified UI
+      removeRotationHandle();
+      removeScaleHandle();
+      removeArrowHandle();
+      showArrowHandle(draggedId);
+      showUnifiedBoundingBox();
+      showGroupRotationHandle();
+      showGroupScaleHandle();
+      
+      // Store initial positions for ALL selected components
+      initialPositions.clear();
+      componentManager.selectedIds.forEach(id => {
+        const comp = componentManager.getComponent(id);
+        if (comp) {
+          const pos = comp.getPosition();
+          initialPositions.set(id, { x: pos.x, y: pos.y });
+        }
+      });
+    } else {
+      isGroupDrag = false;
+      
+      // Show individual UI
+      removeUnifiedBoundingBox();
+      showRotationHandle(draggedId);
+      showScaleHandle(draggedId);
+      showArrowHandle(draggedId);
 
-    const pos = component.getPosition();
-    initialPositions.set(draggedId, {
-      x: pos.x,
-      y: pos.y
-    });
+      // Store initial position for single component
+      initialPositions.clear();
+      const pos = component.getPosition();
+      initialPositions.set(draggedId, {
+        x: pos.x,
+        y: pos.y
+      });
+    }
 
     startX = e.clientX;
     startY = e.clientY;
@@ -349,6 +375,12 @@ export function setupComponentDragging() {
       // Update rotation and scale handles to follow the group
       showGroupRotationHandle();
       showGroupScaleHandle();
+
+      // Update arrow handle for the dragged component
+      if (componentManager.currentId !== null) {
+        showArrowHandle(componentManager.currentId);
+        componentManager.updateNextPositionFromComponent(componentManager.currentId);
+      }
 
       // Update hover boxes for all selected components
       // Clear existing hover boxes first
@@ -731,37 +763,11 @@ export function setupSelectionBox() {
 
     // Find components fully enclosed by selection box
     const selectedIds = [];
-    const processedGroups = new Set();
 
     componentManager.components.forEach((component, id) => {
-      // Skip if already processed as part of a group
-      if (processedGroups.has(id)) return;
-
-      // If component is grouped, check if any member is in bounds and select entire group
-      if (component.isGrouped && component.groupMembers.size > 0) {
-        const groupMembers = [id, ...component.groupMembers];
-        let groupFullyEnclosed = true;
-
-        // Check if all group members are fully enclosed
-        for (const memberId of groupMembers) {
-          const memberComponent = componentManager.getComponent(memberId);
-          if (!memberComponent || !isComponentFullyEnclosed(memberComponent, selectionBounds)) {
-            groupFullyEnclosed = false;
-            break;
-          }
-        }
-
-        if (groupFullyEnclosed) {
-          // Add all group members to selection
-          selectedIds.push(...groupMembers);
-          // Mark all members as processed
-          groupMembers.forEach(memberId => processedGroups.add(memberId));
-        }
-      } else {
-        // Individual component - check if fully enclosed
-        if (isComponentFullyEnclosed(component, selectionBounds)) {
-          selectedIds.push(id);
-        }
+      // Check if component is fully enclosed
+      if (isComponentFullyEnclosed(component, selectionBounds)) {
+        selectedIds.push(id);
       }
     });
 
@@ -771,11 +777,13 @@ export function setupSelectionBox() {
       
       // Show handles for the first selected component
       if (selectedIds.length === 1) {
+        componentManager.currentId = selectedIds[0];
         showRotationHandle(selectedIds[0]);
         showScaleHandle(selectedIds[0]);
         showArrowHandle(selectedIds[0]);
         removeUnifiedBoundingBox();
       } else {
+        componentManager.currentId = null;
         // For multiple selections, remove individual component handles
         removeRotationHandle();
         removeScaleHandle();
@@ -787,6 +795,7 @@ export function setupSelectionBox() {
       }
     } else {
       // No components selected - deselect everything
+      componentManager.currentId = null;
       componentManager.deselectComponent();
       removeRotationHandle();
       removeScaleHandle();

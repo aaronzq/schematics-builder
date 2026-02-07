@@ -89,6 +89,26 @@ export function setupActionButtons() {
     });
   }
 
+  // Group button
+  const groupBtn = document.getElementById('group-btn');
+  if (groupBtn) {
+    groupBtn.addEventListener('click', () => {
+      if (componentManager.groupSelectedComponents()) {
+        // Refresh display
+        const selectedIds = Array.from(componentManager.selectedIds);
+        componentManager.selectMultiple(selectedIds);
+      }
+    });
+  }
+
+  // Ungroup button
+  const ungroupBtn = document.getElementById('ungroup-btn');
+  if (ungroupBtn) {
+    ungroupBtn.addEventListener('click', () => {
+      componentManager.ungroupSelectedComponents();
+    });
+  }
+
   // Toggle grid button
   const toggleGridBtn = document.getElementById('toggle-grid-btn');
   if (toggleGridBtn) {
