@@ -115,7 +115,6 @@ export { showUnifiedBoundingBox, removeUnifiedBoundingBox };
 
 /**
  * Get the bounds of the current unified bounding box
- * @returns {Object|null} Bounds object with x, y, width, height or null if no unified bbox
  */
 export function getUnifiedBoundingBoxBounds() {
   const selectedComponents = componentManager.getSelectedComponents();
@@ -125,9 +124,6 @@ export function getUnifiedBoundingBoxBounds() {
 
 /**
  * Check if a point is within the unified bounding box
- * @param {number} x - SVG X coordinate
- * @param {number} y - SVG Y coordinate
- * @returns {boolean}
  */
 function isPointInUnifiedBbox(x, y) {
   const bounds = getUnifiedBoundingBoxBounds();
@@ -775,14 +771,8 @@ export function setupSelectionBox() {
     if (selectedIds.length > 0) {
       componentManager.selectMultiple(selectedIds);
       
-      // Show handles for the first selected component
-      if (selectedIds.length === 1) {
-        componentManager.currentId = selectedIds[0];
-        showRotationHandle(selectedIds[0]);
-        showScaleHandle(selectedIds[0]);
-        showArrowHandle(selectedIds[0]);
-        removeUnifiedBoundingBox();
-      } else {
+      // Check if we have a multiple selection (group)
+      if (componentManager.selectedIds.size > 1) {
         componentManager.currentId = null;
         // For multiple selections, remove individual component handles
         removeRotationHandle();
@@ -792,6 +782,14 @@ export function setupSelectionBox() {
         showUnifiedBoundingBox();
         showGroupRotationHandle();
         showGroupScaleHandle();
+      } else {
+        // Show handles for the first selected component
+        const id = componentManager.selectedIds.values().next().value;
+        componentManager.currentId = id;
+        showRotationHandle(id);
+        showScaleHandle(id);
+        showArrowHandle(id);
+        removeUnifiedBoundingBox();
       }
     } else {
       // No components selected - deselect everything
