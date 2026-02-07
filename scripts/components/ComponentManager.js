@@ -3,6 +3,7 @@ import { autoCenter } from '../Canvas.js';
 import { showRotationHandle } from '../events/RotationHandle.js';
 import { showScaleHandle } from '../events/ScaleHandle.js';
 import { showArrowHandle } from '../events/ArrowHandle.js';
+import { removeUnifiedBoundingBox } from '../events/InteractionHandlers.js';
 
 export class ComponentManager {
   constructor() {
@@ -67,7 +68,7 @@ export class ComponentManager {
     showArrowHandle(id);
     // Auto-center the canvas to show all components
     autoCenter();
-    
+    removeUnifiedBoundingBox();
     return { id, component };
   }
 
