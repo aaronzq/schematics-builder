@@ -14,9 +14,10 @@ export const MIN_VIEWBOX_WIDTH = 100;
 export const MIN_VIEWBOX_HEIGHT = 75;
 export const MAX_VIEWBOX_WIDTH = 4000;
 export const MAX_VIEWBOX_HEIGHT = 3000;
+export const INITIAL_ZOOM = 0.5; 
 
 // ===== Grid configuration =====
-export const GRID_SIZE = 2.5;
+export const GRID_SIZE = 50;
 export const GRID_EXTEND_FACTOR = 5;
 
 // ===== Arrow/positioning handle configuration =====

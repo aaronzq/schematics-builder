@@ -27,7 +27,7 @@
         </div>
         <div class="menu-content-wrapper">
           <div class="filename-container">
-             <span class="filename-text" contenteditable="true">Untitled Schematic</span>
+             <input type="text" class="filename-text" value="Untitled Schematic" placeholder="Untitled Schematic">
           </div>
           <nav class="menubar-nav">
             <div class="menu-group">
@@ -62,37 +62,59 @@
     
     <div class="content-row">
       <aside class="sidebar">
+        <div class="sidebar-header">
+          <h2>Component Library</h2>
+          <p class="sidebar-subtitle">Click to place component</p>
+        </div>
         <div class="component-menu">
-          <p class="component-menu-title">Components</p>
-          <!-- <button data-component="point">Point</button>
-          <button data-component="plane">Plane</button> -->
-          <button data-component="objective">Objective 1</button>
-          <!-- <button data-component="objective2">Objective 2</button>
-          <button data-component="objective3">Objective 3</button> -->
-          <button data-component="lens">Convex Lens 1</button>
-          <!-- <button data-component="lens-transparent">Convex Lens 2</button>
-          <button data-component="lens2">Concave Lens</button>
-          <button data-component="lens3">Aspheric Lens</button>
-          <button data-component="mirror">Flat Mirror</button>
-          <button data-component="mirror2">Concave Mirror</button>
-          <button data-component="mirror3">Convex Mirror</button>
-          <button data-component="plate">Plate/Filter</button>
-          <button data-component="cube">Cube</button>
-          <button data-component="mask">Mask</button>
-          <button data-component="aperture">Aperture</button>
-          <button data-component="wedge-prism">Wedge Prism 1</button>
-          <button data-component="wedge-prism2">Wedge Prism 2</button>
-          <button data-component="right-angle-prism">Right Angle Prism</button>
-          <button data-component="grating">Grating</button>
-          <button data-component="doe">DOE</button>
-          <button data-component="lenslet-array">Lenslet Array</button>
-          <button data-component="dmd">DMD</button>
-          <button data-component="slm">SLM</button>
-          <button data-component="polygon-scanner">Polygon Scanner</button>
-          <button data-component="voice-coil-mirror">Voice Coil Mirror</button>
-          <button data-component="voice-coil-mirror2">Voice Coil Mirror2</button>
-          <button data-component="detector">Detector</button>
-          <button data-component="photo-diode">PD</button> -->
+          <div class="category-header" data-category="lens">
+            <p class="category-title">Lens</p>
+            <span class="material-symbols-outlined category-icon">expand_more</span>
+          </div>
+          <div class="category-content" data-category-content="lens">
+            <button data-component="objective">Objective</button>
+            <button data-component="lens">Convex Lens</button>
+            <!-- <button data-component="lens-transparent">Convex Lens 2</button>
+            <button data-component="lens2">Concave Lens</button>
+            <button data-component="lens3">Aspheric Lens</button> -->
+          </div>
+        </div>
+
+        <div class="component-menu">
+          <div class="category-header" data-category="mirrors">
+            <p class="category-title">Mirrors</p>
+            <span class="material-symbols-outlined category-icon">expand_more</span>
+          </div>
+          <div class="category-content" data-category-content="mirrors">
+            <!-- <button data-component="mirror">Flat Mirror</button>
+            <button data-component="mirror2">Concave Mirror</button>
+            <button data-component="mirror3">Convex Mirror</button> -->
+          </div>
+        </div>
+
+        <div class="component-menu">
+          <div class="category-header" data-category="optoelectronics">
+            <p class="category-title">Optoelectronics</p>
+            <span class="material-symbols-outlined category-icon">expand_more</span>
+          </div>
+          <div class="category-content" data-category-content="optoelectronics">
+            <!-- <button data-component="dmd">DMD</button>
+            <button data-component="slm">SLM</button>
+            <button data-component="polygon-scanner">Polygon Scanner</button>
+            <button data-component="voice-coil-mirror">Voice Coil Mirror</button>
+            <button data-component="voice-coil-mirror2">Voice Coil Mirror2</button> -->
+          </div>
+        </div>
+
+        <div class="component-menu">
+          <div class="category-header" data-category="detectors">
+            <p class="category-title">Detectors</p>
+            <span class="material-symbols-outlined category-icon">expand_more</span>
+          </div>
+          <div class="category-content" data-category-content="detectors">
+            <!-- <button data-component="detector">Detector</button>
+            <button data-component="photo-diode">PD</button> -->
+          </div>
         </div>
       </aside>
       <div class="right-column">

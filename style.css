@@ -57,24 +57,37 @@ body, html {
   display: flex;
   align-items: baseline;
   gap: 12px;
+  max-width: 400px;
+  overflow: hidden;
 }
 
 .filename-text {
   font-size: 1rem;
   font-weight: 400;
   color: #333;
-  padding: 2px 4px;
-  border-radius: 2px;
+  padding: 4px 8px;
+  border-radius: 3px;
   cursor: text;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-family: inherit;
+  transition: all 0.15s ease;
 }
 
 .filename-text:hover {
   background: #e8e8e8;
+  border-color: #d0d0d0;
 }
 
 .filename-text:focus {
   background: #fff;
-  outline: 1px solid #1a73e8;
+  outline: none;
+  border-color: #1a73e8;
+  box-shadow: 0 1px 2px rgba(26, 115, 232, 0.2);
 }
 
 .file-status {
@@ -128,11 +141,17 @@ body, html {
   z-index: 1000;
   padding: 4px 0;
   border-radius: 0 4px 4px 4px;
-  transform: translateY(2px);
+  transform: translateY(-5px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .menu-group:hover .menu-dropdown {
   display: block;
+  opacity: 1;
+  transform: translateY(2px);
+  pointer-events: all;
 }
 
 .menu-btn, .menu-link {
@@ -184,7 +203,7 @@ body, html {
 /* Sidebar */
 .sidebar {
   width: 200px;
-  background: #ededed;
+  background: #e0e0e0;
   border-right: 1px solid #ddd;
   display: flex;
   flex-direction: column;
@@ -194,12 +213,34 @@ body, html {
   flex-shrink: 0;
 }
 
+.sidebar-header {
+  padding: 16px 12px 12px 12px;
+  background: #e0e0e0;
+}
+
+.sidebar-header h2 {
+  margin: 0 0 4px 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1f1f1f;
+  letter-spacing: 0.3px;
+  text-align: center;
+}
+
+.sidebar-subtitle {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #666;
+  font-weight: 400;
+  text-align: center;
+}
+
 /* Sidebar Component Menu */
 .component-menu {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 10px;
+  padding: 0 10px;
   background: transparent;
   border-radius: 0;
   margin: 0;
@@ -208,7 +249,7 @@ body, html {
 
 .component-menu > p {
   font-family: inherit;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   font-weight: 600;
   text-align: left;
   margin: 0 0 8px 0;
@@ -223,15 +264,70 @@ body, html {
   border: 1px solid transparent;
   background: transparent;
   border-radius: 4px;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   transition: all 0.1s;
   text-align: left;
   color: #333;
 }
 
 .component-menu button:hover {
-  background: #dadada;
+  background: #c9c9c9;
   color: #000;
+}
+
+/* Foldable category styles */
+.category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 4px;
+  margin: 2px 0;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 4px;
+  transition: background 0.1s;
+}
+
+.category-header:hover {
+  background: #d5d5d5;
+}
+
+.category-title {
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #3a3a3a;
+  text-transform: uppercase;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.category-icon {
+  font-size: 18px;
+  color: #666;
+  transition: transform 0.2s ease;
+}
+
+.category-header.collapsed .category-icon {
+  transform: rotate(-90deg);
+}
+
+.category-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 8px;
+  margin-top: 2px;
+  margin-bottom: 4px;
+  max-height: 1000px;
+  overflow: hidden;
+  transition: max-height 0.1s ease, margin-top 0.2s ease, margin-bottom 0.2s ease;
+}
+
+.category-content.collapsed {
+  max-height: 0;
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 /* Secondary Toolbar */
@@ -327,8 +423,8 @@ body, html {
 
 /* Footer */
 .footer {
-  background: #333;
-  color: #ccc;
+  background: #7e7e7e;
+  color: #ebebeb;
   text-align: center;
   padding: 6px 12px;
   flex-shrink: 0;

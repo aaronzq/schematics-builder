@@ -1,6 +1,7 @@
 import { setupComponentButtons, setupActionButtons } from './events/ButtonHandlers.js';
 import { setupComponentSelection, setupComponentDragging, setupCanvasPanning, setupCanvasZoom, setupSelectionBox } from './events/InteractionHandlers.js';
-
+import { setupCategoryFolding } from './components/ComponentMenu.js';
+import { setupFilenameEditor } from './Fileio.js';
 
 export function initializeApp() {
   console.log('Initializing application...');
@@ -17,10 +18,14 @@ export function initializeApp() {
   setupCanvasPanning();
   setupCanvasZoom();
   setupSelectionBox();
+  setupCategoryFolding();
+  setupFilenameEditor();
 
   console.log('Application initialized');
   
   return { canvas };
 }
+
+
 
 document.addEventListener('DOMContentLoaded', initializeApp);

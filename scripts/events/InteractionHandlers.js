@@ -519,6 +519,19 @@ export function setupCanvasZoom() {
   const canvas = document.getElementById('canvas');
   if (!canvas) return;
 
+  // Apply initial zoom
+  import('../config.js').then(config => {
+    const viewBox = canvas.getAttribute('viewBox');
+    if (viewBox && config.INITIAL_ZOOM) {
+      const [x, y, width, height] = viewBox.split(' ').map(Number);
+      const newWidth = width / config.INITIAL_ZOOM;
+      const newHeight = height / config.INITIAL_ZOOM;
+      const newX = x - (newWidth - width) / 2;
+      const newY = y - (newHeight - height) / 2;
+      canvas.setAttribute('viewBox', `${newX} ${newY} ${newWidth} ${newHeight}`);
+    }
+  });
+
   // Detect if device is Mac
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 

@@ -168,7 +168,7 @@ export class CanvasManager {
     const vbHeight = this.currentViewBox.height;
 
     // Grid size in SVG units
-    const gridSize = GRID_SIZE * 20;
+    const gridSize = GRID_SIZE;
     const extend = GRID_EXTEND_FACTOR;
 
     // Extend grid to cover (1 + 2*extend)x the viewBox in all directions
