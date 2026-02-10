@@ -30,9 +30,9 @@ export function setupActionButtons() {
   const deleteBtn = document.getElementById('delete-btn');
   if (deleteBtn) {
     deleteBtn.addEventListener('click', () => {
-      const selected = componentManager.getSelectedComponent();
-      if (selected) {
-        componentManager.deleteComponent(selected.id);
+      if (componentManager.selectedIds.size > 0) {
+        const idsToDelete = Array.from(componentManager.selectedIds);
+        idsToDelete.forEach(id => componentManager.deleteComponent(id));
         removeRotationHandle();
         removeScaleHandle();
         removeArrowHandle();
@@ -45,9 +45,10 @@ export function setupActionButtons() {
   const flipHorizontalBtn = document.getElementById('flip-horizontal-btn');
   if (flipHorizontalBtn) {
     flipHorizontalBtn.addEventListener('click', () => {
-      const selected = componentManager.getSelectedComponent();
-      if (selected) {
-        componentManager.flipComponentHorizontal(selected.id);
+      if (componentManager.selectedIds.size > 0) {
+        componentManager.selectedIds.forEach(id => {
+          componentManager.flipComponentHorizontal(id);
+        });
       }
     });
   }
@@ -56,9 +57,10 @@ export function setupActionButtons() {
   const flipVerticalBtn = document.getElementById('flip-vertical-btn');
   if (flipVerticalBtn) {
     flipVerticalBtn.addEventListener('click', () => {
-      const selected = componentManager.getSelectedComponent();
-      if (selected) {
-        componentManager.flipComponentVertical(selected.id);
+      if (componentManager.selectedIds.size > 0) {
+        componentManager.selectedIds.forEach(id => {
+          componentManager.flipComponentVertical(id);
+        });
       }
     });
   }
@@ -67,9 +69,8 @@ export function setupActionButtons() {
   const hideComponentBtn = document.getElementById('hide-component-btn');
   if (hideComponentBtn) {
     hideComponentBtn.addEventListener('click', () => {
-      const selected = componentManager.getSelectedComponent();
-      if (selected) {
-        componentManager.hideComponent(selected.id);
+      if (componentManager.selectedIds.size > 0) {
+        componentManager.hideComponent();
       }
     });
   }
@@ -78,9 +79,8 @@ export function setupActionButtons() {
   const showComponentBtn = document.getElementById('show-component-btn');
   if (showComponentBtn) {
     showComponentBtn.addEventListener('click', () => {
-      const selected = componentManager.getSelectedComponent();
-      if (selected) {
-        componentManager.showComponent(selected.id);
+      if (componentManager.selectedIds.size > 0) {
+        componentManager.showComponent();
       }
     });
   }

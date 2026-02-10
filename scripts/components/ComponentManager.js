@@ -137,13 +137,6 @@ export class ComponentManager {
     this.selectedIds.clear();
   }
 
-  getSelectedComponent() {
-    if (this.selectedIds.size === 0) return null;
-    const id = Array.from(this.selectedIds)[0];
-    const component = this.components.get(id);
-    return component ? { id, component } : null;
-  }
-
   getComponent(id) {
     return this.components.get(id);
   }
@@ -258,7 +251,25 @@ export class ComponentManager {
     return true;
   }
 
-  hideComponent(id) {
+  hideComponent(id = null) {
+    // If no id provided, hide all selected components
+    if (id === null) {
+      if (this.selectedIds.size === 0) return false;
+      
+      let count = 0;
+      this.selectedIds.forEach(selectedId => {
+        const component = this.components.get(selectedId);
+        if (component) {
+          component.setVisible(false);
+          count++;
+        }
+      });
+      
+      console.log(`Hid ${count} component(s): [${Array.from(this.selectedIds).join(', ')}]`);
+      return count > 0;
+    }
+    
+    // Hide specific component
     const component = this.components.get(id);
     if (!component) return false;
 
@@ -269,7 +280,25 @@ export class ComponentManager {
     return true;
   }
 
-  showComponent(id) {
+  showComponent(id = null) {
+    // If no id provided, show all selected components
+    if (id === null) {
+      if (this.selectedIds.size === 0) return false;
+      
+      let count = 0;
+      this.selectedIds.forEach(selectedId => {
+        const component = this.components.get(selectedId);
+        if (component) {
+          component.setVisible(true);
+          count++;
+        }
+      });
+      
+      console.log(`Showed ${count} component(s): [${Array.from(this.selectedIds).join(', ')}]`);
+      return count > 0;
+    }
+    
+    // Show specific component
     const component = this.components.get(id);
     if (!component) return false;
 
@@ -321,6 +350,7 @@ export class ComponentManager {
       }
     });
 
+    console.log(`Selected multiple components: [${Array.from(this.selectedIds).join(', ')}]`);
   }
 
   addToSelection(id) {

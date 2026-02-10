@@ -410,8 +410,7 @@ export function setupComponentDragging() {
           snappedY
         );
 
-        const selected = componentManager.getSelectedComponent();
-        if (selected && selected.id === draggedId) {
+        if (componentManager.selectedIds.size === 1 && componentManager.selectedIds.has(draggedId)) {
           showRotationHandle(draggedId);
           showScaleHandle(draggedId);
           showArrowHandle(draggedId);
