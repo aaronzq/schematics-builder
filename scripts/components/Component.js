@@ -58,6 +58,8 @@ export class Component {
     this.aperturePoints = this._getAperturePoints();
     this.coneAngle = config.coneAngle ?? 0;
     this.rayShape = config.rayShape || 'collimated';
+    this.rayPolygonColor = config.rayPolygonColor || '#00ffff';
+    this.rayPolygonOpacity = config.rayPolygonOpacity ?? 0.2;
 
     // Arrow vector for positioning handle - defaults to forwardVector * ARROW_LENGTH
     this.arrowVector = config.arrowVector || {

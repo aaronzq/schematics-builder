@@ -7,6 +7,8 @@ import { removeScaleHandle } from './ScaleHandle.js';
 import { removeArrowHandle } from './ArrowHandle.js';
 import { canvas } from '../Canvas.js';
 import { updateRays } from '../rays/DrawRays.js';
+import { toggleApertureRays } from '../rays/ApertureRays.js';
+import { toggleTraceLines } from '../rays/TraceLines.js';
 
 export function setupComponentButtons() {
   const componentMenu = document.querySelector('.component-menu');
@@ -116,6 +118,22 @@ export function setupActionButtons() {
   if (toggleGridBtn) {
     toggleGridBtn.addEventListener('click', () => {
       canvas.toggleGrid();
+    });
+  }
+
+  // Toggle trace lines button
+  const traceBtn = document.getElementById('trace-btn');
+  if (traceBtn) {
+    traceBtn.addEventListener('click', () => {
+      toggleTraceLines();
+    });
+  }
+
+  // Toggle aperture rays button
+  const raysToggleBtn = document.getElementById('rays-toggle-btn');
+  if (raysToggleBtn) {
+    raysToggleBtn.addEventListener('click', () => {
+      toggleApertureRays();
     });
   }
 
