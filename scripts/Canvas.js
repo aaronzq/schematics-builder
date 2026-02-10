@@ -9,7 +9,8 @@ import {
   MIN_VIEWBOX_WIDTH,
   MIN_VIEWBOX_HEIGHT,
   MAX_VIEWBOX_WIDTH,
-  MAX_VIEWBOX_HEIGHT
+  MAX_VIEWBOX_HEIGHT,
+  INITIAL_ZOOM
 } from './config.js';
 
 export class CanvasManager {
@@ -25,7 +26,19 @@ export class CanvasManager {
     }
     
     this.gridVisible = true;
-    this.currentViewBox = { x: -200, y: -150, width: 400, height: 300 };
+    
+    // Apply initial zoom to default viewBox
+    const defaultWidth = 400;
+    const defaultHeight = 300;
+    const zoomedWidth = defaultWidth / INITIAL_ZOOM;
+    const zoomedHeight = defaultHeight / INITIAL_ZOOM;
+    
+    this.currentViewBox = { 
+      x: -zoomedWidth / 2, 
+      y: -zoomedHeight / 2, 
+      width: zoomedWidth, 
+      height: zoomedHeight 
+    };
     this.updateViewBox();
     this.drawGrid();
   }
