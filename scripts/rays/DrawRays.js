@@ -1,4 +1,5 @@
 import { drawTraceLines } from './TraceLines.js';
+import { drawApertureRays, showApertureRays } from './ApertureRays.js';
 
 /**
  * Main function to update all ray/line visualizations in the scene.
@@ -10,6 +11,8 @@ export function updateRays(sourceId = null) {
     // 1. Draw parent-child trace lines
     drawTraceLines();
 
-    // 2. Future: Trace optical rays
-    // traceOpticalRays(); 
+    // 2. Draw aperture rays
+    if (showApertureRays) {
+        drawApertureRays();
+    }
 }
