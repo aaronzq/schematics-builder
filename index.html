@@ -119,17 +119,22 @@
       </aside>
       <div class="right-column">
         <div class="secondary-toolbar">
+           <button id="undo-btn" class="tool-btn" title="Undo"><span class="material-symbols-outlined">undo</span></button>
+           <button id="redo-btn" class="tool-btn" title="Redo"><span class="material-symbols-outlined">redo</span></button>
+           <div class="tool-separator"></div>
            <button id="delete-btn" class="tool-btn" title="Delete"><span class="material-symbols-outlined">delete</span></button>
-           <div class="tool-separator"></div>
-           <button id="flip-horizontal-btn" class="tool-btn" title="Flip Horizontal"><span class="material-symbols-outlined">flip</span></button>
-           <button id="flip-vertical-btn" class="tool-btn" title="Flip Vertical"><span class="material-symbols-outlined" style="transform: rotate(90deg);">flip</span></button>            
-           <div class="tool-separator"></div>
            <button id="hide-component-btn" class="tool-btn" title="Hide Selection"><span class="material-symbols-outlined">visibility_off</span></button>
            <button id="show-component-btn" class="tool-btn" title="Show Selection"><span class="material-symbols-outlined">visibility</span></button>
            <button id="show-all-components-btn" class="tool-btn" title="Show All"><span class="material-symbols-outlined">visibility</span> <sub>ALL</sub></button> 
+           <button id="flip-horizontal-btn" class="tool-btn" title="Flip Horizontal"><span class="material-symbols-outlined">flip</span></button>
+           <button id="flip-vertical-btn" class="tool-btn" title="Flip Vertical"><span class="material-symbols-outlined" style="transform: rotate(90deg);">flip</span></button>            
            <div class="tool-separator"></div>
            <button id="group-btn" class="tool-btn" title="Group"><span class="material-symbols-outlined">group</span></button>
-           <button id="ungroup-btn" class="tool-btn" title="Ungroup"><span class="material-symbols-outlined">ungroup</span></button>
+           <button id="ungroup-btn" class="tool-btn" title="Ungroup"><span class="material-symbols-outlined">group_off</span></button>
+           <div class="tool-separator"></div>
+           <button id="cut-link-btn" class="tool-btn" title="Remove current link"><span class="material-symbols-outlined">link_off</span></button>
+           <button id="re-link-btn" class="tool-btn" title="Re-link to a component"><span class="material-symbols-outlined"><span class="material-symbols-outlined">add_link</span></span></button>
+           
         </div>
         <main class="workspace-area">
           <div class="canvas-container">
