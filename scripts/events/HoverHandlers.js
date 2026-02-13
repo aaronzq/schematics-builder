@@ -1,4 +1,5 @@
 import { componentManager } from '../components/index.js';
+import { LINK_HOVER_BOX_COLOR } from '../config.js';
 
 let hoverBox = null;
 let selectionHoverBoxes = new Map(); // Track hover boxes during selection
@@ -263,7 +264,7 @@ export function showRelinkHoverBoxes(validComponentIds, hoverBoxesArray) {
     rect.setAttribute('width', width);
     rect.setAttribute('height', height);
     rect.setAttribute('fill', 'none');
-    rect.setAttribute('stroke', '#ff6b6b');
+    rect.setAttribute('stroke', LINK_HOVER_BOX_COLOR);
     rect.setAttribute('stroke-width', '2.5');
     // rect.setAttribute('stroke-dasharray', '5,5');
     rect.setAttribute('pointer-events', 'none');

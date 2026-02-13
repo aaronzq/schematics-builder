@@ -10,6 +10,7 @@ import { updateRays } from '../rays/DrawRays.js';
 import { toggleApertureRays } from '../rays/ApertureRays.js';
 import { toggleTraceLines } from '../rays/TraceLines.js';
 import { showRelinkHoverBoxes, removeRelinkHoverBoxes } from './HoverHandlers.js';
+import { LINK_ARROW_COLOR } from '../config.js';
 
 export function setupComponentButtons() {
   const componentMenu = document.querySelector('.component-menu');
@@ -252,7 +253,7 @@ function drawRelinkIndicator(childComponent, parentComponent) {
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   const pathData = `M ${childPos.x},${childPos.y} Q ${controlX},${controlY} ${parentPos.x},${parentPos.y}`;
   path.setAttribute('d', pathData);
-  path.setAttribute('stroke', '#ff6b6b');
+  path.setAttribute('stroke', LINK_ARROW_COLOR);
   path.setAttribute('stroke-width', '2');
   path.setAttribute('stroke-dasharray', '5,5');
   path.setAttribute('fill', 'none');
@@ -280,7 +281,7 @@ function drawRelinkIndicator(childComponent, parentComponent) {
   
   const arrowPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   arrowPath.setAttribute('d', 'M0,0 L0,6 L9,3 z');
-  arrowPath.setAttribute('fill', '#ff6b6b');
+  arrowPath.setAttribute('fill', LINK_ARROW_COLOR);
   
   marker.appendChild(arrowPath);
   defs.appendChild(marker);
@@ -291,24 +292,48 @@ function drawRelinkIndicator(childComponent, parentComponent) {
   const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
   text.setAttribute('id', 'relink-text');
   text.setAttribute('pointer-events', 'none');
-  text.setAttribute('fill', '#ff6b6b');
+  text.setAttribute('fill', LINK_ARROW_COLOR);
   text.setAttribute('font-size', '14');
   text.setAttribute('font-weight', 'bold');
-  text.textContent = 'Click the component to finish linking';
+  text.textContent = 'Click component to link';
   
-  // Position text at the curve's peak (control point) with offset
-  // Keep text upright (no rotation or minimal rotation for readability)
-  const textX = controlX;
-  const textY = controlY - 15; // Offset above the curve
+  // Calculate the uppermost point of the rotated component's bounding box
+  const parentWidth = parentComponent.width * parentComponent.getScale();
+  const parentHeight = parentComponent.height * parentComponent.getScale();
+  const parentRotation = parentComponent.getRotation() * Math.PI / 180; // Convert to radians
+  
+  // Calculate the four corners of the component in local coordinates
+  const corners = [
+    { x: -parentWidth / 2, y: -parentHeight / 2 },  // Top-left
+    { x: parentWidth / 2, y: -parentHeight / 2 },   // Top-right
+    { x: parentWidth / 2, y: parentHeight / 2 },    // Bottom-right
+    { x: -parentWidth / 2, y: parentHeight / 2 }    // Bottom-left
+  ];
+  
+  // Rotate corners and find the minimum Y (uppermost point)
+  let minY = Infinity;
+  const cos = Math.cos(parentRotation);
+  const sin = Math.sin(parentRotation);
+  
+  corners.forEach(corner => {
+    const rotatedX = corner.x * cos - corner.y * sin;
+    const rotatedY = corner.x * sin + corner.y * cos;
+    const worldY = parentPos.y + rotatedY;
+    minY = Math.min(minY, worldY);
+  });
+  
+  // Position text above the uppermost point
+  const textX = parentPos.x;
+  const textY = minY - 25; // Offset above the uppermost edge
   
   text.setAttribute('x', textX);
   text.setAttribute('y', textY);
   text.setAttribute('text-anchor', 'middle');
   // No rotation - always keep text horizontal and readable
   
-  // Insert after schematics group (on top of components)
+  // Insert elements: arrow first, then text on top
   canvas.appendChild(path);
-  canvas.appendChild(text);
+  canvas.appendChild(text); // Text is appended last to be on absolute top
   
   relinkMode.indicatorLine = path;
   relinkMode.indicatorText = text;

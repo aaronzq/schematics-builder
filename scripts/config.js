@@ -47,6 +47,10 @@ export const MAX_SCALE = 2.0;
 // ===== Value display =====
 export const VALUE_DISPLAY_DISTANCE = 50;
 
+// ===== Link arrow configuration =====
+export const LINK_ARROW_COLOR = '#ffba0c';
+export const LINK_HOVER_BOX_COLOR = '#ffba0c';
+
 // ===== Component defaults =====
 export const DEFAULT_APERTURE_RADIUS = 15;  // Default aperture radius for components
 export const DEFAULT_CONE_ANGLE = 0;        // Default cone angle in degrees (0 = collimated)
