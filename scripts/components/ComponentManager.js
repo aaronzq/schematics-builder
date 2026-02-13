@@ -102,6 +102,7 @@ export class ComponentManager {
 
     // Log component information
     if (component) {
+      console.log(`================`);
       console.log(`   Selected component [${Array.from(this.selectedIds).join(', ')}]`);
       console.log(`   Current ID: ${this.currentId}`);
       console.log(`   Type: ${component.type}`);
@@ -639,6 +640,124 @@ export class ComponentManager {
 
     console.log('No grouped components to ungroup');
     return false;
+  }
+
+  /**
+   * Check if newParentId would create a circular parent relationship with childId
+   * @param {number} childId - The component that would receive a new parent
+   * @param {number} newParentId - The proposed new parent
+   * @returns {boolean} - True if setting newParentId as parent would create a cycle
+   */
+  wouldCreateCycle(childId, newParentId) {
+    if (childId === newParentId) return true;
+    
+    // Traverse up the parent chain from newParentId
+    let currentId = newParentId;
+    const visited = new Set();
+    
+    while (currentId !== null) {
+      // Check for cycle
+      if (currentId === childId) return true;
+      
+      // Check for infinite loop in existing parent chain (shouldn't happen but safety check)
+      if (visited.has(currentId)) {
+        console.warn(`Detected existing cycle in parent chain at component ${currentId}`);
+        return true;
+      }
+      visited.add(currentId);
+      
+      const component = this.components.get(currentId);
+      if (!component) break;
+      
+      currentId = component.parent;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Remove parent relationship from a component
+   * @param {number} id - Component ID to cut parent link from
+   * @returns {boolean} - Success status
+   */
+  cutParentLink(id) {
+    const component = this.components.get(id);
+    if (!component) {
+      console.log(`Component ${id} not found`);
+      return false;
+    }
+    
+    if (component.parent === null) {
+      console.log(`Component ${id} has no parent to remove`);
+      return false;
+    }
+    
+    const parentId = component.parent;
+    const parentComponent = this.components.get(parentId);
+    
+    // Remove from parent's children array
+    if (parentComponent) {
+      const index = parentComponent.children.indexOf(id);
+      if (index > -1) {
+        parentComponent.children.splice(index, 1);
+      }
+    }
+    
+    // Clear parent reference
+    component.parent = null;
+    
+    console.log(`Cut parent link: Component ${id} is no longer child of ${parentId}`);
+    return true;
+  }
+
+  /**
+   * Change parent relationship of a component
+   * @param {number} childId - Component to change parent of
+   * @param {number} newParentId - New parent ID
+   * @returns {boolean} - Success status
+   */
+  changeParent(childId, newParentId) {
+    const childComponent = this.components.get(childId);
+    const newParentComponent = this.components.get(newParentId);
+    
+    if (!childComponent) {
+      console.log(`Child component ${childId} not found`);
+      return false;
+    }
+    
+    if (!newParentComponent) {
+      console.log(`New parent component ${newParentId} not found`);
+      return false;
+    }
+    
+    // Check for circular dependency
+    if (this.wouldCreateCycle(childId, newParentId)) {
+      console.log(`Cannot set parent: would create circular dependency`);
+      return false;
+    }
+    
+    // Remove from old parent's children array
+    const oldParentId = childComponent.parent;
+    if (oldParentId !== null) {
+      const oldParentComponent = this.components.get(oldParentId);
+      if (oldParentComponent) {
+        const index = oldParentComponent.children.indexOf(childId);
+        if (index > -1) {
+          oldParentComponent.children.splice(index, 1);
+        }
+      }
+    }
+    
+    // Set new parent relationship
+    childComponent.parent = newParentId;
+    
+    // Add to new parent's children array if not already there
+    if (!newParentComponent.children.includes(childId)) {
+      newParentComponent.children.push(childId);
+    }
+    
+    console.log(`Changed parent: Component ${childId} now child of ${newParentId} (was ${oldParentId})`);
+    return true;
   }
 
 }

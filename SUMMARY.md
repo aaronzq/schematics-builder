@@ -164,16 +164,24 @@ componentManager.selectComponent(draggedId); // Mode 3 if multiple selected
 **Available in Single Selection (Mode 1 only)**:
 - `flip-horizontal-btn` - Flip component horizontally
 - `flip-vertical-btn` - Flip component vertically
-- `cut-link-btn` - Remove parent-child link
-- `re-link-btn` - Re-establish parent-child link
+
+**Available in Focused Selection (Modes 1 & 3)**:
+- `cut-link-btn` - Remove parent-child link from the current component (currentId)
+  - Removes the component's parent relationship
+  - Updates children array of former parent
+  - Automatically updates ray visualization
+- `re-link-btn` - Change parent of the current component (currentId)
+  - Enters interactive re-link mode with visual feedback
+  - Shows dotted red line from component to current parent (if exists)
+  - Click any other component to set as new parent
+  - Includes cycle detection to prevent circular parent relationships
+  - Cannot link component to itself
+  - Click canvas to cancel
+  - Automatically updates ray visualization
 
 **Available in Multiple Selection (Modes 2 & 3)**:
 - `group-btn` - Create group from selected components
 - `ungroup-btn` - Ungroup selected components
-
-**Available in Focused Multiple Selection (Mode 3 only)**:
-- `cut-link-btn` - Remove link for focused component
-- `re-link-btn` - Re-link focused component to another parent
 
 ### 4. Mouse cursor hovering and hover box
 

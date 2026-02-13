@@ -232,3 +232,57 @@ export function setupHoverListeners(isSelectionActive, getUnifiedBoundsFn, getSe
 
   console.log('Hover listeners initialized');
 }
+
+/**
+ * Show persistent hover boxes on all valid components for re-link mode
+ * @param {Set} validComponentIds - Set of component IDs to show hover boxes for
+ * @param {Array} hoverBoxesArray - Array to store the created hover boxes
+ */
+export function showRelinkHoverBoxes(validComponentIds, hoverBoxesArray) {
+  const canvas = document.getElementById('canvas');
+  if (!canvas) return;
+  
+  // Remove existing relink hover boxes
+  removeRelinkHoverBoxes(hoverBoxesArray);
+  
+  // Create persistent hover box for each valid component
+  validComponentIds.forEach(id => {
+    const component = componentManager.getComponent(id);
+    if (!component) return;
+    
+    const pos = component.getPosition();
+    const rotation = component.getRotation();
+    const scale = component.getScale();
+    const width = component.width * scale;
+    const height = component.height * scale;
+    
+    const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    rect.setAttribute('class', 'relink-hover-box');
+    rect.setAttribute('x', -width / 2);
+    rect.setAttribute('y', -height / 2);
+    rect.setAttribute('width', width);
+    rect.setAttribute('height', height);
+    rect.setAttribute('fill', 'none');
+    rect.setAttribute('stroke', '#ff6b6b');
+    rect.setAttribute('stroke-width', '2.5');
+    // rect.setAttribute('stroke-dasharray', '5,5');
+    rect.setAttribute('pointer-events', 'none');
+    rect.setAttribute('transform', `translate(${pos.x}, ${pos.y}) rotate(${rotation})`);
+    
+    canvas.appendChild(rect);
+    hoverBoxesArray.push(rect);
+  });
+}
+
+/**
+ * Remove relink-specific hover boxes
+ * @param {Array} hoverBoxesArray - Array of hover boxes to remove
+ */
+export function removeRelinkHoverBoxes(hoverBoxesArray) {
+  hoverBoxesArray.forEach(box => {
+    if (box && box.parentNode) {
+      box.remove();
+    }
+  });
+  hoverBoxesArray.length = 0;
+}
