@@ -1,7 +1,7 @@
 import { Component } from './Component.js';
 import { autoCenter } from '../Canvas.js';
-import { showRotationHandle } from '../events/RotationHandle.js';
-import { showScaleHandle } from '../events/ScaleHandle.js';
+import { showRotationHandle, removeRotationHandle } from '../events/RotationHandle.js';
+import { showScaleHandle, removeScaleHandle } from '../events/ScaleHandle.js';
 import { showArrowHandle } from '../events/ArrowHandle.js';
 import { removeUnifiedBoundingBox } from '../events/InteractionHandlers.js';
 
@@ -633,8 +633,47 @@ export class ComponentManager {
           component.clearGroup();
         }
       });
-
-      console.log(`Ungrouped ${groupedIds.size} components: [${Array.from(groupedIds).join(', ')}]`);
+      
+      // Remove group UI elements
+      removeUnifiedBoundingBox();
+      removeRotationHandle();
+      removeScaleHandle();
+      
+      // Preserve currentId if it exists, otherwise clear selection
+      const preservedCurrentId = this.currentId;
+      
+      // Clear all selections
+      this.selectedIds.forEach(id => {
+        const element = document.querySelector(`[data-id="${id}"]`);
+        if (element) {
+          element.classList.remove('selected');
+        }
+      });
+      this.selectedIds.clear();
+      
+      // If there was a currentId, restore it as single selection (Mode 1)
+      if (preservedCurrentId !== null && this.components.has(preservedCurrentId)) {
+        this.selectedIds.add(preservedCurrentId);
+        this.currentId = preservedCurrentId;
+        
+        const element = document.querySelector(`[data-id="${preservedCurrentId}"]`);
+        if (element) {
+          element.classList.add('selected');
+        }
+        
+        // Show individual component handles (Mode 1)
+        showRotationHandle(preservedCurrentId);
+        showScaleHandle(preservedCurrentId);
+        showArrowHandle(preservedCurrentId);
+        
+        console.log(`Ungrouped ${groupedIds.size} components: [${Array.from(groupedIds).join(', ')}]`);
+        console.log(`Transitioned to Mode 1 with component ${preservedCurrentId} selected`);
+      } else {
+        // No currentId - fully deselect
+        this.currentId = null;
+        console.log(`Ungrouped ${groupedIds.size} components: [${Array.from(groupedIds).join(', ')}] - all deselected`);
+      }
+      
       return true;
     }
 

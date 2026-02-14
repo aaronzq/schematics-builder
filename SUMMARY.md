@@ -35,8 +35,8 @@ The application supports three distinct selection states that enable different i
 **Mode 2: Multiple Selection (No Focus)**
 - **Condition**: `selectedIds.size > 1` AND `currentId === null`
 - **How to Achieve**:
-  - Draw selection box around multiple components (initially)
-  - Components in a group when selected together
+  - Draw selection box around multiple ungrouped components
+  - Start dragging by clicking within empty space inside the unified bounding box (transitions from Mode 3 to Mode 2 by removing currentId)
 - **Indicators**:
   - All component ids has been added to `selectedIds` in Component manager but `currentId` is empty
   - Shows unified bounding box around all
@@ -48,11 +48,12 @@ The application supports three distinct selection states that enable different i
 **Mode 3: Multiple Selection (One Focused)**
 - **Condition**: `selectedIds.size > 1` AND `currentId !== null` AND `selectedIds.has(currentId)`
 - **How to Achieve**:
+  - **Use selection box to select one component from a group** (auto-expands to entire group, selected component becomes focused)
   - **Click on any grouped component** (auto-selects entire group, clicked one becomes focused)
-  - Start dragging on any grouped component (triggers State 3 with that component focused)
-  - **Important**: Clicking an ungrouped component from a multi-selection will transition to State 1 (single selection)
+  - Start dragging on any grouped component (triggers Mode 3 with that component focused)
+  - **Important**: Clicking an ungrouped component from a multi-selection will transition to Mode 1 (single selection)
 - **Indicators**:
-  - All component ids has been added to `selectedIds` in Component manager and `currentId` is the component being clicked/dragged
+  - All component ids has been added to `selectedIds` in Component manager and `currentId` is the component being clicked/dragged or selected via selection box
   - Shows unified bounding box around all
   - Shows group rotation handle (on unified bbox)
   - Shows group scale handle (on unified bbox)
@@ -88,13 +89,25 @@ selectMultiple(ids) {
 
 // Selection box completion
 if (selectedIds.length > 1) {
-  componentManager.currentId = null; // Mode 2
+  // Check if any selected component is grouped
+  const hasGrouped = selectedIds.some(id => componentState[id].isGrouped);
+  if (hasGrouped) {
+    // Auto-expand to entire group, keep first selected as currentId
+    componentManager.currentId = selectedIds[0]; // Mode 3
+  } else {
+    componentManager.currentId = null; // Mode 2 (ungrouped multi-selection)
+  }
 } else if (selectedIds.length === 1) {
   componentManager.currentId = selectedIds[0]; // Mode 1
 }
 
 // Clicking component during drag
-componentManager.selectComponent(draggedId); // Mode 3 if multiple selected
+componentManager.selectComponent(draggedId); // Mode 3 if grouped and multiple selected
+
+// Clicking empty space inside unified bounding box
+if (mousedownInsideBboxButNotOnComponent) {
+  componentManager.currentId = null; // Mode 2 (remove focus)
+}
 ```
 
 **Key Implementation Details**:
@@ -120,10 +133,10 @@ componentManager.selectComponent(draggedId); // Mode 3 if multiple selected
   
 - **Mode 2**: Drag entire multi-selection without focus
   - Triggered by: Mousedown inside unified bounding box (not on any component)
-  - Does NOT change selection or set currentId
+  - If transitioning from Mode 3: Removes currentId (clears focus)
   - Snaps to DRAGGING_SNAP_INCREMENT (2.5) as a group (maintains exact relative positions)
   - Updates group rotation/scale handles during drag
-  - No arrow handle (currentId remains null)
+  - No arrow handle (currentId becomes null)
   
 - **Mode 3**: Drag entire multi-selection with focused component
   - Triggered by: Mousedown on any grouped component
@@ -182,6 +195,12 @@ componentManager.selectComponent(draggedId); // Mode 3 if multiple selected
 **Available in Multiple Selection (Modes 2 & 3)**:
 - `group-btn` - Create group from selected components
 - `ungroup-btn` - Ungroup selected components
+  - Removes group relationships from all components in the group
+  - Removes unified bounding box and group rotation/scale handles
+  - Clears all selections
+  - If `currentId` exists (Mode 3), preserves it and transitions to Mode 1 (single selection)
+    - Shows individual rotation, scale, and arrow handles for the preserved component
+  - If no `currentId` (Mode 2), fully deselects all components
 
 ### 4. Mouse cursor hovering and hover box
 

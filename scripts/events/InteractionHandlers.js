@@ -315,10 +315,21 @@ export function setupComponentDragging() {
     // Check if click is within unified bbox
     if (!isPointInUnifiedBbox(svgPt.x, svgPt.y)) return;
 
-    // Start group drag
+    // Start group drag from empty space (Mode 3 → Mode 2 transition)
     isDragging = true;
     hasMoved = false;
     isGroupDrag = true;
+    
+    // Clear currentId (transition to Mode 2: no focus)
+    const hadCurrentId = componentManager.currentId !== null;
+    componentManager.currentId = null;
+    
+    // Remove arrow handle since we're now in Mode 2
+    removeArrowHandle();
+    
+    if (hadCurrentId) {
+      console.log(`Drag from empty space: Mode 3 → Mode 2 (cleared currentId)`);
+    }
     
     // Store initial positions of all selected components
     initialPositions = componentManager.getGroupInitialStates(componentManager.selectedIds);
@@ -775,23 +786,45 @@ export function setupSelectionBox() {
       
       // Check if we have a multiple selection (group)
       if (componentManager.selectedIds.size > 1) {
-        componentManager.currentId = null;
+        // Check if any selected component is grouped
+        const hasGrouped = Array.from(componentManager.selectedIds).some(id => {
+          const comp = componentManager.getComponent(id);
+          return comp && comp.isGrouped;
+        });
+        
+        if (hasGrouped) {
+          // Mode 3: Set first selected as currentId (focused component)
+          componentManager.currentId = selectedIds[0];
+          console.log(`Selection box: Mode 3 (grouped) - currentId: ${componentManager.currentId}`);
+        } else {
+          // Mode 2: No focus for ungrouped multi-selection
+          componentManager.currentId = null;
+          console.log(`Selection box: Mode 2 (ungrouped multi-selection)`);
+        }
+        
         // For multiple selections, remove individual component handles
         removeRotationHandle();
         removeScaleHandle();
         removeArrowHandle();
+        
+        // Show arrow handle if we have a focused component (Mode 3)
+        if (componentManager.currentId !== null) {
+          showArrowHandle(componentManager.currentId);
+        }
+        
         // Show unified bounding box and group handles for multiple selections
         showUnifiedBoundingBox();
         showGroupRotationHandle();
         showGroupScaleHandle();
       } else {
-        // Show handles for the first selected component
+        // Mode 1: Single component selection
         const id = componentManager.selectedIds.values().next().value;
         componentManager.currentId = id;
         showRotationHandle(id);
         showScaleHandle(id);
         showArrowHandle(id);
         removeUnifiedBoundingBox();
+        console.log(`Selection box: Mode 1 (single component)`);
       }
     } else {
       // No components selected - deselect everything
