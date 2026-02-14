@@ -4,6 +4,7 @@ import { showRotationHandle, removeRotationHandle } from '../events/RotationHand
 import { showScaleHandle, removeScaleHandle } from '../events/ScaleHandle.js';
 import { showArrowHandle } from '../events/ArrowHandle.js';
 import { removeUnifiedBoundingBox } from '../events/InteractionHandlers.js';
+import { updateToolbarButtons } from '../events/ButtonHandlers.js';
 
 export class ComponentManager {
   constructor() {
@@ -115,6 +116,9 @@ export class ComponentManager {
         console.log(`   Group members: [${Array.from(component.groupMembers).join(', ')}]`);
       }
     }
+    
+    // Update toolbar button visibility
+    updateToolbarButtons();
   }
 
   deselectComponent() {
@@ -136,6 +140,9 @@ export class ComponentManager {
     }
     
     this.selectedIds.clear();
+    
+    // Update toolbar button visibility
+    updateToolbarButtons();
   }
 
   getComponent(id) {
@@ -223,7 +230,10 @@ export class ComponentManager {
     this.components.delete(id);
 
     // Remove from selection if selected
-    this.selectedIds.delete(id);
+    if (this.selectedIds.has(id)) {
+      this.selectedIds.delete(id);
+      updateToolbarButtons();
+    }
 
     console.log(`Deleted component [ID: ${id}]`);
 
@@ -352,6 +362,9 @@ export class ComponentManager {
     });
 
     console.log(`Selected multiple components: [${Array.from(this.selectedIds).join(', ')}]`);
+    
+    // Update toolbar button visibility
+    updateToolbarButtons();
   }
 
   addToSelection(id) {
@@ -674,6 +687,8 @@ export class ComponentManager {
         console.log(`Ungrouped ${groupedIds.size} components: [${Array.from(groupedIds).join(', ')}] - all deselected`);
       }
       
+      // Update toolbar button visibility
+      updateToolbarButtons();
       return true;
     }
 
@@ -746,6 +761,7 @@ export class ComponentManager {
     component.parent = null;
     
     console.log(`Cut parent link: Component ${id} is no longer child of ${parentId}`);
+    updateToolbarButtons(); // Update toolbar since parent status changed
     return true;
   }
 
@@ -796,6 +812,7 @@ export class ComponentManager {
     }
     
     console.log(`Changed parent: Component ${childId} now child of ${newParentId} (was ${oldParentId})`);
+    updateToolbarButtons(); // Update toolbar since parent status changed
     return true;
   }
 

@@ -1,4 +1,4 @@
-import { setupComponentButtons, setupActionButtons } from './events/ButtonHandlers.js';
+import { setupComponentButtons, setupActionButtons, updateToolbarButtons } from './events/ButtonHandlers.js';
 import { setupComponentSelection, setupComponentDragging, setupCanvasPanning, setupCanvasZoom, setupSelectionBox } from './events/InteractionHandlers.js';
 import { setupCategoryFolding } from './components/ComponentMenu.js';
 import { setupFilenameEditor } from './Fileio.js';
@@ -20,6 +20,7 @@ export function initializeApp() {
   setupSelectionBox();
   setupCategoryFolding();
   setupFilenameEditor();
+  updateToolbarButtons();
 
   console.log('Application initialized');
   

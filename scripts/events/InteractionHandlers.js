@@ -3,6 +3,7 @@ import { showRotationHandle, removeRotationHandle, showGroupRotationHandle } fro
 import { showScaleHandle, removeScaleHandle, showGroupScaleHandle } from './ScaleHandle.js';
 import { showArrowHandle, removeArrowHandle } from './ArrowHandle.js';
 import { showHoverBox, removeHoverBox, clearSelectionHoverBoxes, setupHoverListeners, createComponentHoverBox, addSelectionHoverBox, removeSelectionHoverBox, hasSelectionHoverBox, forEachSelectionHoverBox } from './HoverHandlers.js';
+import { updateToolbarButtons } from './ButtonHandlers.js';
 import { 
   SELECTION_BOX_FILL,
   SELECTION_BOX_STROKE,
@@ -329,6 +330,7 @@ export function setupComponentDragging() {
     
     if (hadCurrentId) {
       console.log(`Drag from empty space: Mode 3 → Mode 2 (cleared currentId)`);
+      updateToolbarButtons(); // Update toolbar when transitioning modes
     }
     
     // Store initial positions of all selected components
@@ -786,20 +788,32 @@ export function setupSelectionBox() {
       
       // Check if we have a multiple selection (group)
       if (componentManager.selectedIds.size > 1) {
-        // Check if any selected component is grouped
-        const hasGrouped = Array.from(componentManager.selectedIds).some(id => {
-          const comp = componentManager.getComponent(id);
-          return comp && comp.isGrouped;
-        });
+        // Check if ALL selected components are part of the SAME group
+        let allInSameGroup = false;
+        const selectedIdsArray = Array.from(componentManager.selectedIds);
+        const firstComp = componentManager.getComponent(selectedIdsArray[0]);
         
-        if (hasGrouped) {
-          // Mode 3: Set first selected as currentId (focused component)
+        if (firstComp && firstComp.isGrouped) {
+          // Check if all other selected components are in the same group as the first
+          allInSameGroup = selectedIdsArray.every(id => {
+            const comp = componentManager.getComponent(id);
+            if (!comp || !comp.isGrouped) return false;
+            // Check if this component's group includes all the same members
+            const groupMembers = new Set([id, ...comp.groupMembers]);
+            return selectedIdsArray.every(selectedId => groupMembers.has(selectedId));
+          });
+        }
+        
+        if (allInSameGroup) {
+          // Mode 3: All components are in the same group - set first as currentId
           componentManager.currentId = selectedIds[0];
-          console.log(`Selection box: Mode 3 (grouped) - currentId: ${componentManager.currentId}`);
+          console.log(`Selection box: Mode 3 (same group) - currentId: ${componentManager.currentId}`);
+          updateToolbarButtons(); // Update toolbar after setting currentId
         } else {
-          // Mode 2: No focus for ungrouped multi-selection
+          // Mode 2: No focus (mixed selection: ungrouped, or from different groups)
           componentManager.currentId = null;
-          console.log(`Selection box: Mode 2 (ungrouped multi-selection)`);
+          console.log(`Selection box: Mode 2 (mixed or ungrouped multi-selection)`);
+          updateToolbarButtons(); // Update toolbar after clearing currentId
         }
         
         // For multiple selections, remove individual component handles
@@ -825,6 +839,7 @@ export function setupSelectionBox() {
         showArrowHandle(id);
         removeUnifiedBoundingBox();
         console.log(`Selection box: Mode 1 (single component)`);
+        updateToolbarButtons(); // Update toolbar after setting currentId
       }
     } else {
       // No components selected - deselect everything
@@ -834,6 +849,7 @@ export function setupSelectionBox() {
       removeScaleHandle();
       removeArrowHandle();
       removeUnifiedBoundingBox();
+      // Note: deselectComponent() already calls updateToolbarButtons()
     }
 
     // Clear selection box

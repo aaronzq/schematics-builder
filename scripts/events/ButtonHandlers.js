@@ -12,6 +12,122 @@ import { toggleTraceLines } from '../rays/TraceLines.js';
 import { showRelinkHoverBoxes, removeRelinkHoverBoxes } from './HoverHandlers.js';
 import { LINK_ARROW_COLOR } from '../config.js';
 
+/**
+ * Update toolbar button visibility based on selection mode
+ * Mode 1: Single component (selectedIds.size === 1, currentId set)
+ * Mode 2: Multiple selection, no focus (selectedIds.size > 1, currentId === null)
+ * Mode 3: Multiple selection, one focused (selectedIds.size > 1, currentId set)
+ */
+export function updateToolbarButtons() {
+  const selectedCount = componentManager.selectedIds.size;
+  const hasFocus = componentManager.currentId !== null;
+  const hasSelection = selectedCount > 0;
+  
+  // Check if any selected component is grouped
+  let hasGroupedComponent = false;
+  let allGrouped = true;
+  let canGroup = false;
+  
+  if (hasSelection) {
+    componentManager.selectedIds.forEach(id => {
+      const component = componentManager.getComponent(id);
+      if (component) {
+        if (!component.isGrouped) {
+          hasGroupedComponent = true;
+        } else {
+          allGrouped = false;
+        }
+      }
+    });
+    // Can group if we have 2+ components and not ALL are already in the same group
+    // This allows grouping mixed selections (grouped + ungrouped)
+    canGroup = selectedCount >= 2 && !allGrouped;
+  }
+  
+  // Check if focused component has a parent (for cut-link)
+  let canCutLink = false;
+  if (hasFocus) {
+    const component = componentManager.getComponent(componentManager.currentId);
+    canCutLink = component && component.parent !== null;
+  }
+  
+  // Get all button elements
+  const buttons = {
+    delete: document.getElementById('delete-btn'),
+    hide: document.getElementById('hide-component-btn'),
+    show: document.getElementById('show-component-btn'),
+    showAll: document.getElementById('show-all-components-btn'),
+    flipH: document.getElementById('flip-horizontal-btn'),
+    flipV: document.getElementById('flip-vertical-btn'),
+    group: document.getElementById('group-btn'),
+    ungroup: document.getElementById('ungroup-btn'),
+    cutLink: document.getElementById('cut-link-btn'),
+    reLink: document.getElementById('re-link-btn')
+  };
+  
+  // Mode 1: Single component selection
+  if (selectedCount === 1 && hasFocus) {
+    setButtonVisibility(buttons.delete, true);
+    setButtonVisibility(buttons.hide, true);
+    setButtonVisibility(buttons.show, true);
+    setButtonVisibility(buttons.showAll, true);
+    setButtonVisibility(buttons.flipH, true);
+    setButtonVisibility(buttons.flipV, true);
+    setButtonVisibility(buttons.group, false);
+    setButtonVisibility(buttons.ungroup, false);
+    setButtonVisibility(buttons.cutLink, canCutLink);
+    setButtonVisibility(buttons.reLink, true);
+  }
+  // Mode 2: Multiple selection, no focus
+  else if (selectedCount > 1 && !hasFocus) {
+    setButtonVisibility(buttons.delete, true);
+    setButtonVisibility(buttons.hide, true);
+    setButtonVisibility(buttons.show, true);
+    setButtonVisibility(buttons.showAll, true);
+    setButtonVisibility(buttons.flipH, false);
+    setButtonVisibility(buttons.flipV, false);
+    setButtonVisibility(buttons.group, canGroup);
+    setButtonVisibility(buttons.ungroup, hasGroupedComponent);
+    setButtonVisibility(buttons.cutLink, false);
+    setButtonVisibility(buttons.reLink, false);
+  }
+  // Mode 3: Multiple selection, one focused
+  else if (selectedCount > 1 && hasFocus) {
+    setButtonVisibility(buttons.delete, true);
+    setButtonVisibility(buttons.hide, true);
+    setButtonVisibility(buttons.show, true);
+    setButtonVisibility(buttons.showAll, true);
+    setButtonVisibility(buttons.flipH, true);
+    setButtonVisibility(buttons.flipV, true);
+    setButtonVisibility(buttons.group, false); // Already grouped
+    setButtonVisibility(buttons.ungroup, true);
+    setButtonVisibility(buttons.cutLink, canCutLink);
+    setButtonVisibility(buttons.reLink, true);
+  }
+  // No selection
+  else {
+    setButtonVisibility(buttons.delete, false);
+    setButtonVisibility(buttons.hide, false);
+    setButtonVisibility(buttons.show, false);
+    setButtonVisibility(buttons.showAll, false);
+    setButtonVisibility(buttons.flipH, false);
+    setButtonVisibility(buttons.flipV, false);
+    setButtonVisibility(buttons.group, false);
+    setButtonVisibility(buttons.ungroup, false);
+    setButtonVisibility(buttons.cutLink, false);
+    setButtonVisibility(buttons.reLink, false);
+  }
+}
+
+/**
+ * Helper function to set button visibility
+ */
+function setButtonVisibility(button, visible) {
+  if (button) {
+    button.style.display = visible ? '' : 'none';
+  }
+}
+
 export function setupComponentButtons() {
   const componentMenu = document.querySelector('.component-menu');
   if (!componentMenu) return;
@@ -39,6 +155,7 @@ export function setupActionButtons() {
         removeScaleHandle();
         removeArrowHandle();
         updateRays();
+        updateToolbarButtons();
       }
     });
   }
@@ -103,6 +220,7 @@ export function setupActionButtons() {
         // Refresh display
         const selectedIds = Array.from(componentManager.selectedIds);
         componentManager.selectMultiple(selectedIds);
+        updateToolbarButtons();
       }
     });
   }
@@ -112,6 +230,7 @@ export function setupActionButtons() {
   if (ungroupBtn) {
     ungroupBtn.addEventListener('click', () => {
       componentManager.ungroupSelectedComponents();
+      updateToolbarButtons();
     });
   }
 

@@ -36,6 +36,8 @@ The application supports three distinct selection states that enable different i
 - **Condition**: `selectedIds.size > 1` AND `currentId === null`
 - **How to Achieve**:
   - Draw selection box around multiple ungrouped components
+  - Draw selection box that includes a mix of grouped and ungrouped components (mixed selection → Mode 2)
+  - Draw selection box that includes components from different groups (not all in same group → Mode 2)
   - Start dragging by clicking within empty space inside the unified bounding box (transitions from Mode 3 to Mode 2 by removing currentId)
 - **Indicators**:
   - All component ids has been added to `selectedIds` in Component manager but `currentId` is empty
@@ -48,7 +50,7 @@ The application supports three distinct selection states that enable different i
 **Mode 3: Multiple Selection (One Focused)**
 - **Condition**: `selectedIds.size > 1` AND `currentId !== null` AND `selectedIds.has(currentId)`
 - **How to Achieve**:
-  - **Use selection box to select one component from a group** (auto-expands to entire group, selected component becomes focused)
+  - **Use selection box to select components that are ALL in the SAME group** (auto-expands to entire group, first selected becomes focused)
   - **Click on any grouped component** (auto-selects entire group, clicked one becomes focused)
   - Start dragging on any grouped component (triggers Mode 3 with that component focused)
   - **Important**: Clicking an ungrouped component from a multi-selection will transition to Mode 1 (single selection)
@@ -89,13 +91,14 @@ selectMultiple(ids) {
 
 // Selection box completion
 if (selectedIds.length > 1) {
-  // Check if any selected component is grouped
-  const hasGrouped = selectedIds.some(id => componentState[id].isGrouped);
-  if (hasGrouped) {
-    // Auto-expand to entire group, keep first selected as currentId
-    componentManager.currentId = selectedIds[0]; // Mode 3
+  // Check if ALL selected components are in the SAME group
+  const allInSameGroup = checkIfAllInSameGroup(selectedIds);
+  if (allInSameGroup) {
+    // Mode 3: All components in same group, set first as currentId
+    componentManager.currentId = selectedIds[0];
   } else {
-    componentManager.currentId = null; // Mode 2 (ungrouped multi-selection)
+    // Mode 2: Mixed selection (ungrouped, or different groups)
+    componentManager.currentId = null;
   }
 } else if (selectedIds.length === 1) {
   componentManager.currentId = selectedIds[0]; // Mode 1
@@ -111,7 +114,8 @@ if (mousedownInsideBboxButNotOnComponent) {
 ```
 
 **Key Implementation Details**:
-- `currentId` is set during `selectComponent()` but cleared during `selectMultiple()`
+- `currentId` istransitions to Mode 3 ONLY when ALL selected components are in the SAME group
+- Selection box uses Mode 2 for mixed selections (grouped + ungrouped, or different groups)`
 - Selection box always starts in Mode 2 (no focus) when multiple components selected
 - Clicking a grouped component transitions to Mode 3 (multi-selection with focus)
 - Clicking an ungrouped component transitions to Mode 1 (single selection)
@@ -168,39 +172,74 @@ if (mousedownInsideBboxButNotOnComponent) {
 
 ### 3. Menu button (secondary-toolbar) Visibility & Functionality
 
-**Available in ALL modes (1, 2, 3)**:
-- `delete-btn` - Delete selected component(s)
-- `hide-component-btn` - Hide selected component(s) (selectedIds)
-- `show-component-btn` - Show selected component(s) (selectedIds)
-- `show-all-components-btn` - Show all hidden components
+The secondary toolbar buttons dynamically show/hide based on the current selection mode and component state. This provides a cleaner UI by only showing relevant actions.
 
-**Available in Single Selection (Mode 1 only)**:
-- `flip-horizontal-btn` - Flip component horizontally
-- `flip-vertical-btn` - Flip component vertically
+**Implementation**: The `updateToolbarButtons()` function in [ButtonHandlers.js](scripts/events/ButtonHandlers.js) is called whenever selection state changes (select, deselect, group, ungroup, delete, cut-link, change-parent).
 
-**Available in Focused Selection (Modes 1 & 3)**:
+#### Button Visibility by Mode
+
+**No Selection (Mode 0)**:
+
+
+**Single Selection (Mode 1)**:
+- ✅ `delete-btn` - Delete selected component
+- ✅ `hide-component-btn` - Hide selected component
+- ✅ `show-component-btn` - Show selected component
+- ✅ `show-all-components-btn` - Show all hidden components
+- ✅ `flip-horizontal-btn` - Flip component horizontally
+- ✅ `flip-vertical-btn` - Flip component vertically
+- ✅ `cut-link-btn` - Remove parent link (only if component has a parent)
+- ✅ `re-link-btn` - Change parent of component
+
+**Multiple Selection (Mode 2 - No Focus)**:
+- ✅ `delete-btn` - Delete all selected components
+- ✅ `hide-component-btn` - Hide all selected components
+- ✅ `show-component-btn` - Show all selected components
+- ✅ `show-all-components-btn` - Show all hidden components
+- ✅ `group-btn` - Create group (only if components aren't already grouped)
+- ✅ `ungroup-btn` - Ungroup (only if any selected component is grouped)
+
+**Multiple Selection (Mode 3 - One Focused)**:
+- ✅ `delete-btn` - Delete all selected components
+- ✅ `hide-component-btn` - Hide all selected components
+- ✅ `show-component-btn` - Show all selected components
+- ✅ `show-all-components-btn` - Show all hidden components
+- ✅ `flip-horizontal-btn` - Flip all selected components horizontally
+- ✅ `flip-vertical-btn` - Flip all selected components vertically
+- ✅ `ungroup-btn` - Ungroup the group (components already grouped)
+- ✅ `cut-link-btn` - Remove parent link from focused component (only if it has a parent)
+- ✅ `re-link-btn` - Change parent of focused component
+
+#### Button Functionality Details
+
+**Link Management Buttons** (Mode 1 & 3 only):
 - `cut-link-btn` - Remove parent-child link from the current component (currentId)
+  - Visibility: Only shown when `currentId` is set AND that component has a parent
   - Removes the component's parent relationship
   - Updates children array of former parent
-  - Automatically updates ray visualization
+  - Automatically updates ray visualization and toolbar buttons
 - `re-link-btn` - Change parent of the current component (currentId)
+  - Visibility: Always shown when `currentId` is set
   - Enters interactive re-link mode with visual feedback
   - Shows dotted red line from component to current parent (if exists)
   - Click any other component to set as new parent
   - Includes cycle detection to prevent circular parent relationships
   - Cannot link component to itself
   - Click canvas to cancel
-  - Automatically updates ray visualization
+  - Automatically updates ray visualization and toolbar buttons
 
-**Available in Multiple Selection (Modes 2 & 3)**:
-- `group-btn` - Create group from selected components
+**Group Management Buttons** (Mode 2 & 3):
+- `group-btn` - Create group from selected components (Mode 2 only)
+  - Visibility: Only shown in Mode 2 when 2+ ungrouped components are selected
+  - Hidden in Mode 3 (components already grouped)
 - `ungroup-btn` - Ungroup selected components
+  - Visibility: Only shown when any selected component is grouped
   - Removes group relationships from all components in the group
   - Removes unified bounding box and group rotation/scale handles
-  - Clears all selections
   - If `currentId` exists (Mode 3), preserves it and transitions to Mode 1 (single selection)
     - Shows individual rotation, scale, and arrow handles for the preserved component
   - If no `currentId` (Mode 2), fully deselects all components
+  - Automatically updates toolbar buttons
 
 ### 4. Mouse cursor hovering and hover box
 
