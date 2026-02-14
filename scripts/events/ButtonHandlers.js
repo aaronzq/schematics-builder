@@ -32,7 +32,7 @@ export function updateToolbarButtons() {
     componentManager.selectedIds.forEach(id => {
       const component = componentManager.getComponent(id);
       if (component) {
-        if (!component.isGrouped) {
+        if (component.isGrouped) {
           hasGroupedComponent = true;
         } else {
           allGrouped = false;
