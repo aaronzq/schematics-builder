@@ -417,29 +417,16 @@ function drawRelinkIndicator(childComponent, parentComponent) {
   text.setAttribute('font-weight', 'bold');
   text.textContent = 'Click component to link';
   
-  // Calculate the uppermost point of the rotated component's bounding box
-  const parentWidth = parentComponent.width * parentComponent.getScale();
-  const parentHeight = parentComponent.height * parentComponent.getScale();
-  const parentRotation = parentComponent.getRotation() * Math.PI / 180; // Convert to radians
-  
-  // Calculate the four corners of the component in local coordinates
-  const corners = [
-    { x: -parentWidth / 2, y: -parentHeight / 2 },  // Top-left
-    { x: parentWidth / 2, y: -parentHeight / 2 },   // Top-right
-    { x: parentWidth / 2, y: parentHeight / 2 },    // Bottom-right
-    { x: -parentWidth / 2, y: parentHeight / 2 }    // Bottom-left
+  // Find the uppermost world-space point of the component using localBounds corners
+  const lb = parentComponent.localBounds;
+  const lbCorners = [
+    { x: lb.minX, y: lb.minY }, { x: lb.maxX, y: lb.minY },
+    { x: lb.maxX, y: lb.maxY }, { x: lb.minX, y: lb.maxY }
   ];
-  
-  // Rotate corners and find the minimum Y (uppermost point)
   let minY = Infinity;
-  const cos = Math.cos(parentRotation);
-  const sin = Math.sin(parentRotation);
-  
-  corners.forEach(corner => {
-    const rotatedX = corner.x * cos - corner.y * sin;
-    const rotatedY = corner.x * sin + corner.y * cos;
-    const worldY = parentPos.y + rotatedY;
-    minY = Math.min(minY, worldY);
+  lbCorners.forEach(corner => {
+    const world = parentComponent._localToWorld(corner.x, corner.y);
+    minY = Math.min(minY, world.y);
   });
   
   // Position text above the uppermost point

@@ -24,13 +24,13 @@ export function showScaleHandle(componentId) {
   const component = componentManager.getComponent(componentId);
   if (!component) return;
 
-  const pos = component.getPosition();
   const rotation = component.getRotation();
   const scale = component.getScale();
+  const oc = component.getCenterPointWorld();
 
   const angleRad = rotation * Math.PI / 180;
-  const handleX = pos.x + SCALE_HANDLE_DISTANCE * scale * Math.cos(angleRad + Math.PI/2);
-  const handleY = pos.y + SCALE_HANDLE_DISTANCE * scale * Math.sin(angleRad + Math.PI/2);
+  const handleX = oc.x + SCALE_HANDLE_DISTANCE * scale * Math.cos(angleRad + Math.PI/2);
+  const handleY = oc.y + SCALE_HANDLE_DISTANCE * scale * Math.sin(angleRad + Math.PI/2);
 
   const schematics = document.getElementById('schematics');
   if (!schematics) return;
@@ -67,7 +67,7 @@ export function showScaleHandle(componentId) {
 
   schematics.appendChild(handle);
 
-  setupScaleHandleDrag(handle, componentId, pos.x, pos.y, handleX, handleY);
+  setupScaleHandleDrag(handle, componentId, oc.x, oc.y, handleX, handleY);
 }
 
 export function removeScaleHandle() {

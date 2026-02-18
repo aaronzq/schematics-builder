@@ -34,12 +34,14 @@ export function createComponentHoverBox(component) {
   const sx = scale * (component.flipX ? -1 : 1);
   const sy = scale * (component.flipY ? -1 : 1);
 
-  // Rect centered at local origin — translate(-cx,-cy) in the transform already
-  // moves centerPoint to the origin before rotation/scale are applied.
-  rect.setAttribute('x', -width / 2);
-  rect.setAttribute('y', -height / 2);
-  rect.setAttribute('width', width);
-  rect.setAttribute('height', height);
+  // Use localBounds for asymmetric components (e.g. mirror).
+  // The transform ends with translate(-cx,-cy), which shifts all rect coords by (-cx,-cy).
+  // So rect x=lb.minX places the left edge at pre-translate local coord lb.minX — correct.
+  const lb = component.localBounds ?? { minX: -width/2, maxX: width/2, minY: -height/2, maxY: height/2 };
+  rect.setAttribute('x', lb.minX);
+  rect.setAttribute('y', lb.minY);
+  rect.setAttribute('width', lb.maxX - lb.minX);
+  rect.setAttribute('height', lb.maxY - lb.minY);
 
   // Must match _updateTransform: translate(x,y) rotate scale translate(-cx,-cy)
   const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`;
@@ -70,12 +72,14 @@ export function showHoverBox(id) {
   const sx = scale * (component.flipX ? -1 : 1);
   const sy = scale * (component.flipY ? -1 : 1);
 
-  // Rect centered at local origin — translate(-cx,-cy) in the transform already
-  // moves centerPoint to the origin before rotation/scale are applied.
-  hoverBox.setAttribute('x', -width / 2);
-  hoverBox.setAttribute('y', -height / 2);
-  hoverBox.setAttribute('width', width);
-  hoverBox.setAttribute('height', height);
+  // Use localBounds for asymmetric components (e.g. mirror).
+  // The transform ends with translate(-cx,-cy), which shifts all rect coords by (-cx,-cy).
+  // So rect x=lb.minX places the left edge at pre-translate local coord lb.minX — correct.
+  const lb = component.localBounds ?? { minX: -width/2, maxX: width/2, minY: -height/2, maxY: height/2 };
+  hoverBox.setAttribute('x', lb.minX);
+  hoverBox.setAttribute('y', lb.minY);
+  hoverBox.setAttribute('width', lb.maxX - lb.minX);
+  hoverBox.setAttribute('height', lb.maxY - lb.minY);
 
   // Must match _updateTransform: translate(x,y) rotate scale translate(-cx,-cy)
   const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`;
@@ -118,10 +122,11 @@ export function showMultipleHoverBoxes(componentIds) {
       const sx = scale * (component.flipX ? -1 : 1);
       const sy = scale * (component.flipY ? -1 : 1);
 
-      box.setAttribute('x', -width / 2);
-      box.setAttribute('y', -height / 2);
-      box.setAttribute('width', width);
-      box.setAttribute('height', height);
+      const lb = component.localBounds ?? { minX: -width/2, maxX: width/2, minY: -height/2, maxY: height/2 };
+      box.setAttribute('x', lb.minX);
+      box.setAttribute('y', lb.minY);
+      box.setAttribute('width', lb.maxX - lb.minX);
+      box.setAttribute('height', lb.maxY - lb.minY);
 
       const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`;
       box.setAttribute('transform', transform);
@@ -270,10 +275,11 @@ export function showRelinkHoverBoxes(validComponentIds, hoverBoxesArray) {
     
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     rect.setAttribute('class', 'relink-hover-box');
-    rect.setAttribute('x', -width / 2);
-    rect.setAttribute('y', -height / 2);
-    rect.setAttribute('width', width);
-    rect.setAttribute('height', height);
+    const lb = component.localBounds ?? { minX: -width/2, maxX: width/2, minY: -height/2, maxY: height/2 };
+    rect.setAttribute('x', lb.minX);
+    rect.setAttribute('y', lb.minY);
+    rect.setAttribute('width', lb.maxX - lb.minX);
+    rect.setAttribute('height', lb.maxY - lb.minY);
     rect.setAttribute('fill', 'none');
     rect.setAttribute('stroke', LINK_HOVER_BOX_COLOR);
     rect.setAttribute('stroke-width', '2.5');

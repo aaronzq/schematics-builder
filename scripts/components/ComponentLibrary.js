@@ -5,8 +5,7 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 
 export const components = {
     objective: { 
-        width: 129, 
-        height: 60, 
+        localBounds: { minX: -64.5, maxX: 64.5, minY: -30, maxY: 30 },
         centerPoint: { x: 0, y: 0 },
         forwardVector: { x: 1, y: 0 },
         apertureCenter: {x: 0, y: 0},
@@ -14,6 +13,7 @@ export const components = {
         apertureRadius: DEFAULT_APERTURE_RADIUS,
         coneAngle: DEFAULT_CONE_ANGLE,
         rayShape: 'collimated',
+        
 
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
@@ -77,15 +77,15 @@ export const components = {
 
 
     lens: { 
-        width: 10, 
-        height: 60, 
-        centerPoint: { x: 0, y: 0 },  // Component center
-        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
-        apertureCenter: {x: 0, y: 0}, // Aperture plane center
-        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
-        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
-        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
-        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+        localBounds: { minX: -6, maxX: 6, minY: -30, maxY: 30 },
+        centerPoint: { x: 0, y: 0 },
+        forwardVector: { x: 1, y: 0 },
+        apertureCenter: {x: 0, y: 0},
+        upVector: { x: 0, y: -1 },
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+        
 
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
@@ -103,16 +103,14 @@ export const components = {
     },
 
     mirror: { 
-        width: 40, 
-        height: 60, 
-        centerPoint: { x: -30, y: 0 },  // Component center
-        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
-        apertureCenter: {x: 10, y: 0}, // Aperture plane center
-        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
-        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
-        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
-        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
-
+        localBounds: { minX: -3, maxX: 3, minY: -30, maxY: 30 },
+        centerPoint: { x: -3, y: 0 },
+        apertureCenter: {x: -3, y: 0},
+        forwardVector: { x: 1, y: 0 },
+        upVector: { x: 0, y: -1 },
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
             
@@ -139,16 +137,15 @@ export const components = {
     },
 
     plane: { 
-        width: 6, 
-        height: 60, 
-        centerPoint: { x: 0, y: 0 },  // Component center
-        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
-        apertureCenter: {x: 0, y: 0}, // Aperture plane center
-        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
-        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
-        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
-        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
-
+        localBounds: { minX: -3, maxX: 3, minY: -20, maxY: 20 },
+        centerPoint: { x: 0, y: 0 },
+        forwardVector: { x: 1, y: 0 },
+        apertureCenter: {x: 0, y: 0},
+        upVector: { x: 0, y: -1 },
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+        
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
             

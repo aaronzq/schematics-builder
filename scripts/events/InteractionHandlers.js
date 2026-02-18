@@ -38,27 +38,35 @@ function calculateUnifiedBounds(components) {
     const { width, height } = component;
     const rotation = component.getRotation() * Math.PI / 180;
     const scale = component.getScale();
+    const cx = component.centerPoint?.x ?? 0;
+    const cy = component.centerPoint?.y ?? 0;
+    const flipX = component.flipX ? -1 : 1;
+    const flipY = component.flipY ? -1 : 1;
 
-    // Calculate the four corners of the component's bounding box
-    const halfWidth = (width * scale) / 2;
-    const halfHeight = (height * scale) / 2;
+    // Use localBounds for the actual visual extent of the component
+    const lb = component.localBounds ?? {
+      minX: -width / 2, maxX: width / 2,
+      minY: -height / 2, maxY: height / 2
+    };
 
+    // Four corners of localBounds in pre-translate local space
     const corners = [
-      { x: -halfWidth, y: -halfHeight },
-      { x: halfWidth, y: -halfHeight },
-      { x: halfWidth, y: halfHeight },
-      { x: -halfWidth, y: halfHeight }
+      { x: lb.minX, y: lb.minY },
+      { x: lb.maxX, y: lb.minY },
+      { x: lb.maxX, y: lb.maxY },
+      { x: lb.minX, y: lb.maxY }
     ];
 
-    // Rotate corners and translate to component position
+    // Apply same transform chain as _updateTransform / _localToWorld:
+    // translate(-cx,-cy) → flip → scale → rotate → translate(x,y)
     const cos = Math.cos(rotation);
     const sin = Math.sin(rotation);
 
     corners.forEach(corner => {
-      const rotatedX = corner.x * cos - corner.y * sin;
-      const rotatedY = corner.x * sin + corner.y * cos;
-      const worldX = x + rotatedX;
-      const worldY = y + rotatedY;
+      const lx = (corner.x - cx) * flipX * scale;
+      const ly = (corner.y - cy) * flipY * scale;
+      const worldX = x + (lx * cos - ly * sin);
+      const worldY = y + (lx * sin + ly * cos);
 
       minX = Math.min(minX, worldX);
       maxX = Math.max(maxX, worldX);

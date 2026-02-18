@@ -22,8 +22,7 @@ export class Component {
       const config = {
         type: type,
         name: definition.name || type,
-        width: definition.width,
-        height: definition.height,
+        localBounds: definition.localBounds,
         centerPoint: definition.centerPoint,
         upVector: definition.upVector,
         forwardVector: definition.forwardVector,
@@ -48,8 +47,11 @@ export class Component {
     this.name = config.name || config.type;
     this.id = config.id || this._generateId();
 
-    this.width = config.width || 10;
-    this.height = config.height || 60;
+    // localBounds: actual visual extent in local coords (pre-translate(-cx,-cy)).
+    // width/height are derived from localBounds for backward-compat; localBounds is the source of truth.
+    this.localBounds = config.localBounds || { minX: -5, maxX: 5, minY: -30, maxY: 30 };
+    this.width = this.localBounds.maxX - this.localBounds.minX;
+    this.height = this.localBounds.maxY - this.localBounds.minY;
     this.centerPoint = config.centerPoint || { x: 0, y: 0 };
     this.forwardVector = config.forwardVector || { x: 1, y: 0 };
     this.apertureCenter = config.apertureCenter || { x: 0, y: 0 };
@@ -242,8 +244,7 @@ export class Component {
 
   getProperties() {
     return {
-      width: this.width,
-      height: this.height,
+      localBounds: this.localBounds,
       centerPoint: this.centerPoint,
       upVector: this.upVector,
       forwardVector: this.forwardVector,
@@ -373,16 +374,18 @@ export class Component {
   }
 
   getBoundingBox() {
-    // (x, y) is the position of centerPoint on canvas
-    // Calculate bounding box relative to centerPoint
-    return {
-      minX: this.x - (this.width / 2),
-      maxX: this.x + (this.width / 2),
-      minY: this.y - (this.height / 2),
-      maxY: this.y + (this.height / 2),
-      width: this.width,
-      height: this.height
-    };
+    // Compute axis-aligned world bounding box using localBounds corners + _localToWorld.
+    const corners = [
+      this._localToWorld(this.localBounds.minX, this.localBounds.minY),
+      this._localToWorld(this.localBounds.maxX, this.localBounds.minY),
+      this._localToWorld(this.localBounds.maxX, this.localBounds.maxY),
+      this._localToWorld(this.localBounds.minX, this.localBounds.maxY)
+    ];
+    const minX = Math.min(...corners.map(c => c.x));
+    const maxX = Math.max(...corners.map(c => c.x));
+    const minY = Math.min(...corners.map(c => c.y));
+    const maxY = Math.max(...corners.map(c => c.y));
+    return { minX, maxX, minY, maxY, width: maxX - minX, height: maxY - minY };
   }
 
   _updateTransform(element) {
