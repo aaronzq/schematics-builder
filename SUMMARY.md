@@ -307,8 +307,11 @@ clearSelectionHoverBoxes()          // Remove all selection hover boxes
 ```
 
 **Hover Box Transform**:
-- Uses SVG transform: `translate(x, y) rotate(rotation) scale(scale)`
-- Box dimensions set relative to component center (-width/2, -height/2)
+- Uses SVG transform: `translate(x, y) rotate(rotation) scale(sx, sy) translate(-cx, -cy)`
+  - Matches `_updateTransform` exactly so the box tracks the component geometry precisely
+- Box rect attributes use `localBounds` directly: `x=lb.minX, y=lb.minY, width=lb.maxX-lb.minX, height=lb.maxY-lb.minY`
+  - `translate(-cx,-cy)` in the transform shifts these to the correct position automatically
+  - Supports asymmetric components (e.g. `mirror`) without any manual offset correction
 - Automatically updates when component position/rotation/scale changes
 
 ### 5. Rays
@@ -923,49 +926,124 @@ document.getElementById('center-all-btn').addEventListener('click', () => {
 
 ### 2. Component State & Hierarchy
 
-**State Object** (Single Source of Truth):
+**State Object** (Single Source of Truth — `Component` instance):
 ```javascript
 {
-    id: unique ID
-    type: 'lens' | 'mirror' | etc.
-    posX, posY: center coordinates
-    rotation: degrees
-    scaleX, scaleY: scale factors
-    parentId: null | parent ID  // null = root
-    children: [child IDs]       // array
-    dimensions: { /* aperture, vectors */ }
-    rayShape: ['collimated']    // per-ray array
-    rayPolygonColor: ['#00ffff']
-    visible, selected: booleans
-    arrowX, arrowY: spawn position
+    id: number            // unique auto-incremented ID
+    type: string          // 'lens' | 'mirror' | 'objective' | 'plane' | ...
+    x, y: number          // world position of centerPoint
+    rotation: number      // degrees
+    scale: number         // uniform scale
+    flipX, flipY: boolean // mirror along local axes
+    visible: boolean
+
+    // Geometry (from ComponentLibrary, immutable per type)
+    centerPoint: { x, y }     // pivot point in local space
+    apertureCenter: { x, y }  // center of aperture face in local space
+    aperturePoints: [{x,y}]   // aperture endpoints in local space (top/bottom)
+    upVector: { x, y }        // local "up" direction (for aperture orientation)
+    forwardVector: { x, y }   // local optical axis direction
+    localBounds: { minX, maxX, minY, maxY } // visual extent in local space
+
+    // Optical properties
+    apertureRadius: number
+    coneAngle: number
+    rayShape: string          // 'collimated' | 'divergent' | 'convergent' | 'custom'
+    rayPolygonColor: string
+    rayPolygonOpacity: number
+
+    // Arrow handle
+    arrowVector: { x, y }     // offset from centerPoint world pos to arrow tip
+
+    // Hierarchy
+    parent: number | null     // parent component id
+    children: number[]        // child component ids
+    isGrouped: boolean
+    groupMembers: Set<number> // ids of all members in same group
 }
 ```
 
 **Hierarchy Rules**:
 - One parent, multiple children (tree structure)
-- Rays connect parent → child
+- Rays connect parent → child via aperture points
 - Recursive updates propagate down tree
 - Deletion orphans children (become roots)
 
 ### 2. Coordinate Systems
 
 Three spaces requiring transformation:
-1. **Screen**: Mouse pixels
-2. **SVG**: Canvas with pan/zoom
-3. **Local**: Component-relative
+1. **Screen**: Mouse pixels (clientX/Y)
+2. **SVG / world**: Canvas space with pan/zoom applied
+3. **Local**: Component-relative, defined in `ComponentLibrary.js`
 
-**Critical**: Always transform screen → SVG for interactions. Components positioned by center (not corner). Rotation around center.
+#### centerPoint — the positional anchor
+
+Every component has a `centerPoint: {x, y}` defined in local space. The component's `(x, y)` world position IS the world location of `centerPoint`. This makes `centerPoint` the rotation pivot, scale anchor, and spawn origin.
+
+**SVG transform chain** (applied by `_updateTransform`):
+```
+translate(x, y)  →  rotate(θ)  →  scale(sx, sy)  →  translate(-cx, -cy)
+```
+Reading right-to-left (SVG matrix order): first shift local space so `centerPoint` is at the origin, then scale+flip, then rotate, then move to world position. Result: `centerPoint` in world space always equals `(x, y)`.
+
+#### localBounds — the visual extent
+
+`localBounds: { minX, maxX, minY, maxY }` describes the actual rendered bounding rectangle in **pre-translate local space** (i.e., before `translate(-cx,-cy)` is applied). This is the source of truth for component size — `width` and `height` are derived from it.
+
+For symmetric components (`centerPoint = {0,0}`), `localBounds` is symmetric around zero. For asymmetric ones (e.g. `mirror` with `centerPoint.x = -30`), `localBounds` correctly spans from the mount point to the aperture face.
+
+#### _localToWorld — the canonical transform helper
+
+```javascript
+// In Component.js — mirrors the SVG transform chain exactly
+_localToWorld(localX, localY) {
+  // 1. translate(-cx,-cy):  shift into post-translate space
+  const lx = (localX - cx) * flipX;
+  const ly = (localY - cy) * flipY;
+  // 2. scale + rotate + translate(x,y)
+  return {
+    x: this.x + (lx * cos - ly * sin) * this.scale,
+    y: this.y + (lx * sin + ly * cos) * this.scale
+  };
+}
+```
+
+**World-space getters** (use these everywhere instead of manual math):
+| Method | Returns |
+|---|---|
+| `getCenterPointWorld()` | `centerPoint` in world coords (= `{x, y}`) |
+| `getApertureCenterWorld()` | `apertureCenter` in world coords |
+| `getAperturePointsWorld()` | array of aperture endpoints in world coords |
+| `getArrowEndpoint()` | arrow tip in world coords |
+| `getBoundingBox()` | axis-aligned world bbox from `localBounds` corners |
+
+#### Key rule
+> **Never use `component.x / component.y` as the visual center.** It is the world position of `centerPoint`, which may not be the geometric center of the drawn shape. Always use `getCenterPointWorld()` for handles, `getAperturePointsWorld()` for rays, and `localBounds` for bounding rectangles.
 
 ### 3. Aperture System
 
-**Purpose**: Calculate optimal aperture radius so rays look coherent.
+#### Aperture geometry (per component type, in local space)
 
-**Scaling Strategies**:
+- **`apertureCenter: {x, y}`** — the center of the aperture face (where the optical axis crosses the element). Defined in local space. Converted to world space via `getApertureCenterWorld()`.
+- **`upVector: {x, y}`** — local unit direction pointing "up" along the aperture face (perpendicular to the optical axis).
+- **`apertureRadius`** — half-width of the aperture along `upVector`.
+- **`aperturePoints`** — the two aperture endpoints (top and bottom), computed as:
+  ```
+  aperturePoints[0] = apertureCenter + upVector × apertureRadius   // top
+  aperturePoints[1] = apertureCenter - upVector × apertureRadius   // bottom
+  ```
+  In world space: `getAperturePointsWorld()` — used as ray polygon vertices.
+
+#### Trace lines (in `TraceLines.js`)
+Dotted lines connect parent `apertureCenter` → child `apertureCenter` in world space (`getApertureCenterWorld()`).
+
+#### Aperture scaling strategies
 - **Collimated** (parallel): `radius = parentAperture / cos(deviation)`
-- **Divergent** (expanding): `radius = distance × tan(coneAngle)`  
-- **Convergent** (focusing): Dynamic cone angle from geometry
+- **Divergent** (expanding): `radius = distance × tan(coneAngle)`
+- **Convergent** (focusing): dynamic cone angle from geometry
+- **Custom**: user-controlled radius slider (no auto-scaling)
 
-**Recursion**: When component moves/rotates → recalculate its aperture → recursively update all children.
+**Recursion**: when component moves/rotates → recalculate its aperture → recursively update all children.
 
 ### 4. Ray Visualization
 
