@@ -11,7 +11,9 @@ import { showValueDisplay, hideValueDisplay } from './ValueDisplay.js';
 import { 
   clearSelectionHoverBoxes, 
   createComponentHoverBox, 
-  addSelectionHoverBox 
+  addSelectionHoverBox,
+  showHoverBox,
+  removeHoverBox
 } from './HoverHandlers.js';
 import { showUnifiedBoundingBox, removeUnifiedBoundingBox, getUnifiedBoundingBoxBounds } from './InteractionHandlers.js';
 import { updateRays } from '../rays/DrawRays.js';
@@ -316,6 +318,7 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
       icon.setAttribute('font-size', 1.5 * 5 * ROTATION_HANDLE_RADIUS);
     }
 
+    removeHoverBox();
     document.addEventListener('mousemove', handleDrag);
     document.addEventListener('mouseup', handleEnd);
   });
@@ -365,6 +368,7 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
     }
 
     showScaleHandle(componentId);
+    showHoverBox(componentId);
     updateRays();
   } 
 
