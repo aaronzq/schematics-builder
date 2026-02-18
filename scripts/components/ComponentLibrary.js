@@ -101,6 +101,71 @@ export const components = {
             return g;
         }
     },
+
+    mirror: { 
+        width: 6, 
+        height: 60, 
+        centerPoint: { x: -30, y: 0 },  // Component center
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureCenter: {x: 30, y: 0}, // Aperture plane center
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            // Mirror line
+            const mirror = document.createElementNS(ns, "path");
+            mirror.setAttribute("d", "M -3 -30 L 3 -30 L 3 30 L -3 30 Z");
+            mirror.setAttribute("stroke", "black");
+            mirror.setAttribute("stroke-width", "1.5");
+            mirror.setAttribute("fill", "#8caed6");
+            mirror.setAttribute("fill-opacity", "1");
+            g.appendChild(mirror);
+
+            const backsurface = document.createElementNS(ns, "line");
+            backsurface.setAttribute("x1", "-3");
+            backsurface.setAttribute("y1", "-30.75");
+            backsurface.setAttribute("x2", "-3");
+            backsurface.setAttribute("y2", "30.75");
+            backsurface.setAttribute("stroke", "black");
+            backsurface.setAttribute("stroke-width", "2.5");
+            g.appendChild(backsurface);
+
+            return g;
+        }
+    },
+
+    plane: { 
+        width: 6, 
+        height: 60, 
+        centerPoint: { x: 0, y: 0 },  // Component center
+        forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
+        apertureCenter: {x: 0, y: 0}, // Aperture plane center
+        upVector: { x: 0, y: -1 },    // Up direction (negative Y)
+        apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
+        coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees
+        rayShape: 'collimated',       // Ray shape: collimated, divergent, or convergent
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+            
+            // Solid vertical line
+            const plane = document.createElementNS(ns, "line");
+            plane.setAttribute("x1", "0");
+            plane.setAttribute("y1", "-20");
+            plane.setAttribute("x2", "0");
+            plane.setAttribute("y2", "20");
+            plane.setAttribute("stroke", "black");
+            plane.setAttribute("stroke-width", "1.5");
+            g.appendChild(plane);
+
+            return g;
+        }
+    },
+
 }
 
 

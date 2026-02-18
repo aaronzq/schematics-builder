@@ -25,10 +25,10 @@ export const ARROW_LENGTH = 150;
 export const ARROW_COLOR = '#2196F3';
 export const ARROW_STROKE_WIDTH = 2;
 export const ARROW_HANDLE_RADIUS = 3;
-export const ARROW_TIP_SNAP_SIZE = 2.5;
+export const ARROW_TIP_SNAP_SIZE = 1;
 
 // ===== Component positioning =====
-export const DRAGGING_SNAP_INCREMENT = 2.5;
+export const DRAGGING_SNAP_INCREMENT = 1;
 
 // ===== Component rotation handle =====
 export const ROTATION_SNAP_INCREMENT = 2.5;

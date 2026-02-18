@@ -129,10 +129,11 @@ function setButtonVisibility(button, visible) {
 }
 
 export function setupComponentButtons() {
-  const componentMenu = document.querySelector('.component-menu');
-  if (!componentMenu) return;
+  // Use event delegation on the sidebar so all category menus are covered
+  const sidebar = document.querySelector('.sidebar');
+  if (!sidebar) return;
 
-  componentMenu.addEventListener('click', (e) => {
+  sidebar.addEventListener('click', (e) => {
     const button = e.target.closest('button[data-component]');
     if (button) {
       const type = button.dataset.component;
