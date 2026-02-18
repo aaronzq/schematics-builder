@@ -103,11 +103,11 @@ export const components = {
     },
 
     mirror: { 
-        width: 6, 
+        width: 40, 
         height: 60, 
         centerPoint: { x: -30, y: 0 },  // Component center
         forwardVector: { x: 1, y: 0 }, // Forward direction (positive X)
-        apertureCenter: {x: 30, y: 0}, // Aperture plane center
+        apertureCenter: {x: 10, y: 0}, // Aperture plane center
         upVector: { x: 0, y: -1 },    // Up direction (negative Y)
         apertureRadius: DEFAULT_APERTURE_RADIUS,           // Scalar radius for aperture points
         coneAngle: DEFAULT_CONE_ANGLE,                     // Cone angle in degrees

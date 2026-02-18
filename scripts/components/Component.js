@@ -192,11 +192,51 @@ export class Component {
     return this.arrowVector;
   }
 
-  getArrowEndpoint() {
-    // Returns the absolute position of the arrow endpoint in world coordinates
+  /**
+   * Shared helper: transforms a local-space point to world space,
+   * matching the SVG transform chain:
+   *   translate(x,y) → rotate → scale+flip → translate(-cx,-cy)
+   */
+  _localToWorld(localX, localY) {
+    const cx = this.centerPoint.x;
+    const cy = this.centerPoint.y;
+    const flipX = this.flipX ? -1 : 1;
+    const flipY = this.flipY ? -1 : 1;
+    const rad = this.rotation * Math.PI / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    // Step 1: translate(-cx, -cy)
+    const lx = (localX - cx) * flipX;
+    const ly = (localY - cy) * flipY;
+    // Step 2: scale+flip then rotate
     return {
-      x: this.x + this.arrowVector.x,
-      y: this.y + this.arrowVector.y
+      x: this.x + (lx * cos - ly * sin) * this.scale,
+      y: this.y + (lx * sin + ly * cos) * this.scale
+    };
+  }
+
+  /** Returns centerPoint in world coordinates. */
+  getCenterPointWorld() {
+    return this._localToWorld(this.centerPoint.x, this.centerPoint.y);
+  }
+
+  /** Returns apertureCenter in world coordinates. */
+  getApertureCenterWorld() {
+    return this._localToWorld(this.apertureCenter.x, this.apertureCenter.y);
+  }
+
+  /** Returns all aperturePoints in world coordinates. */
+  getAperturePointsWorld() {
+    return this.aperturePoints.map(p => this._localToWorld(p.x, p.y));
+  }
+
+  getArrowEndpoint() {
+    // Returns the absolute position of the arrow tip in world coordinates.
+    // The arrow originates from the optical center (centerPoint in world space).
+    const oc = this.getCenterPointWorld();
+    return {
+      x: oc.x + this.arrowVector.x,
+      y: oc.y + this.arrowVector.y
     };
   }
 
@@ -346,18 +386,22 @@ export class Component {
   }
 
   _updateTransform(element) {
-    const transforms = [];
+    const cx = this.centerPoint.x;
+    const cy = this.centerPoint.y;
+    const sx = this.scale * (this.flipX ? -1 : 1);
+    const sy = this.scale * (this.flipY ? -1 : 1);
 
-    // Translate to position
-    transforms.push(`translate(${this.x}, ${this.y})`);
+    // Rotate & scale around centerPoint, then place centerPoint at (x, y) in world space.
+    // Chain: translate(x,y) → rotate → scale+flip → translate(-cx,-cy)
+    // Net effect: centerPoint stays fixed at (x,y) as rotation changes.
+    const transform = [
+      `translate(${this.x}, ${this.y})`,
+      `rotate(${this.rotation})`,
+      `scale(${sx}, ${sy})`,
+      `translate(${-cx}, ${-cy})`
+    ].join(' ');
 
-    // Rotate
-    transforms.push(`rotate(${this.rotation})`);
-
-    // Scale
-    transforms.push(`scale(${this.scale * (this.flipX ? -1 : 1)}, ${this.scale * (this.flipY ? -1 : 1)})`);
-
-    element.setAttribute('transform', transforms.join(' '));
+    element.setAttribute('transform', transform);
     
     // Update debug group counter-flip transform if it exists
     if (this.debugGroup) {

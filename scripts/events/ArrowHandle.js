@@ -24,10 +24,10 @@ export function showArrowHandle(componentId) {
   // Ensure arrowhead marker exists
   ensureArrowheadMarker(svg);
 
-  // Get component position (centerPoint in world coordinates)
-  const pos = component.getPosition();
-  const centerX = pos.x;
-  const centerY = pos.y;
+  // Arrow starts from the optical center (centerPoint in world space)
+  const oc = component.getCenterPointWorld();
+  const centerX = oc.x;
+  const centerY = oc.y;
 
   // Get arrow endpoint
   const endpoint = component.getArrowEndpoint();
@@ -117,11 +117,11 @@ function setupArrowDragging(handle, line, componentId, centerX, centerY) {
     handle.setAttribute('cx', snappedX);
     handle.setAttribute('cy', snappedY);
 
-    // Update component's arrow vector
+    // Update component's arrow vector (relative to optical center in world space)
     const component = componentManager.getComponent(componentId);
     if (component) {
-      const pos = component.getPosition();
-      component.setArrowVector(snappedX - pos.x, snappedY - pos.y);
+      const oc = component.getCenterPointWorld();
+      component.setArrowVector(snappedX - oc.x, snappedY - oc.y);
     }
 
     e.preventDefault();

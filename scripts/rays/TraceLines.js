@@ -38,18 +38,16 @@ export function drawTraceLines() {
         const parentComponent = componentManager.getComponent(component.parent);
         if (!parentComponent) return;
         
-        // Get positions (center points)
-        // Since components pivot around their center (0,0 local = x,y global),
-        // we use their (x,y) position directly.
-        const childPos = component.getPosition();
-        const parentPos = parentComponent.getPosition();
+        // Get aperture centers in world space
+        const childCenter = component.getApertureCenterWorld();
+        const parentCenter = parentComponent.getApertureCenterWorld();
         
-        // Draw black dotted line between centers
+        // Draw black dotted line between aperture centers
         const traceLine = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        traceLine.setAttribute("x1", parentPos.x);
-        traceLine.setAttribute("y1", parentPos.y);
-        traceLine.setAttribute("x2", childPos.x);
-        traceLine.setAttribute("y2", childPos.y);
+        traceLine.setAttribute("x1", parentCenter.x);
+        traceLine.setAttribute("y1", parentCenter.y);
+        traceLine.setAttribute("x2", childCenter.x);
+        traceLine.setAttribute("y2", childCenter.y);
         traceLine.setAttribute("stroke", "black");
         traceLine.setAttribute("stroke-width", "1");
         traceLine.setAttribute("stroke-dasharray", "5,5");

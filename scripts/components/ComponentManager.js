@@ -21,12 +21,11 @@ export class ComponentManager {
     const id = this.idCounter++;
     const component = new Component(type);
     
-    // Set position (use provided or default)
+    // Set position (use provided or default).
+    // (x, y) is now the world position of the component's centerPoint,
+    // so no offset compensation is needed.
     const pos = position || this.nextPosition;
-    
-    // Compensate for centerPoint offset so the actual centerPoint lands at the desired position
-    const centerPoint = component.centerPoint || { x: 0, y: 0 };
-    component.setPosition(pos.x - centerPoint.x, pos.y - centerPoint.y);
+    component.setPosition(pos.x, pos.y);
     
     // Align new component's forward vector with the previously selected component's arrow vector
     const previousId = this.currentId;

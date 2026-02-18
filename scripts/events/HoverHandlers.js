@@ -25,20 +25,24 @@ export function createComponentHoverBox(component) {
   rect.setAttribute('stroke-width', '2.5');
   rect.setAttribute('pointer-events', 'none');
   
-  // Get component properties
   const { x, y } = component.getPosition();
   const { width, height } = component;
   const rotation = component.getRotation();
   const scale = component.getScale();
-  
-  // Set box dimensions (relative to origin)
+  const cx = component.centerPoint?.x ?? 0;
+  const cy = component.centerPoint?.y ?? 0;
+  const sx = scale * (component.flipX ? -1 : 1);
+  const sy = scale * (component.flipY ? -1 : 1);
+
+  // Rect centered at local origin — translate(-cx,-cy) in the transform already
+  // moves centerPoint to the origin before rotation/scale are applied.
   rect.setAttribute('x', -width / 2);
   rect.setAttribute('y', -height / 2);
   rect.setAttribute('width', width);
   rect.setAttribute('height', height);
-  
-  // Apply transform: translate to position, then rotate and scale
-  const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${scale})`;
+
+  // Must match _updateTransform: translate(x,y) rotate scale translate(-cx,-cy)
+  const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`;
   rect.setAttribute('transform', transform);
   
   return rect;
@@ -57,21 +61,24 @@ export function showHoverBox(id) {
   // Create new hover box
   hoverBox = createHoverBox();
   
-  // Get component properties
   const { x, y } = component.getPosition();
   const { width, height } = component;
   const rotation = component.getRotation();
   const scale = component.getScale();
-  const centerPoint = component.centerPoint || { x: 0, y: 0 };
-  
-  // Set box dimensions (relative to origin)
+  const cx = component.centerPoint?.x ?? 0;
+  const cy = component.centerPoint?.y ?? 0;
+  const sx = scale * (component.flipX ? -1 : 1);
+  const sy = scale * (component.flipY ? -1 : 1);
+
+  // Rect centered at local origin — translate(-cx,-cy) in the transform already
+  // moves centerPoint to the origin before rotation/scale are applied.
   hoverBox.setAttribute('x', -width / 2);
   hoverBox.setAttribute('y', -height / 2);
   hoverBox.setAttribute('width', width);
   hoverBox.setAttribute('height', height);
-  
-  // Apply transform: translate to position, then rotate and scale
-  const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${scale})`;
+
+  // Must match _updateTransform: translate(x,y) rotate scale translate(-cx,-cy)
+  const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`;
   hoverBox.setAttribute('transform', transform);
   
   canvas.appendChild(hoverBox);
@@ -102,20 +109,21 @@ export function showMultipleHoverBoxes(componentIds) {
     if (component) {
       const box = createHoverBox();
       
-      // Get component properties
       const { x, y } = component.getPosition();
       const { width, height } = component;
       const rotation = component.getRotation();
       const scale = component.getScale();
-      
-      // Set box dimensions (relative to origin)
+      const cx = component.centerPoint?.x ?? 0;
+      const cy = component.centerPoint?.y ?? 0;
+      const sx = scale * (component.flipX ? -1 : 1);
+      const sy = scale * (component.flipY ? -1 : 1);
+
       box.setAttribute('x', -width / 2);
       box.setAttribute('y', -height / 2);
       box.setAttribute('width', width);
       box.setAttribute('height', height);
-      
-      // Apply transform: translate to position, then rotate and scale
-      const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${scale})`;
+
+      const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`;
       box.setAttribute('transform', transform);
       
       canvas.appendChild(box);
@@ -251,11 +259,14 @@ export function showRelinkHoverBoxes(validComponentIds, hoverBoxesArray) {
     const component = componentManager.getComponent(id);
     if (!component) return;
     
-    const pos = component.getPosition();
+    const { x, y } = component.getPosition();
     const rotation = component.getRotation();
     const scale = component.getScale();
-    const width = component.width * scale;
-    const height = component.height * scale;
+    const { width, height } = component;
+    const cx = component.centerPoint?.x ?? 0;
+    const cy = component.centerPoint?.y ?? 0;
+    const sx = scale * (component.flipX ? -1 : 1);
+    const sy = scale * (component.flipY ? -1 : 1);
     
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     rect.setAttribute('class', 'relink-hover-box');
@@ -266,9 +277,8 @@ export function showRelinkHoverBoxes(validComponentIds, hoverBoxesArray) {
     rect.setAttribute('fill', 'none');
     rect.setAttribute('stroke', LINK_HOVER_BOX_COLOR);
     rect.setAttribute('stroke-width', '2.5');
-    // rect.setAttribute('stroke-dasharray', '5,5');
     rect.setAttribute('pointer-events', 'none');
-    rect.setAttribute('transform', `translate(${pos.x}, ${pos.y}) rotate(${rotation})`);
+    rect.setAttribute('transform', `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`);
     
     canvas.appendChild(rect);
     hoverBoxesArray.push(rect);

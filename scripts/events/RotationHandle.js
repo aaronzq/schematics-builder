@@ -11,9 +11,7 @@ import { showValueDisplay, hideValueDisplay } from './ValueDisplay.js';
 import { 
   clearSelectionHoverBoxes, 
   createComponentHoverBox, 
-  addSelectionHoverBox,
-  showHoverBox,
-  removeHoverBox
+  addSelectionHoverBox 
 } from './HoverHandlers.js';
 import { showUnifiedBoundingBox, removeUnifiedBoundingBox, getUnifiedBoundingBoxBounds } from './InteractionHandlers.js';
 import { updateRays } from '../rays/DrawRays.js';
@@ -24,13 +22,13 @@ export function showRotationHandle(componentId) {
   const component = componentManager.getComponent(componentId);
   if (!component) return;
 
-  const pos = component.getPosition();
+  const oc = component.getCenterPointWorld();
   const rotation = component.getRotation();
   const scale = component.getScale();
 
   const angleRad = rotation * Math.PI / 180;
-  const handleX = pos.x + ROTATION_HANDLE_DISTANCE * scale * Math.cos(angleRad - Math.PI/2);
-  const handleY = pos.y + ROTATION_HANDLE_DISTANCE * scale * Math.sin(angleRad - Math.PI/2);
+  const handleX = oc.x + ROTATION_HANDLE_DISTANCE * scale * Math.cos(angleRad - Math.PI/2);
+  const handleY = oc.y + ROTATION_HANDLE_DISTANCE * scale * Math.sin(angleRad - Math.PI/2);
 
   const schematics = document.getElementById('schematics');
   if (!schematics) return;
@@ -65,7 +63,7 @@ export function showRotationHandle(componentId) {
 
   schematics.appendChild(handle);
 
-  setupRotationHandleDrag(handle, componentId, pos.x, pos.y);
+  setupRotationHandleDrag(handle, componentId, oc.x, oc.y);
 }
 
 export function removeRotationHandle() {
@@ -318,7 +316,6 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
       icon.setAttribute('font-size', 1.5 * 5 * ROTATION_HANDLE_RADIUS);
     }
 
-    removeHoverBox();
     document.addEventListener('mousemove', handleDrag);
     document.addEventListener('mouseup', handleEnd);
   });
@@ -368,7 +365,6 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
     }
 
     showScaleHandle(componentId);
-    showHoverBox(componentId);
     updateRays();
   } 
 

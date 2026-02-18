@@ -27,34 +27,17 @@ export function drawApertureRays() {
         const parentComponent = componentManager.getComponent(component.parent);
         if (!parentComponent) return;
         
-        // Get aperture points in local coordinates
-        const childAperturePoints = component.aperturePoints;
-        const parentAperturePoints = parentComponent.aperturePoints;
-        
-        if (!childAperturePoints || childAperturePoints.length < 2) return;
-        if (!parentAperturePoints || parentAperturePoints.length < 2) return;
-        
-        // Transform aperture points to global coordinates
-        const childUpper = transformToGlobal(
-            childAperturePoints[0].x,
-            childAperturePoints[0].y,
-            component
-        );
-        const childLower = transformToGlobal(
-            childAperturePoints[1].x,
-            childAperturePoints[1].y,
-            component
-        );
-        const parentUpper = transformToGlobal(
-            parentAperturePoints[0].x,
-            parentAperturePoints[0].y,
-            parentComponent
-        );
-        const parentLower = transformToGlobal(
-            parentAperturePoints[1].x,
-            parentAperturePoints[1].y,
-            parentComponent
-        );
+        // Get aperture points in world coordinates
+        const childWorldPoints = component.getAperturePointsWorld();
+        const parentWorldPoints = parentComponent.getAperturePointsWorld();
+
+        if (!childWorldPoints || childWorldPoints.length < 2) return;
+        if (!parentWorldPoints || parentWorldPoints.length < 2) return;
+
+        const childUpper = childWorldPoints[0];
+        const childLower = childWorldPoints[1];
+        const parentUpper = parentWorldPoints[0];
+        const parentLower = parentWorldPoints[1];
         
         // Draw collimated ray (rectangle connecting parent apertures to child apertures)
         // Upper parent → Upper child, Lower parent → Lower child
@@ -104,32 +87,3 @@ export function toggleApertureRays() {
     }
 }
 
-/**
- * Transform a point from local component coordinates to global SVG coordinates.
- * 
- * @param {number} localX - Local x coordinate
- * @param {number} localY - Local y coordinate
- * @param {Component} component - Component instance
- * @returns {{x: number, y: number}} Global coordinates
- */
-function transformToGlobal(localX, localY, component) {
-    const rotation = component.rotation * Math.PI / 180;
-    const cos = Math.cos(rotation);
-    const sin = Math.sin(rotation);
-    
-    // Apply flip
-    const flipX = component.flipX ? -1 : 1;
-    const flipY = component.flipY ? -1 : 1;
-    const flippedX = localX * flipX;
-    const flippedY = localY * flipY;
-    
-    // Apply rotation
-    const rotatedX = flippedX * cos - flippedY * sin;
-    const rotatedY = flippedX * sin + flippedY * cos;
-    
-    // Apply scale and translation
-    return {
-        x: component.x + rotatedX * component.scale,
-        y: component.y + rotatedY * component.scale
-    };
-}
