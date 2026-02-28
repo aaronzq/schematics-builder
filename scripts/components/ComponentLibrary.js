@@ -68,6 +68,9 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 
 
 export const components = {
+
+    // ── Lens ─────────────────────────────────────────────────────────────────
+
     objective: {
         category: 'Lens',
         label: 'Objective',
@@ -79,7 +82,6 @@ export const components = {
         apertureRadius: DEFAULT_APERTURE_RADIUS,
         coneAngle: DEFAULT_CONE_ANGLE,
         rayShape: 'collimated',
-        
 
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
@@ -141,7 +143,6 @@ export const components = {
         }
     },
 
-
     lens: {
         category: 'Lens',
         label: 'Convex Lens',
@@ -153,7 +154,6 @@ export const components = {
         apertureRadius: DEFAULT_APERTURE_RADIUS,
         coneAngle: DEFAULT_CONE_ANGLE,
         rayShape: 'collimated',
-        
 
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
@@ -170,6 +170,52 @@ export const components = {
         }
     },
 
+    'lenslet-array': {
+        category: 'Lens',
+        label: 'Lenslet Array',
+        // Lenslet array: 5 small double-convex lenslets stacked vertically.
+        // Overall height ~60 units, width ~12 units.
+        localBounds: { minX: -7.5, maxX: 7.5, minY: -30, maxY: 30 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, 'g');
+
+            // 5 small double-convex lenslets, evenly spaced over 60-unit height
+            const count = 5;
+            const spacing = 12;           // px between lenslet centres
+            const lensHalf = 6;           // half-height of each lenslet
+            const curve   = 3.6;          // horizontal bulge of the Bézier curves
+
+            for (let i = 0; i < count; i++) {
+                const cy = (i - (count - 1) / 2) * spacing;  // centre y of this lenslet
+                const t  = cy - lensHalf;
+                const b  = cy + lensHalf;
+
+                const lens = document.createElementNS(ns, 'path');
+                // Double-convex outline using two cubic Bézier curves
+                lens.setAttribute('d',
+                    `M 0 ${t} C ${curve} ${t + 1} ${curve} ${b - 1} 0 ${b}` +
+                    ` C ${-curve} ${b - 1} ${-curve} ${t + 1} 0 ${t}`);
+                lens.setAttribute('stroke', 'black');
+                lens.setAttribute('stroke-width', '1');
+                lens.setAttribute('fill', '#145ec0');
+                lens.setAttribute('fill-opacity', '0.3');
+                g.appendChild(lens);
+            }
+
+            return g;
+        }
+    },
+
+    // ── Mirrors ───────────────────────────────────────────────────────────────
+
     mirror: {
         category: 'Mirrors',
         label: 'Flat Mirror',
@@ -181,6 +227,7 @@ export const components = {
         apertureRadius: DEFAULT_APERTURE_RADIUS,
         coneAngle: DEFAULT_CONE_ANGLE,
         rayShape: 'collimated',
+
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
             
@@ -206,34 +253,7 @@ export const components = {
         }
     },
 
-    plane: {
-        category: 'Misc',
-        label: 'Plane',
-        localBounds: { minX: -3, maxX: 3, minY: -20, maxY: 20 },
-        centerPoint: { x: 0, y: 0 },
-        forwardVector: { x: 1, y: 0 },
-        apertureCenter: {x: 0, y: 0},
-        upVector: { x: 0, y: -1 },
-        apertureRadius: DEFAULT_APERTURE_RADIUS,
-        coneAngle: DEFAULT_CONE_ANGLE,
-        rayShape: 'collimated',
-        
-        draw: (ns) => {
-            const g = document.createElementNS(ns, "g");
-            
-            // Solid vertical line
-            const plane = document.createElementNS(ns, "line");
-            plane.setAttribute("x1", "0");
-            plane.setAttribute("y1", "-20");
-            plane.setAttribute("x2", "0");
-            plane.setAttribute("y2", "20");
-            plane.setAttribute("stroke", "black");
-            plane.setAttribute("stroke-width", "1.5");
-            g.appendChild(plane);
-
-            return g;
-        }
-    },
+    // ── Prisms ────────────────────────────────────────────────────────────────
 
     'right-angle-prism': {
         category: 'Prisms',
@@ -264,6 +284,8 @@ export const components = {
             return g;
         }
     },
+
+    // ── Detectors ─────────────────────────────────────────────────────────────
 
     detector: {
         category: 'Detectors',
@@ -314,45 +336,32 @@ export const components = {
         }
     },
 
-    'lenslet-array': {
-        category: 'Lens',
-        label: 'Lenslet Array',
-        // Lenslet array: 5 small double-convex lenslets stacked vertically.
-        // Overall height ~60 units, width ~12 units.
-        localBounds: { minX: -7.5, maxX: 7.5, minY: -30, maxY: 30 },
+    // ── Misc ──────────────────────────────────────────────────────────────────
+
+    plane: {
+        category: 'Misc',
+        label: 'Plane',
+        localBounds: { minX: -3, maxX: 3, minY: -20, maxY: 20 },
         centerPoint: { x: 0, y: 0 },
-        apertureCenter: { x: 0, y: 0 },
-        upVector: { x: 0, y: -1 },
         forwardVector: { x: 1, y: 0 },
+        apertureCenter: {x: 0, y: 0},
+        upVector: { x: 0, y: -1 },
         apertureRadius: DEFAULT_APERTURE_RADIUS,
         coneAngle: DEFAULT_CONE_ANGLE,
         rayShape: 'collimated',
-
+        
         draw: (ns) => {
-            const g = document.createElementNS(ns, 'g');
-
-            // 5 small double-convex lenslets, evenly spaced over 60-unit height
-            const count = 5;
-            const spacing = 12;           // px between lenslet centres
-            const lensHalf = 6;           // half-height of each lenslet
-            const curve   = 3.6;          // horizontal bulge of the Bézier curves
-
-            for (let i = 0; i < count; i++) {
-                const cy = (i - (count - 1) / 2) * spacing;  // centre y of this lenslet
-                const t  = cy - lensHalf;
-                const b  = cy + lensHalf;
-
-                const lens = document.createElementNS(ns, 'path');
-                // Double-convex outline using two cubic Bézier curves
-                lens.setAttribute('d',
-                    `M 0 ${t} C ${curve} ${t + 1} ${curve} ${b - 1} 0 ${b}` +
-                    ` C ${-curve} ${b - 1} ${-curve} ${t + 1} 0 ${t}`);
-                lens.setAttribute('stroke', 'black');
-                lens.setAttribute('stroke-width', '1');
-                lens.setAttribute('fill', '#145ec0');
-                lens.setAttribute('fill-opacity', '0.3');
-                g.appendChild(lens);
-            }
+            const g = document.createElementNS(ns, "g");
+            
+            // Solid vertical line
+            const plane = document.createElementNS(ns, "line");
+            plane.setAttribute("x1", "0");
+            plane.setAttribute("y1", "-20");
+            plane.setAttribute("x2", "0");
+            plane.setAttribute("y2", "20");
+            plane.setAttribute("stroke", "black");
+            plane.setAttribute("stroke-width", "1.5");
+            g.appendChild(plane);
 
             return g;
         }
