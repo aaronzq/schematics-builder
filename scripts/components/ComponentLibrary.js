@@ -285,6 +285,42 @@ export const components = {
         }
     },
 
+    cube: {
+        category: 'Mirrors',
+        label: 'Beamsplitter Cube',
+        localBounds: { minX: -42, maxX: 42, minY: -42, maxY: 42 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            const cube = document.createElementNS(ns, "path");
+            cube.setAttribute("d", "M 0 -42 L -42 0 L 0 42 L 42 0 Z");
+            cube.setAttribute("stroke", "black");
+            cube.setAttribute("stroke-width", "1.5");
+            cube.setAttribute("fill", "#145ec0");
+            cube.setAttribute("fill-opacity", "0.4");
+            g.appendChild(cube);
+
+            const surface = document.createElementNS(ns, "line");
+            surface.setAttribute("x1", "0");
+            surface.setAttribute("y1", "-42");
+            surface.setAttribute("x2", "0");
+            surface.setAttribute("y2", "42");
+            surface.setAttribute("stroke", "black");
+            surface.setAttribute("stroke-width", "2.5");
+            g.appendChild(surface);
+
+            return g;
+        }
+    },
+
     // ── Detectors ─────────────────────────────────────────────────────────────
 
     detector: {
@@ -336,7 +372,183 @@ export const components = {
         }
     },
 
+    // ── Optoelectronics ───────────────────────────────────────────────────────
+
+    slm: {
+        category: 'Optoelectronics',
+        label: 'SLM',
+        localBounds: { minX: -5, maxX: 5, minY: -40, maxY: 40 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            const baseplate = document.createElementNS(ns, "rect");
+            baseplate.setAttribute("x", "0");
+            baseplate.setAttribute("y", "-40");
+            baseplate.setAttribute("width", "5");
+            baseplate.setAttribute("height", "80");
+            baseplate.setAttribute("stroke", "black");
+            baseplate.setAttribute("stroke-width", "1.5");
+            baseplate.setAttribute("fill", "#868686");
+            g.appendChild(baseplate);
+
+            const lc = document.createElementNS(ns, "rect");
+            lc.setAttribute("x", "-5");
+            lc.setAttribute("y", "-30");
+            lc.setAttribute("width", "5");
+            lc.setAttribute("height", "60");
+            lc.setAttribute("fill", "#145ec0");
+            lc.setAttribute("fill-opacity", "0.5");
+            g.appendChild(lc);
+
+            return g;
+        }
+    },
+
+    dmd: {
+        category: 'Optoelectronics',
+        label: 'DMD',
+        localBounds: { minX: -5, maxX: 5, minY: -40, maxY: 40 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            const baseplate = document.createElementNS(ns, "rect");
+            baseplate.setAttribute("x", "0");
+            baseplate.setAttribute("y", "-40");
+            baseplate.setAttribute("width", "5");
+            baseplate.setAttribute("height", "80");
+            baseplate.setAttribute("stroke", "black");
+            baseplate.setAttribute("stroke-width", "1.5");
+            baseplate.setAttribute("fill", "#868686");
+            g.appendChild(baseplate);
+
+            const mirror1 = document.createElementNS(ns, "rect");
+            mirror1.setAttribute("x", "-5");
+            mirror1.setAttribute("y", "-30");
+            mirror1.setAttribute("width", "5");
+            mirror1.setAttribute("height", "18");
+            mirror1.setAttribute("fill", "#000000");
+            g.appendChild(mirror1);
+
+            const mirror2 = document.createElementNS(ns, "rect");
+            mirror2.setAttribute("x", "-5");
+            mirror2.setAttribute("y", "-5");
+            mirror2.setAttribute("width", "5");
+            mirror2.setAttribute("height", "10");
+            mirror2.setAttribute("fill", "#000000");
+            g.appendChild(mirror2);
+
+            const mirror3 = document.createElementNS(ns, "rect");
+            mirror3.setAttribute("x", "-5");
+            mirror3.setAttribute("y", "10");
+            mirror3.setAttribute("width", "5");
+            mirror3.setAttribute("height", "20");
+            mirror3.setAttribute("fill", "#000000");
+            g.appendChild(mirror3);
+
+            return g;
+        }
+    },
+
+    'polygon-scanner': {
+        category: 'Optoelectronics',
+        label: 'Polygon Scanner',
+        // Hexagonal body centered at hub (0,0): x: [-73, 73], y: [-83, 83].
+        localBounds: { minX: -73, maxX: 73, minY: -83, maxY: 83 },
+        centerPoint: { x: -73, y: 0 },
+        apertureCenter: { x: -73, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            const baseplate = document.createElementNS(ns, "path");
+            baseplate.setAttribute("d", "M -73 -42 L -73 42 L 0 83 L 73 42 L 73 -42 L 0 -83 Z");
+            baseplate.setAttribute("stroke", "black");
+            baseplate.setAttribute("stroke-width", "1.5");
+            baseplate.setAttribute("fill", "#a8a8a8");
+            g.appendChild(baseplate);
+
+            // Rotation indicator — 240-degree arc around hub (0, 0)
+            const centerX = 0, centerY = 0, radius = 25;
+            const startAngle = -Math.PI / 2;
+            const endAngle = startAngle + (240 * Math.PI / 180);
+            const startX = centerX + radius * Math.cos(startAngle);
+            const startY = centerY + radius * Math.sin(startAngle);
+            const endX   = centerX + radius * Math.cos(endAngle);
+            const endY   = centerY + radius * Math.sin(endAngle);
+
+            const rotationArc = document.createElementNS(ns, "path");
+            rotationArc.setAttribute("d", `M ${startX} ${startY} A ${radius} ${radius} 0 1 1 ${endX} ${endY}`);
+            rotationArc.setAttribute("stroke", "black");
+            rotationArc.setAttribute("stroke-width", "1.5");
+            rotationArc.setAttribute("fill", "none");
+            g.appendChild(rotationArc);
+
+            // Arrowhead at arc end
+            const arrowSize = 6;
+            const arrowAngle = endAngle + Math.PI / 6 - Math.PI / 2;
+            const arrow = document.createElementNS(ns, "path");
+            arrow.setAttribute("d",
+                `M ${endX} ${endY} L ${endX + arrowSize * Math.cos(arrowAngle)} ${endY + arrowSize * Math.sin(arrowAngle)}` +
+                ` M ${endX} ${endY} L ${endX + arrowSize * Math.cos(arrowAngle - Math.PI/3)} ${endY + arrowSize * Math.sin(arrowAngle - Math.PI/3)}`
+            );
+            arrow.setAttribute("stroke", "black");
+            arrow.setAttribute("stroke-width", "1.5");
+            arrow.setAttribute("stroke-linecap", "round");
+            g.appendChild(arrow);
+
+            return g;
+        }
+    },
+
     // ── Misc ──────────────────────────────────────────────────────────────────
+    
+    point: {
+        category: 'Misc',
+        label: 'Point',
+        localBounds: { minX: -2.5, maxX: 2.5, minY: -2.5, maxY: 2.5 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: 0,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'convergent',
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, "g");
+
+            const point = document.createElementNS(ns, "circle");
+            point.setAttribute("cx", "0");
+            point.setAttribute("cy", "0");
+            point.setAttribute("r", "2.5");
+            point.setAttribute("stroke", "black");
+            point.setAttribute("fill", "black");
+            g.appendChild(point);
+
+            return g;
+        }
+    },
 
     plane: {
         category: 'Misc',
@@ -366,6 +578,8 @@ export const components = {
             return g;
         }
     },
+
+
 
 }
 

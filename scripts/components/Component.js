@@ -56,7 +56,7 @@ export class Component {
     this.forwardVector = config.forwardVector || { x: 1, y: 0 };
     this.apertureCenter = config.apertureCenter || { x: 0, y: 0 };
     this.upVector = config.upVector || { x: 0, y: -1 };
-    this.apertureRadius = config.apertureRadius || 15;
+    this.apertureRadius = config.apertureRadius ?? 15;
     this.aperturePoints = this._getAperturePoints();
     this.coneAngle = config.coneAngle ?? 0;
     this.rayShape = config.rayShape || 'collimated';
@@ -308,9 +308,12 @@ export class Component {
     }
 
     // Create a group for debug elements with counter-flip transform
+    // Must pivot around centerPoint (after translate(-cx,-cy) the origin is at -cx,-cy in local space)
     const debugGroup = document.createElementNS(ns, 'g');
     this.debugGroup = debugGroup;
-    const counterFlipScale = `scale(${this.flipX ? -1 : 1}, ${this.flipY ? -1 : 1})`;
+    const cx = this.centerPoint.x;
+    const cy = this.centerPoint.y;
+    const counterFlipScale = `translate(${cx}, ${cy}) scale(${this.flipX ? -1 : 1}, ${this.flipY ? -1 : 1}) translate(${-cx}, ${-cy})`;
     debugGroup.setAttribute('transform', counterFlipScale);
     
     // Center marker (red dot)
@@ -346,9 +349,9 @@ export class Component {
     forwardLine.setAttribute('pointer-events', 'none');
     debugGroup.appendChild(forwardLine);
 
-    // Aperture points (blue dots)
+    // Aperture points (blue dots) — skip when radius is 0 (no meaningful aperture)
     const aperturePoints = this._getAperturePoints();
-    if (aperturePoints && aperturePoints.length >= 2) {
+    if (aperturePoints && aperturePoints.length >= 2 && this.apertureRadius > 0) {
       // Upper aperture point
       const upperPoint = document.createElementNS(ns, 'circle');
       upperPoint.setAttribute('cx', aperturePoints[0].x);
@@ -408,7 +411,7 @@ export class Component {
     
     // Update debug group counter-flip transform if it exists
     if (this.debugGroup) {
-      const counterFlipScale = `scale(${this.flipX ? -1 : 1}, ${this.flipY ? -1 : 1})`;
+      const counterFlipScale = `translate(${cx}, ${cy}) scale(${this.flipX ? -1 : 1}, ${this.flipY ? -1 : 1}) translate(${-cx}, ${-cy})`;
       this.debugGroup.setAttribute('transform', counterFlipScale);
     }
   }
