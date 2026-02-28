@@ -897,7 +897,7 @@ document.getElementById('center-all-btn').addEventListener('click', () => {
 
 ### ✅ Fully Implemented (Current scripts/)
 - **Canvas Management**: Pan, zoom, viewport, grid system
-- **Component Library**: Complete component definitions with 40+ optical elements
+- **Component Library**: Complete component definitions with optical elements. Each entry carries `category`, `label`, `localBounds`, `centerPoint`, `apertureCenter`, `upVector`, `forwardVector`, `apertureRadius`, `coneAngle`, `rayShape`, and a `draw(ns)` function. The sidebar menu is **generated dynamically** from these definitions by `buildComponentMenu()` — no `index.html` changes needed to add a component.
 - **Component Manager**: State management, add/remove, positioning, rotation
 - **Interaction System**: Drag, rotation handle, scale handle, arrow handle
 - **Event System**: Mouse/keyboard handlers, selection logic
@@ -1147,8 +1147,8 @@ scripts/
 ├── components/         # Component system
 │   ├── Component.js            # State & lifecycle
 │   ├── ComponentManager.js     # Add/remove/update
-│   ├── ComponentLibrary.js     # Definitions
-│   ├── ComponentMenu.js        # Spawn UI
+│   ├── ComponentLibrary.js     # Component definitions: category, label, localBounds, draw fn, optical props
+│   ├── ComponentMenu.js        # buildComponentMenu() — dynamically generates sidebar from library definitions
 │   └── ComponentActions.js     # Operations
 ├── events/             # Interactions
 │   ├── InteractionHandlers.js  # Selection/click
@@ -1167,6 +1167,51 @@ scripts/
     ├── colorUtils.js
     └── domUtils.js
 ```
+
+## Adding a New Component
+
+**Only one file needs to change: `scripts/components/ComponentLibrary.js`.**
+
+Add an entry to the `components` object. The sidebar button and category section are generated automatically by `buildComponentMenu()` at startup.
+
+```js
+'my-component': {
+    // --- Sidebar ---
+    category: 'My Category',   // existing or new section name
+    label:    'My Label',      // text on the sidebar button
+
+    // --- Geometry (local coordinate space) ---
+    localBounds:    { minX: -W/2, maxX: W/2, minY: -H/2, maxY: H/2 },
+    centerPoint:    { x: 0, y: 0 },   // rotation pivot & ray-trace anchor
+    apertureCenter: { x: 0, y: 0 },   // where aperture points are centred
+    upVector:       { x: 0, y: -1 },  // direction aperture extends along
+    forwardVector:  { x: 1, y: 0 },   // direction arrow handle points
+
+    // --- Optical properties ---
+    apertureRadius: DEFAULT_APERTURE_RADIUS,
+    coneAngle:      DEFAULT_CONE_ANGLE,
+    rayShape:       'collimated',      // 'collimated' | 'divergent' | 'convergent'
+
+    // --- SVG artwork ---
+    draw: (ns) => {
+        const g = document.createElementNS(ns, 'g');
+        // ... build SVG children ...
+        return g;
+    }
+},
+```
+
+### Dynamic sidebar generation (`ComponentMenu.js`)
+
+`buildComponentMenu()` runs once at `DOMContentLoaded` (before `setupComponentButtons()`):
+
+1. Iterates `Object.entries(components)` in insertion order.
+2. Groups entries by `category` into a `Map` — new categories are created automatically.
+3. For each category builds: `.component-menu` → `.category-header` → `.category-content` → `<button data-component="key">label</button>`.
+4. Injects everything into `<div id="component-menu-root">` in `index.html`.
+5. Attaches collapse/expand click listeners to each `.category-header`.
+
+`setupComponentButtons()` in `ButtonHandlers.js` uses event delegation (`e.target.closest('button[data-component]')`), so it works on the dynamically generated buttons without any changes.
 
 ## Implementation Plans
 

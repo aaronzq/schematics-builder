@@ -1,6 +1,6 @@
 import { setupComponentButtons, setupActionButtons, updateToolbarButtons } from './events/ButtonHandlers.js';
 import { setupComponentSelection, setupComponentDragging, setupCanvasPanning, setupCanvasZoom, setupSelectionBox } from './events/InteractionHandlers.js';
-import { setupCategoryFolding } from './components/ComponentMenu.js';
+import { buildComponentMenu } from './components/ComponentMenu.js';
 import { setupFilenameEditor } from './Fileio.js';
 
 export function initializeApp() {
@@ -11,14 +11,14 @@ export function initializeApp() {
     throw new Error('Canvas element (#canvas) not found in HTML');
   }
 
-  setupComponentButtons();
+  buildComponentMenu();      // generate sidebar from ComponentLibrary definitions
+  setupComponentButtons();   // wire click handlers onto the generated buttons
   setupActionButtons();
   setupComponentSelection();
   setupComponentDragging();
   setupCanvasPanning();
   setupCanvasZoom();
   setupSelectionBox();
-  setupCategoryFolding();
   setupFilenameEditor();
   updateToolbarButtons();
 
