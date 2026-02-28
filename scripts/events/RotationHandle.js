@@ -11,7 +11,8 @@ import { showValueDisplay, hideValueDisplay } from './ValueDisplay.js';
 import { 
   clearSelectionHoverBoxes, 
   createComponentHoverBox, 
-  addSelectionHoverBox 
+  addSelectionHoverBox,
+  updateHoverBoxTransform,
 } from './HoverHandlers.js';
 import { showUnifiedBoundingBox, removeUnifiedBoundingBox, getUnifiedBoundingBoxBounds } from './InteractionHandlers.js';
 import { updateRays } from '../rays/DrawRays.js';
@@ -363,6 +364,9 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
       icon.setAttribute('y', handleY);
       icon.setAttribute('font-size', 1.5 * 5 * ROTATION_HANDLE_RADIUS);
     }
+
+    // Keep the selection hover box in sync with the rotating component
+    updateHoverBoxTransform(component);
 
     showScaleHandle(componentId);
     updateRays();

@@ -96,6 +96,25 @@ export function removeHoverBox() {
 }
 
 /**
+ * Update the transform of the existing singleton hover box to match the
+ * component's current rotation. Called every frame during single-component
+ * rotation drag so the box tracks the component.
+ * @param {object} component
+ */
+export function updateHoverBoxTransform(component) {
+  if (!hoverBox) return;
+  const { x, y } = component.getPosition();
+  const rotation = component.getRotation();
+  const scale = component.getScale();
+  const cx = component.centerPoint?.x ?? 0;
+  const cy = component.centerPoint?.y ?? 0;
+  const sx = scale * (component.flipX ? -1 : 1);
+  const sy = scale * (component.flipY ? -1 : 1);
+  hoverBox.setAttribute('transform',
+    `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`);
+}
+
+/**
  * Show hover boxes for multiple selected components
  * @param {Array} componentIds - Array of component IDs to show hover boxes for
  */
