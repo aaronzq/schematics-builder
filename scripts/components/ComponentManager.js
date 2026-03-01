@@ -219,6 +219,9 @@ export class ComponentManager {
       }
     });
 
+    // Remove debug overlay elements (lives outside the component element)
+    component.removeDebugElements();
+
     // Remove from DOM
     const element = document.querySelector(`[data-id="${id}"]`);
     if (element) {

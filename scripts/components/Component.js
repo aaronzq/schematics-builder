@@ -307,73 +307,148 @@ export class Component {
       ensureDebugMarkers(svg);
     }
 
-    // Create a group for debug elements with counter-flip transform
-    // Must pivot around centerPoint (after translate(-cx,-cy) the origin is at -cx,-cy in local space)
+    // The debugGroup lives in the top-level #debug-overlay layer, NOT inside the
+    // component's <g>. This means it inherits NO component transform (no scale, no
+    // rotate, no flip). All positions are written directly in world coordinates and
+    // are refreshed by _updateDebugElements() whenever the component moves/rotates/scales.
     const debugGroup = document.createElementNS(ns, 'g');
+    debugGroup.setAttribute('data-debug-for', this.id);
+    debugGroup.setAttribute('pointer-events', 'none');
     this.debugGroup = debugGroup;
-    const cx = this.centerPoint.x;
-    const cy = this.centerPoint.y;
-    const counterFlipScale = `translate(${cx}, ${cy}) scale(${this.flipX ? -1 : 1}, ${this.flipY ? -1 : 1}) translate(${-cx}, ${-cy})`;
-    debugGroup.setAttribute('transform', counterFlipScale);
-    
+
     // Center marker (red dot)
     const centerMarker = document.createElementNS(ns, 'circle');
-    centerMarker.setAttribute('cx', this.centerPoint.x);
-    centerMarker.setAttribute('cy', this.centerPoint.y);
     centerMarker.setAttribute('r', CENTER_MARKER_RADIUS);
     centerMarker.setAttribute('fill', 'red');
     centerMarker.setAttribute('pointer-events', 'none');
+    centerMarker.setAttribute('data-debug-role', 'center');
     debugGroup.appendChild(centerMarker);
 
     // Up vector (green arrow)
     const upLine = document.createElementNS(ns, 'line');
-    upLine.setAttribute('x1', this.centerPoint.x);
-    upLine.setAttribute('y1', this.centerPoint.y);
-    upLine.setAttribute('x2', this.centerPoint.x + this.upVector.x * UP_VECTOR_LENGTH);
-    upLine.setAttribute('y2', this.centerPoint.y + this.upVector.y * UP_VECTOR_LENGTH);
     upLine.setAttribute('stroke', 'green');
     upLine.setAttribute('stroke-width', '1');
     upLine.setAttribute('marker-end', 'url(#upVectorArrow)');
     upLine.setAttribute('pointer-events', 'none');
+    upLine.setAttribute('data-debug-role', 'up-vector');
     debugGroup.appendChild(upLine);
 
     // Forward vector (blue arrow)
     const forwardLine = document.createElementNS(ns, 'line');
-    forwardLine.setAttribute('x1', this.centerPoint.x);
-    forwardLine.setAttribute('y1', this.centerPoint.y);
-    forwardLine.setAttribute('x2', this.centerPoint.x + this.forwardVector.x * FORWARD_VECTOR_LENGTH);
-    forwardLine.setAttribute('y2', this.centerPoint.y + this.forwardVector.y * FORWARD_VECTOR_LENGTH);
     forwardLine.setAttribute('stroke', 'blue');
     forwardLine.setAttribute('stroke-width', '1');
     forwardLine.setAttribute('marker-end', 'url(#forwardVectorArrow)');
     forwardLine.setAttribute('pointer-events', 'none');
+    forwardLine.setAttribute('data-debug-role', 'forward-vector');
     debugGroup.appendChild(forwardLine);
 
-    // Aperture points (blue dots) — skip when radius is 0 (no meaningful aperture)
-    const aperturePoints = this._getAperturePoints();
-    if (aperturePoints && aperturePoints.length >= 2 && this.apertureRadius > 0) {
-      // Upper aperture point
+    // Aperture points (blue dots) — only when radius > 0
+    if (this.apertureRadius > 0) {
       const upperPoint = document.createElementNS(ns, 'circle');
-      upperPoint.setAttribute('cx', aperturePoints[0].x);
-      upperPoint.setAttribute('cy', aperturePoints[0].y);
       upperPoint.setAttribute('r', APERTURE_POINT_RADIUS);
       upperPoint.setAttribute('fill', 'blue');
       upperPoint.setAttribute('pointer-events', 'none');
-      upperPoint.setAttribute('data-aperture-type', 'upper');
+      upperPoint.setAttribute('data-debug-role', 'aperture-upper');
       debugGroup.appendChild(upperPoint);
 
-      // Lower aperture point
       const lowerPoint = document.createElementNS(ns, 'circle');
-      lowerPoint.setAttribute('cx', aperturePoints[1].x);
-      lowerPoint.setAttribute('cy', aperturePoints[1].y);
       lowerPoint.setAttribute('r', LOWER_APERTURE_POINT_RADIUS);
       lowerPoint.setAttribute('fill', 'blue');
       lowerPoint.setAttribute('pointer-events', 'none');
-      lowerPoint.setAttribute('data-aperture-type', 'lower');
+      lowerPoint.setAttribute('data-debug-role', 'aperture-lower');
       debugGroup.appendChild(lowerPoint);
     }
-    
-    group.appendChild(debugGroup);
+
+    // Attach to the overlay layer (world-space, no inherited transform)
+    const overlay = document.getElementById('debug-overlay');
+    if (overlay) {
+      overlay.appendChild(debugGroup);
+    }
+
+    // Set initial world-space positions
+    this._updateDebugElements();
+  }
+
+  /** Reposition all debug elements using current world-space coordinates.
+   *  Called every time the component transform changes. Because the debugGroup
+   *  lives in #debug-overlay (no inherited transform), cx/cy attributes are
+   *  written directly as world coordinates.
+   */
+  _updateDebugElements() {
+    if (!this.debugGroup) return;
+
+    // Debug elements reflect only rotation and position — not scale, not flip.
+    const rad = this.rotation * Math.PI / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+
+    // Rotate a local direction vector by rotation only (no flip, no scale).
+    const rotateDir = (lx, ly) => ({
+      x: lx * cos - ly * sin,
+      y: lx * sin + ly * cos
+    });
+
+    // Translate a local point to world space using rotation + position only
+    // (no flip, no scale): world = (x,y) + rotate(local - centerPoint)
+    const localToWorldNoScale = (lx, ly) => {
+      const d = rotateDir(lx - this.centerPoint.x, ly - this.centerPoint.y);
+      return { x: this.x + d.x, y: this.y + d.y };
+    };
+
+    // Optical center in world space (rotation + position only)
+    const oc = localToWorldNoScale(this.centerPoint.x, this.centerPoint.y);
+
+    // --- Center marker ---
+    const centerMarker = this.debugGroup.querySelector('[data-debug-role="center"]');
+    if (centerMarker) {
+      centerMarker.setAttribute('cx', oc.x);
+      centerMarker.setAttribute('cy', oc.y);
+    }
+
+    // --- Up vector: fixed display length, rotation+flip only ---
+    const upDir = rotateDir(this.upVector.x, this.upVector.y);
+    const upLine = this.debugGroup.querySelector('[data-debug-role="up-vector"]');
+    if (upLine) {
+      upLine.setAttribute('x1', oc.x);
+      upLine.setAttribute('y1', oc.y);
+      upLine.setAttribute('x2', oc.x + upDir.x * UP_VECTOR_LENGTH);
+      upLine.setAttribute('y2', oc.y + upDir.y * UP_VECTOR_LENGTH);
+    }
+
+    // --- Forward vector: fixed display length, rotation+flip only ---
+    const fwdDir = rotateDir(this.forwardVector.x, this.forwardVector.y);
+    const fwdLine = this.debugGroup.querySelector('[data-debug-role="forward-vector"]');
+    if (fwdLine) {
+      fwdLine.setAttribute('x1', oc.x);
+      fwdLine.setAttribute('y1', oc.y);
+      fwdLine.setAttribute('x2', oc.x + fwdDir.x * FORWARD_VECTOR_LENGTH);
+      fwdLine.setAttribute('y2', oc.y + fwdDir.y * FORWARD_VECTOR_LENGTH);
+    }
+
+    // --- Aperture points: fixed at true apertureRadius, rotation+flip only ---
+    if (this.apertureRadius > 0) {
+      const ac = localToWorldNoScale(this.apertureCenter.x, this.apertureCenter.y);
+      const upD = rotateDir(this.upVector.x, this.upVector.y);
+
+      const upperDot = this.debugGroup.querySelector('[data-debug-role="aperture-upper"]');
+      if (upperDot) {
+        upperDot.setAttribute('cx', ac.x + upD.x * this.apertureRadius);
+        upperDot.setAttribute('cy', ac.y + upD.y * this.apertureRadius);
+      }
+      const lowerDot = this.debugGroup.querySelector('[data-debug-role="aperture-lower"]');
+      if (lowerDot) {
+        lowerDot.setAttribute('cx', ac.x - upD.x * this.apertureRadius);
+        lowerDot.setAttribute('cy', ac.y - upD.y * this.apertureRadius);
+      }
+    }
+  }
+
+  /** Remove the debug overlay group from the DOM. Call on component deletion. */
+  removeDebugElements() {
+    if (this.debugGroup) {
+      this.debugGroup.remove();
+      this.debugGroup = null;
+    }
   }
 
   getBoundingBox() {
@@ -408,11 +483,10 @@ export class Component {
     ].join(' ');
 
     element.setAttribute('transform', transform);
-    
-    // Update debug group counter-flip transform if it exists
+
+    // Refresh debug overlay elements (world-space, lives outside this element)
     if (this.debugGroup) {
-      const counterFlipScale = `translate(${cx}, ${cy}) scale(${this.flipX ? -1 : 1}, ${this.flipY ? -1 : 1}) translate(${-cx}, ${-cy})`;
-      this.debugGroup.setAttribute('transform', counterFlipScale);
+      this._updateDebugElements();
     }
   }
 
