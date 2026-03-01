@@ -5,6 +5,7 @@ import { showScaleHandle, removeScaleHandle } from '../events/ScaleHandle.js';
 import { showArrowHandle } from '../events/ArrowHandle.js';
 import { removeUnifiedBoundingBox } from '../events/InteractionHandlers.js';
 import { updateToolbarButtons } from '../events/ButtonHandlers.js';
+import { applyApertureScaling } from '../rays/ApertureScaling.js';
 
 export class ComponentManager {
   constructor() {
@@ -46,6 +47,9 @@ export class ComponentManager {
       // Set up parent-child relationship
       component.parent = previousId;
       previousComponent.children.push(id);
+
+      // Scale aperture to match parent projection at spawn time
+      applyApertureScaling(component, previousComponent);
     }
     
     
