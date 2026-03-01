@@ -28,11 +28,10 @@ export function createComponentHoverBox(component) {
   const { x, y } = component.getPosition();
   const { width, height } = component;
   const rotation = component.getRotation();
-  const scale = component.getScale();
+  const s = component.getScale();
   const cx = component.centerPoint?.x ?? 0;
   const cy = component.centerPoint?.y ?? 0;
-  const sx = scale * (component.flipX ? -1 : 1);
-  const sy = scale * (component.flipY ? -1 : 1);
+  const { a, b, c, d } = component._getFlipMatrix();
 
   // Use localBounds for asymmetric components (e.g. mirror).
   // The transform ends with translate(-cx,-cy), which shifts all rect coords by (-cx,-cy).
@@ -43,8 +42,8 @@ export function createComponentHoverBox(component) {
   rect.setAttribute('width', lb.maxX - lb.minX);
   rect.setAttribute('height', lb.maxY - lb.minY);
 
-  // Must match _updateTransform: translate(x,y) rotate scale translate(-cx,-cy)
-  const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`;
+  // Must match _updateTransform: translate(x,y) rotate matrix(flip*scale) translate(-cx,-cy)
+  const transform = `translate(${x}, ${y}) rotate(${rotation}) matrix(${s*a}, ${s*b}, ${s*c}, ${s*d}, 0, 0) translate(${-cx}, ${-cy})`;
   rect.setAttribute('transform', transform);
   
   return rect;
@@ -66,11 +65,10 @@ export function showHoverBox(id) {
   const { x, y } = component.getPosition();
   const { width, height } = component;
   const rotation = component.getRotation();
-  const scale = component.getScale();
+  const s = component.getScale();
   const cx = component.centerPoint?.x ?? 0;
   const cy = component.centerPoint?.y ?? 0;
-  const sx = scale * (component.flipX ? -1 : 1);
-  const sy = scale * (component.flipY ? -1 : 1);
+  const { a, b, c, d } = component._getFlipMatrix();
 
   // Use localBounds for asymmetric components (e.g. mirror).
   // The transform ends with translate(-cx,-cy), which shifts all rect coords by (-cx,-cy).
@@ -81,8 +79,8 @@ export function showHoverBox(id) {
   hoverBox.setAttribute('width', lb.maxX - lb.minX);
   hoverBox.setAttribute('height', lb.maxY - lb.minY);
 
-  // Must match _updateTransform: translate(x,y) rotate scale translate(-cx,-cy)
-  const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`;
+  // Must match _updateTransform: translate(x,y) rotate matrix(flip*scale) translate(-cx,-cy)
+  const transform = `translate(${x}, ${y}) rotate(${rotation}) matrix(${s*a}, ${s*b}, ${s*c}, ${s*d}, 0, 0) translate(${-cx}, ${-cy})`;
   hoverBox.setAttribute('transform', transform);
   
   canvas.appendChild(hoverBox);
@@ -105,13 +103,12 @@ export function updateHoverBoxTransform(component) {
   if (!hoverBox) return;
   const { x, y } = component.getPosition();
   const rotation = component.getRotation();
-  const scale = component.getScale();
+  const s = component.getScale();
   const cx = component.centerPoint?.x ?? 0;
   const cy = component.centerPoint?.y ?? 0;
-  const sx = scale * (component.flipX ? -1 : 1);
-  const sy = scale * (component.flipY ? -1 : 1);
+  const { a, b, c, d } = component._getFlipMatrix();
   hoverBox.setAttribute('transform',
-    `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`);
+    `translate(${x}, ${y}) rotate(${rotation}) matrix(${s*a}, ${s*b}, ${s*c}, ${s*d}, 0, 0) translate(${-cx}, ${-cy})`);
 }
 
 /**
@@ -135,11 +132,10 @@ export function showMultipleHoverBoxes(componentIds) {
       const { x, y } = component.getPosition();
       const { width, height } = component;
       const rotation = component.getRotation();
-      const scale = component.getScale();
+      const s = component.getScale();
       const cx = component.centerPoint?.x ?? 0;
       const cy = component.centerPoint?.y ?? 0;
-      const sx = scale * (component.flipX ? -1 : 1);
-      const sy = scale * (component.flipY ? -1 : 1);
+      const { a, b, c, d } = component._getFlipMatrix();
 
       const lb = component.localBounds ?? { minX: -width/2, maxX: width/2, minY: -height/2, maxY: height/2 };
       box.setAttribute('x', lb.minX);
@@ -147,7 +143,7 @@ export function showMultipleHoverBoxes(componentIds) {
       box.setAttribute('width', lb.maxX - lb.minX);
       box.setAttribute('height', lb.maxY - lb.minY);
 
-      const transform = `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`;
+      const transform = `translate(${x}, ${y}) rotate(${rotation}) matrix(${s*a}, ${s*b}, ${s*c}, ${s*d}, 0, 0) translate(${-cx}, ${-cy})`;
       box.setAttribute('transform', transform);
       
       canvas.appendChild(box);
@@ -285,12 +281,11 @@ export function showRelinkHoverBoxes(validComponentIds, hoverBoxesArray) {
     
     const { x, y } = component.getPosition();
     const rotation = component.getRotation();
-    const scale = component.getScale();
+    const s = component.getScale();
     const { width, height } = component;
     const cx = component.centerPoint?.x ?? 0;
     const cy = component.centerPoint?.y ?? 0;
-    const sx = scale * (component.flipX ? -1 : 1);
-    const sy = scale * (component.flipY ? -1 : 1);
+    const { a, b, c, d } = component._getFlipMatrix();
     
     const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
     rect.setAttribute('class', 'relink-hover-box');
@@ -303,7 +298,7 @@ export function showRelinkHoverBoxes(validComponentIds, hoverBoxesArray) {
     rect.setAttribute('stroke', LINK_HOVER_BOX_COLOR);
     rect.setAttribute('stroke-width', '2.5');
     rect.setAttribute('pointer-events', 'none');
-    rect.setAttribute('transform', `translate(${x}, ${y}) rotate(${rotation}) scale(${sx}, ${sy}) translate(${-cx}, ${-cy})`);
+    rect.setAttribute('transform', `translate(${x}, ${y}) rotate(${rotation}) matrix(${s*a}, ${s*b}, ${s*c}, ${s*d}, 0, 0) translate(${-cx}, ${-cy})`);
     
     canvas.appendChild(rect);
     hoverBoxesArray.push(rect);

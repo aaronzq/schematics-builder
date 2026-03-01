@@ -40,9 +40,6 @@ function calculateUnifiedBounds(components) {
     const scale = component.getScale();
     const cx = component.centerPoint?.x ?? 0;
     const cy = component.centerPoint?.y ?? 0;
-    const flipX = component.flipX ? -1 : 1;
-    const flipY = component.flipY ? -1 : 1;
-
     // Use localBounds for the actual visual extent of the component
     const lb = component.localBounds ?? {
       minX: -width / 2, maxX: width / 2,
@@ -61,10 +58,13 @@ function calculateUnifiedBounds(components) {
     // translate(-cx,-cy) → flip → scale → rotate → translate(x,y)
     const cos = Math.cos(rotation);
     const sin = Math.sin(rotation);
+    const fm = component._getFlipMatrix();
 
     corners.forEach(corner => {
-      const lx = (corner.x - cx) * flipX * scale;
-      const ly = (corner.y - cy) * flipY * scale;
+      const dx = corner.x - cx;
+      const dy = corner.y - cy;
+      const lx = (fm.a * dx + fm.c * dy) * scale;
+      const ly = (fm.b * dx + fm.d * dy) * scale;
       const worldX = x + (lx * cos - ly * sin);
       const worldY = y + (lx * sin + ly * cos);
 

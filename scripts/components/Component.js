@@ -195,25 +195,81 @@ export class Component {
   }
 
   /**
-   * Shared helper: transforms a local-space point to world space,
-   * matching the SVG transform chain:
-   *   translate(x,y) → rotate → scale+flip → translate(-cx,-cy)
+   * Compute the 2×2 flip matrix in local coordinates.
+   *
+   * "Flip horizontal" mirrors across the upVector axis (left↔right of upVector).
+   * "Flip vertical"   mirrors across the axis perpendicular to upVector (up↔down of upVector).
+   *                   The perpendicular axis is computed as (uy, -ux) — always orthogonal to
+   *                   upVector, independent of forwardVector.
+   *
+   * Reflection of a point across a unit vector n = (nx, ny):
+   *   M = [[2nx²-1,  2nx*ny],
+   *        [2nx*ny,  2ny²-1]]
+   *
+   * For standard upVector=(0,-1) / forwardVector=(1,0) this reduces to the
+   * familiar scale(-1,1) / scale(1,-1), so existing data is fully compatible.
+   *
+   * @returns {{ a:number, b:number, c:number, d:number }}
+   *   The combined 2×2 matrix [[a,c],[b,d]] (SVG matrix column-major).
+   */
+  _getFlipMatrix() {
+    // Identity to start
+    let a = 1, b = 0, c = 0, d = 1;
+
+    if (this.flipX) {
+      // Reflect across upVector axis
+      const ux = this.upVector.x;
+      const uy = this.upVector.y;
+      const ra = 2 * ux * ux - 1;
+      const rb = 2 * ux * uy;
+      const rc = 2 * ux * uy;
+      const rd = 2 * uy * uy - 1;
+      // Compose: new = R_up * current
+      const na = ra * a + rc * b;
+      const nb = rb * a + rd * b;
+      const nc = ra * c + rc * d;
+      const nd = rb * c + rd * d;
+      a = na; b = nb; c = nc; d = nd;
+    }
+
+    if (this.flipY) {
+      // Reflect across the axis perpendicular to upVector: perp = (uy, -ux)
+      const fx = this.upVector.y;   //  uy
+      const fy = -this.upVector.x;  // -ux
+      const ra = 2 * fx * fx - 1;
+      const rb = 2 * fx * fy;
+      const rc = 2 * fx * fy;
+      const rd = 2 * fy * fy - 1;
+      // Compose: new = R_fwd * current
+      const na = ra * a + rc * b;
+      const nb = rb * a + rd * b;
+      const nc = ra * c + rc * d;
+      const nd = rb * c + rd * d;
+      a = na; b = nb; c = nc; d = nd;
+    }
+
+    return { a, b, c, d };
+  }
+
+  /**
+   * Shared helper: transforms a local-space point to world space.
+   * Used for OPTICAL geometry only (aperture points, centerPoint, arrow endpoint).
+   * Scale and flip are intentionally excluded — both are cosmetic (SVG artwork only)
+   * and must not affect ray tracing, aperture positions, or the arrow handle.
+   *
+   * Chain: translate(-cx,-cy) → rotate → translate(x,y)
    */
   _localToWorld(localX, localY) {
     const cx = this.centerPoint.x;
     const cy = this.centerPoint.y;
-    const flipX = this.flipX ? -1 : 1;
-    const flipY = this.flipY ? -1 : 1;
     const rad = this.rotation * Math.PI / 180;
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
-    // Step 1: translate(-cx, -cy)
-    const lx = (localX - cx) * flipX;
-    const ly = (localY - cy) * flipY;
-    // Step 2: scale+flip then rotate
+    const lx = localX - cx;
+    const ly = localY - cy;
     return {
-      x: this.x + (lx * cos - ly * sin) * this.scale,
-      y: this.y + (lx * sin + ly * cos) * this.scale
+      x: this.x + (lx * cos - ly * sin),
+      y: this.y + (lx * sin + ly * cos)
     };
   }
 
@@ -444,7 +500,7 @@ export class Component {
       fwdLine.setAttribute('y2', oc.y + fwdDir.y * FORWARD_VECTOR_LENGTH);
     }
 
-    // --- Aperture points: fixed at true apertureRadius, rotation+flip only ---
+    // --- Aperture points: reflect true optical aperture position (rotation only, no scale) ---
     if (this.apertureRadius > 0) {
       const ac = localToWorldNoScale(this.apertureCenter.x, this.apertureCenter.y);
       const upD = rotateDir(this.upVector.x, this.upVector.y);
@@ -471,13 +527,24 @@ export class Component {
   }
 
   getBoundingBox() {
-    // Compute axis-aligned world bounding box using localBounds corners + _localToWorld.
+    // Compute axis-aligned world bounding box using localBounds corners.
+    // Scale is applied explicitly here (visual extent scales with the component).
+    const cx = this.centerPoint.x;
+    const cy = this.centerPoint.y;
+    const rad = this.rotation * Math.PI / 180;
+    const cos = Math.cos(rad);
+    const sin = Math.sin(rad);
+    const s = this.scale;
     const corners = [
-      this._localToWorld(this.localBounds.minX, this.localBounds.minY),
-      this._localToWorld(this.localBounds.maxX, this.localBounds.minY),
-      this._localToWorld(this.localBounds.maxX, this.localBounds.maxY),
-      this._localToWorld(this.localBounds.minX, this.localBounds.maxY)
-    ];
+      { x: this.localBounds.minX, y: this.localBounds.minY },
+      { x: this.localBounds.maxX, y: this.localBounds.minY },
+      { x: this.localBounds.maxX, y: this.localBounds.maxY },
+      { x: this.localBounds.minX, y: this.localBounds.maxY }
+    ].map(({ x, y }) => {
+      const lx = (x - cx) * s;
+      const ly = (y - cy) * s;
+      return { x: this.x + (lx * cos - ly * sin), y: this.y + (lx * sin + ly * cos) };
+    });
     const minX = Math.min(...corners.map(c => c.x));
     const maxX = Math.max(...corners.map(c => c.x));
     const minY = Math.min(...corners.map(c => c.y));
@@ -488,16 +555,22 @@ export class Component {
   _updateTransform(element) {
     const cx = this.centerPoint.x;
     const cy = this.centerPoint.y;
-    const sx = this.scale * (this.flipX ? -1 : 1);
-    const sy = this.scale * (this.flipY ? -1 : 1);
+    const s = this.scale;
 
-    // Rotate & scale around centerPoint, then place centerPoint at (x, y) in world space.
-    // Chain: translate(x,y) → rotate → scale+flip → translate(-cx,-cy)
-    // Net effect: centerPoint stays fixed at (x,y) as rotation changes.
+    // Build flip matrix (reflection across upVector / forwardVector axes)
+    const { a, b, c, d } = this._getFlipMatrix();
+
+    // Rotate & flip around centerPoint, then place centerPoint at (x, y) in world space.
+    // Chain: translate(x,y) → rotate → (flip * scale) → translate(-cx,-cy)
+    // Net effect: centerPoint stays fixed at (x,y) as rotation/flip changes.
+    //
+    // The flip+scale step is expressed as a matrix() transform:
+    //   [ s*a  s*c ]   applied after translate(-cx,-cy)
+    //   [ s*b  s*d ]
     const transform = [
       `translate(${this.x}, ${this.y})`,
       `rotate(${this.rotation})`,
-      `scale(${sx}, ${sy})`,
+      `matrix(${s*a}, ${s*b}, ${s*c}, ${s*d}, 0, 0)`,
       `translate(${-cx}, ${-cy})`
     ].join(' ');
 
