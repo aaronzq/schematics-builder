@@ -276,6 +276,25 @@ export class Component {
     group.setAttribute('class', `component component-${this.type}`);
     group.setAttribute('data-type', this.type);
 
+    // Invisible hit-area rect for reliable pointer events.
+    // Covers the full localBounds area (same local coordinate space as the artwork)
+    // with a minimum size so even thin/small components are easy to click.
+    const MIN_HIT_SIZE = 10;
+    const lb = this.localBounds;
+    const hitW = Math.max(lb.maxX - lb.minX, MIN_HIT_SIZE);
+    const hitH = Math.max(lb.maxY - lb.minY, MIN_HIT_SIZE);
+    const hitCx = (lb.minX + lb.maxX) / 2;
+    const hitCy = (lb.minY + lb.maxY) / 2;
+    const hitArea = document.createElementNS(ns, 'rect');
+    hitArea.setAttribute('class', 'component-hit-area');
+    hitArea.setAttribute('x', hitCx - hitW / 2);
+    hitArea.setAttribute('y', hitCy - hitH / 2);
+    hitArea.setAttribute('width', hitW);
+    hitArea.setAttribute('height', hitH);
+    hitArea.setAttribute('fill', 'transparent');
+    hitArea.setAttribute('pointer-events', 'all');
+    group.appendChild(hitArea);
+
     // Wrap shape in its own group for visibility control
     const shapeGroup = document.createElementNS(ns, 'g');
     const shape = this.drawFunction(ns);
