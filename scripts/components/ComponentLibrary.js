@@ -253,45 +253,13 @@ export const components = {
         }
     },
 
-    // ── Prisms ────────────────────────────────────────────────────────────────
-
-    'right-angle-prism': {
-        category: 'Prisms',
-        label: 'Right-Angle Prism',
-        // Right-angle prism: triangle with legs of 60 units, apex at left, base on right.
-        // Artwork spans x: [-30, 0], y: [-30, 30] — center of the hypotenuse face at origin.
-        localBounds: { minX: -30, maxX: 0, minY: -30, maxY: 30 },
-        centerPoint: { x: 0, y: 0 },
-        apertureCenter: { x: 0, y: 0 },
-        upVector: { x: 0, y: -1 },
-        forwardVector: { x: 1, y: 0 },
-        apertureRadius: DEFAULT_APERTURE_RADIUS,
-        coneAngle: DEFAULT_CONE_ANGLE,
-        rayShape: 'collimated',
-
-        draw: (ns) => {
-            const g = document.createElementNS(ns, 'g');
-
-            const prism = document.createElementNS(ns, 'path');
-            // Hypotenuse on x=0 (top-right to bottom-right), apex at (-30, 0)
-            prism.setAttribute('d', 'M 0 -30 L 0 30 L -30 0 Z');
-            prism.setAttribute('fill', '#145ec0');
-            prism.setAttribute('fill-opacity', '0.3');
-            prism.setAttribute('stroke', 'black');
-            prism.setAttribute('stroke-width', '1.5');
-            g.appendChild(prism);
-
-            return g;
-        }
-    },
-
     cube: {
         category: 'Mirrors',
         label: 'Beamsplitter Cube',
-        localBounds: { minX: -42, maxX: 42, minY: -42, maxY: 42 },
+        localBounds: { minX: -30, maxX: 30, minY: -30, maxY: 30 },
         centerPoint: { x: 0, y: 0 },
         apertureCenter: { x: 0, y: 0 },
-        upVector: { x: 0, y: -1 },
+        upVector: { x: 0.7071067811865476, y: -0.7071067811865476 },
         forwardVector: { x: 1, y: 0 },
         apertureRadius: DEFAULT_APERTURE_RADIUS,
         coneAngle: DEFAULT_CONE_ANGLE,
@@ -301,7 +269,7 @@ export const components = {
             const g = document.createElementNS(ns, "g");
 
             const cube = document.createElementNS(ns, "path");
-            cube.setAttribute("d", "M 0 -42 L -42 0 L 0 42 L 42 0 Z");
+            cube.setAttribute("d", "M -30 -30 L -30 30 L 30 30 L 30 -30 Z");
             cube.setAttribute("stroke", "black");
             cube.setAttribute("stroke-width", "1.5");
             cube.setAttribute("fill", "#145ec0");
@@ -309,13 +277,47 @@ export const components = {
             g.appendChild(cube);
 
             const surface = document.createElementNS(ns, "line");
-            surface.setAttribute("x1", "0");
-            surface.setAttribute("y1", "-42");
-            surface.setAttribute("x2", "0");
-            surface.setAttribute("y2", "42");
+            surface.setAttribute("x1", "-30");
+            surface.setAttribute("y1", "30");
+            surface.setAttribute("x2", "30");
+            surface.setAttribute("y2", "-30");
             surface.setAttribute("stroke", "black");
             surface.setAttribute("stroke-width", "2.5");
             g.appendChild(surface);
+
+            return g;
+        }
+    },
+
+    // ── Prisms ────────────────────────────────────────────────────────────────
+
+    'right-angle-prism': {
+        category: 'Prisms',
+        label: 'Right-Angle Prism',
+        // Right-angle prism: triangle with legs of 60 units, apex at left, base on right.
+        // Artwork spans x: [-30, 0], y: [-30, 30] — center of the hypotenuse face at origin.
+        // Oriented 45° toward the upper-right by default.
+        localBounds: { minX: -30, maxX: 30, minY: -30, maxY: 30 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        // upVector and forwardVector rotated -45° so the prism points to the upper-right.
+        upVector: { x: 0.7071067811865476, y: -0.7071067811865476 },
+        forwardVector: { x:  1, y: 0 },
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, 'g');
+
+            const prism = document.createElementNS(ns, 'path');
+            // Hypotenuse on x=0 (top-right to bottom-right), apex at (-30, 0)
+            prism.setAttribute('d', 'M -30 -30 L -30 30 L 30 -30 Z');
+            prism.setAttribute('fill', '#145ec0');
+            prism.setAttribute('fill-opacity', '0.3');
+            prism.setAttribute('stroke', 'black');
+            prism.setAttribute('stroke-width', '1.5');
+            g.appendChild(prism);
 
             return g;
         }
