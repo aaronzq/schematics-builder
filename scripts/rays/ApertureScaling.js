@@ -155,8 +155,12 @@ export function applyApertureScaling(child, parent) {
     // 1. Scale to match parent projection
     scaleApertureToParent(child, parent);
 
-    // 2. Crossing check — if rays cross, flip upVector and re-scale
-    if (checkLinesCross(child, parent)) {
+    // 2. Crossing check — if rays cross, flip upVector and re-scale.
+    // Skip when either aperture radius is 0: the two aperture points of that
+    // component collapse to a single coordinate, causing the segment-intersection
+    // test to produce false positives (the shared endpoint satisfies t=0 or u=0,
+    // which is within [0,1]).  A flip is also meaningless for a zero-radius aperture.
+    if (child.apertureRadius > 0 && parent.apertureRadius > 0 && checkLinesCross(child, parent)) {
         flipUpVector(child);
         scaleApertureToParent(child, parent);
     }
