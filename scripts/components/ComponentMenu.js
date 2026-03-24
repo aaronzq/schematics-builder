@@ -83,6 +83,7 @@ export function refreshSidebarMenu() {
           e.stopPropagation();
           deleteUserComponent(type);
         });
+        delBtn.addEventListener('mousedown', (e) => e.stopPropagation());
         btn.appendChild(delBtn);
       }
 
