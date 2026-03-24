@@ -48,6 +48,7 @@ export function showArrowHandle(componentId) {
   line.setAttribute('stroke', ARROW_COLOR);
   line.setAttribute('stroke-width', ARROW_STROKE_WIDTH);
   line.setAttribute('marker-end', 'url(#arrowhead)');
+  line.setAttribute('pointer-events', 'none');
   arrowGroup.appendChild(line);
 
   // Draggable handle at arrow endpoint
