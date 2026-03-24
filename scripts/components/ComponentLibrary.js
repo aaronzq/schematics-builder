@@ -74,6 +74,8 @@ export const components = {
     objective: {
         category: 'Lens',
         label: 'Objective',
+        isComposite: false,
+        isBuiltIn: true,
         localBounds: { minX: -64.5, maxX: 64.5, minY: -30, maxY: 30 },
         centerPoint: { x: 0, y: 0 },
         forwardVector: { x: 1, y: 0 },
@@ -146,6 +148,8 @@ export const components = {
     lens: {
         category: 'Lens',
         label: 'Convex Lens',
+        isComposite: false,
+        isBuiltIn: true,
         localBounds: { minX: -6, maxX: 6, minY: -30, maxY: 30 },
         centerPoint: { x: 0, y: 0 },
         forwardVector: { x: 1, y: 0 },
@@ -173,6 +177,8 @@ export const components = {
     'lenslet-array': {
         category: 'Lens',
         label: 'Lenslet Array',
+        isComposite: false,
+        isBuiltIn: true,
         // Lenslet array: 5 small double-convex lenslets stacked vertically.
         // Overall height ~60 units, width ~12 units.
         localBounds: { minX: -7.5, maxX: 7.5, minY: -30, maxY: 30 },
@@ -219,6 +225,8 @@ export const components = {
     mirror: {
         category: 'Mirrors',
         label: 'Flat Mirror',
+        isComposite: false,
+        isBuiltIn: true,
         localBounds: { minX: -3, maxX: 3, minY: -30, maxY: 30 },
         centerPoint: { x: -3, y: 0 },
         apertureCenter: {x: -3, y: 0},
@@ -256,6 +264,8 @@ export const components = {
     cube: {
         category: 'Mirrors',
         label: 'Beamsplitter Cube',
+        isComposite: false,
+        isBuiltIn: true,
         localBounds: { minX: -30, maxX: 30, minY: -30, maxY: 30 },
         centerPoint: { x: 0, y: 0 },
         apertureCenter: { x: 0, y: 0 },
@@ -294,6 +304,8 @@ export const components = {
     'right-angle-prism': {
         category: 'Prisms',
         label: 'Right-Angle Prism',
+        isComposite: false,
+        isBuiltIn: true,
         // Right-angle prism: triangle with legs of 60 units, apex at left, base on right.
         // Artwork spans x: [-30, 0], y: [-30, 30] — center of the hypotenuse face at origin.
         // Oriented 45° toward the upper-right by default.
@@ -328,6 +340,8 @@ export const components = {
     detector: {
         category: 'Detectors',
         label: 'Detector',
+        isComposite: false,
+        isBuiltIn: true,
         // Grey enclosure 80×60, centred at origin. Adapter ring extends 5 units to the left.
         // Aperture (input face) is at x = -40 (left wall of enclosure).
         localBounds: { minX: -45, maxX: 40, minY: -30, maxY: 30 },
@@ -379,6 +393,8 @@ export const components = {
     slm: {
         category: 'Optoelectronics',
         label: 'SLM',
+        isComposite: false,
+        isBuiltIn: true,
         localBounds: { minX: -5, maxX: 5, minY: -40, maxY: 40 },
         centerPoint: { x: 0, y: 0 },
         apertureCenter: { x: 0, y: 0 },
@@ -417,6 +433,8 @@ export const components = {
     dmd: {
         category: 'Optoelectronics',
         label: 'DMD',
+        isComposite: false,
+        isBuiltIn: true,
         localBounds: { minX: -5, maxX: 5, minY: -40, maxY: 40 },
         centerPoint: { x: 0, y: 0 },
         apertureCenter: { x: 0, y: 0 },
@@ -470,6 +488,8 @@ export const components = {
     'polygon-scanner': {
         category: 'Optoelectronics',
         label: 'Polygon Scanner',
+        isComposite: false,
+        isBuiltIn: true,
         // Hexagonal body centered at hub (0,0): x: [-73, 73], y: [-83, 83].
         localBounds: { minX: -73, maxX: 73, minY: -83, maxY: 83 },
         centerPoint: { x: -73, y: 0 },
@@ -528,6 +548,8 @@ export const components = {
     point: {
         category: 'Misc',
         label: 'Point',
+        isComposite: false,
+        isBuiltIn: true,
         localBounds: { minX: -2.5, maxX: 2.5, minY: -2.5, maxY: 2.5 },
         centerPoint: { x: 0, y: 0 },
         apertureCenter: { x: 0, y: 0 },
@@ -555,6 +577,8 @@ export const components = {
     plane: {
         category: 'Misc',
         label: 'Plane',
+        isComposite: false,
+        isBuiltIn: true,
         localBounds: { minX: -3, maxX: 3, minY: -20, maxY: 20 },
         centerPoint: { x: 0, y: 0 },
         forwardVector: { x: 1, y: 0 },

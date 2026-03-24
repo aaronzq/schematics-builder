@@ -90,6 +90,12 @@ export class Component {
     // Group relationships for multi-selection grouping
     this.isGrouped = false;
     this.groupMembers = new Set();
+
+    // Composite instance flags
+    this.isCompositeInstance = false;  // true if this is part of a spawned composite
+    this.compositeKey = null;          // back-reference to composite definition key
+    this.isExitPort = false;           // true if this is the designated exit port of a composite
+    this.rayLocked = false;            // true = ray/aperture config UI is frozen
   }
 
   _getAperturePoints() {

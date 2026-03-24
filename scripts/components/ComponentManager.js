@@ -1,4 +1,5 @@
 import { Component } from './Component.js';
+import { components as componentRegistry } from './ComponentLibrary.js';
 import { autoCenter } from '../Canvas.js';
 import { showRotationHandle, removeRotationHandle } from '../events/RotationHandle.js';
 import { showScaleHandle, removeScaleHandle } from '../events/ScaleHandle.js';
@@ -6,6 +7,7 @@ import { showArrowHandle } from '../events/ArrowHandle.js';
 import { removeUnifiedBoundingBox } from '../events/InteractionHandlers.js';
 import { updateToolbarButtons } from '../events/ButtonHandlers.js';
 import { applyApertureScaling } from '../rays/ApertureScaling.js';
+import { updateRays } from '../rays/DrawRays.js';
 
 export class ComponentManager {
   constructor() {
@@ -18,6 +20,15 @@ export class ComponentManager {
   }
 
   addComponent(type, position = null) {
+
+    // If it's a composite definition, expand it instead of creating a single component
+    const def = componentRegistry[type];
+    if (def && def.isComposite) {
+      const spawnPos = position || this.nextPosition;
+      const externalParentId = this.currentId;
+      this._expandComposite(def, spawnPos, externalParentId);
+      return;
+    }
 
     const id = this.idCounter++;
     const component = new Component(type);
@@ -103,6 +114,23 @@ export class ComponentManager {
     // Update nextPosition to arrow tip
     this.currentId = id;
     this.updateNextPositionFromComponent(id);
+
+    // Composite: always force currentId to be the exit port member
+    if (component && component.isGrouped && component.groupMembers) {
+      for (const memberId of component.groupMembers) {
+        const member = this.components.get(memberId);
+        if (member && member.isExitPort) {
+          this.currentId = memberId;
+          this.updateNextPositionFromComponent(memberId);
+          break;
+        }
+      }
+      // Also check the component itself
+      if (component.isExitPort) {
+        this.currentId = id;
+        this.updateNextPositionFromComponent(id);
+      }
+    }
 
     // Log component information
     if (component) {
@@ -610,6 +638,110 @@ export class ComponentManager {
   }
 
   /**
+   * Expand a composite definition into individual Component instances,
+   * group them together, wire parent-child relationships, and select them.
+   *
+   * @param {object} def             - Composite definition from the registry
+   * @param {{x:number,y:number}} spawnPos - World position of the composite origin
+   * @param {number|null} externalParentId - ID of the component upstream of this composite
+   */
+  _expandComposite(def, spawnPos, externalParentId) {
+    const schematics = document.getElementById('schematics');
+    if (!schematics) {
+      throw new Error('Components group (#schematics) not found in canvas');
+    }
+
+    const spawnedIds = [];   // parallel array matching def.members indices
+    const spawnedComponents = [];
+
+    // --- Pass 1: create and render all member components ---
+    def.members.forEach((member, index) => {
+      const id = this.idCounter++;
+      const component = new Component(member.type);
+
+      // Position: spawn origin + member's relative offset
+      component.setPosition(spawnPos.x + member.relX, spawnPos.y + member.relY);
+
+      // Apply rotation and scale from the definition
+      component.setRotation(member.rotation ?? 0);
+      component.setScale(member.scale ?? 1);
+
+      // Apply composite instance flags and frozen ray properties
+      component.isCompositeInstance = true;
+      component.compositeKey = def.key;
+      component.rayLocked = true;
+      component.apertureRadius = member.apertureRadius;
+      component.coneAngle = member.coneAngle;
+      component.rayShape = member.rayShape;
+      component.rayPolygonColor = member.rayPolygonColor;
+
+      // Render to SVG
+      const group = component.render();
+      group.setAttribute('data-id', id);
+      schematics.appendChild(group);
+
+      this.components.set(id, component);
+      spawnedIds.push(id);
+      spawnedComponents.push(component);
+
+      console.log(`ComponentManager: [Composite "${def.key}"] spawned member ${index} (${member.type}) [ID: ${id}]`);
+    });
+
+    // --- Pass 2: wire internal parent-child relationships ---
+    def.members.forEach((member, index) => {
+      if (member.internalParentIndex !== null && member.internalParentIndex !== undefined) {
+        const parentId = spawnedIds[member.internalParentIndex];
+        const parentComponent = spawnedComponents[member.internalParentIndex];
+        const childId = spawnedIds[index];
+        const childComponent = spawnedComponents[index];
+
+        childComponent.parent = parentId;
+        parentComponent.children.push(childId);
+      }
+    });
+
+    // --- Wire entry port to external parent ---
+    if (externalParentId !== null && externalParentId !== undefined) {
+      const externalParent = this.components.get(externalParentId);
+      const entryComponent = spawnedComponents[def.entryMemberIndex];
+      const entryId = spawnedIds[def.entryMemberIndex];
+      if (externalParent && entryComponent) {
+        entryComponent.parent = externalParentId;
+        externalParent.children.push(entryId);
+      }
+    }
+
+    // --- Mark exit port ---
+    spawnedComponents[def.exitMemberIndex].isExitPort = true;
+
+    // --- Group all spawned members together ---
+    spawnedIds.forEach(id => {
+      const component = this.components.get(id);
+      if (component) {
+        const otherIds = spawnedIds.filter(otherId => otherId !== id);
+        component.setGroupMembers(otherIds);
+      }
+    });
+
+    // --- Select and set currentId to exit port ---
+    const exitPortId = spawnedIds[def.exitMemberIndex];
+    this.selectMultiple(spawnedIds);
+    this.currentId = exitPortId;
+    this.updateNextPositionFromComponent(exitPortId);
+
+    // Show handles on the exit port
+    showRotationHandle(exitPortId);
+    showScaleHandle(exitPortId);
+    showArrowHandle(exitPortId);
+
+    autoCenter();
+    removeUnifiedBoundingBox();
+    updateRays();
+
+    console.log(`ComponentManager: Composite "${def.key}" expanded — ${spawnedIds.length} members, exit port ID: ${exitPortId}`);
+  }
+
+  /**
    * Group selected components together
    */
   groupSelectedComponents() {
@@ -636,6 +768,17 @@ export class ComponentManager {
    * Ungroup all components in the group containing the selected component(s)
    */
   ungroupSelectedComponents() {
+    // Block ungrouping of composite instances
+    const allIds = [...this.selectedIds];
+    const hasCompositeInstance = allIds.some(id => {
+      const comp = this.components.get(id);
+      return comp && comp.isCompositeInstance;
+    });
+    if (hasCompositeInstance) {
+      console.warn('[ComponentManager] Cannot ungroup a composite component instance.');
+      return;
+    }
+
     const selectedIds = Array.from(this.selectedIds);
     const groupedIds = new Set();
 

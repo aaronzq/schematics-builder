@@ -2482,3 +2482,215 @@ Deliver small increments with immediate value.
 **Key Concept**: Components define everything. Rays are derived. Hierarchy drives updates.
 
 
+
+---
+
+## Phase 8: Composite Component System
+
+### 8.1 Overview & Motivation
+
+The app currently only has **basic components** (primitives defined in `ComponentLibrary.js`). Phase 8 introduces **composite components**  pre-assembled multi-component groups that behave as a single unit and can be:
+
+- **App-shipped** (`isBuiltIn: true`): defined in `CompositeLibrary.js`, appear inside existing sidebar categories (e.g. "Source", "Imaging")
+- **User-created** (`isBuiltIn: false`): saved by the user via the "Save as Composite" dialog, stored in `localStorage`, appear in a new "User Components" sidebar category
+
+Both types are unified under the same JSON-serializable definition schema and merge into the existing `components` registry.
+
+---
+
+### 8.2 Terminology
+
+| Term | Definition |
+|---|---|
+| **Basic component** | Existing single-element primitive (`ComponentLibrary.js`); `isComposite: false` |
+| **Composite component** | Multi-element assembly; `isComposite: true`; app-shipped or user-created |
+| **Composite definition** | The JSON schema object stored in the registry (no `draw` fn) |
+| **Composite instance** | Live `Component` objects on canvas after expanding a composite definition |
+
+---
+
+### 8.3 Unified Composite Definition Schema
+
+```javascript
+{
+  key: string,                    // unique registry key, e.g. 'two_photon_excitation'
+  label: string,                  // display name in sidebar
+  category: string,               // sidebar category, e.g. 'Source', 'User Components'
+  isComposite: true,
+  isBuiltIn: boolean,             // true = app-shipped, false = user-created (localStorage)
+  members: [
+    {
+      type: string,               // basic component key (e.g. 'laser', 'lens')
+      relX: number,               // X offset from group centroid (SVG units)
+      relY: number,               // Y offset from group centroid
+      rotation: number,           // degrees
+      scale: number,              // multiplier
+      apertureRadius: number,     // frozen at save time
+      coneAngle: number,          // frozen at save time
+      rayShape: string,           // 'collimated'|'divergent'|'convergent'|'manual' frozen
+      rayPolygonColor: string,    // frozen - primary color
+      rayPolygonColor2: string,   // frozen - gradient end color (may be same)
+      gradientEnabled: boolean,   // frozen
+      internalParentIndex: number | null  // index into members[] for parent, null for roots
+    }
+  ],
+  entryMemberIndex: number,       // index of entry port member
+  exitMemberIndex: number         // index of exit port member (receives external children)
+}
+```
+
+**Key rules**:
+- `draw` is never stored. Synthesized at render time from `componentLibrary[member.type].draw(ns)` with transform wrappers.
+- All `members[i].ray*` fields are **frozen**  they cannot be changed after the composite is saved.
+- Only basic component types (not other composites) can be members.
+
+---
+
+### 8.4 Composite Instance Behavior on Canvas
+
+When a composite component is spawned:
+
+1. **Expansion**: All `members[]` are instantiated as individual `Component` objects at centroid-relative world positions.
+2. **Locked group**: All member instances are grouped together (`isGrouped = true`, `groupMembers` Set). Cannot be ungrouped.
+3. **Flags on each instance**:
+   - `isCompositeInstance = true`
+   - `compositeKey = string`
+   - `isExitPort = true` on the exit member only
+   - `rayLocked = true`  all ray/aperture config UI disabled
+4. **`currentId` override**: `selectComponent(id)` always resolves `currentId` to the exit port member's ID.
+5. **Ungroup blocked**: `ungroupSelectedComponents()` returns early with `console.warn` if any member has `isCompositeInstance === true`.
+6. **External parent wiring**: Entry port receives external parent; exit port exposes arrow handle.
+7. **`save-as-composite-btn`** hidden when any selected component has `isCompositeInstance === true`.
+
+---
+
+### 8.5 New Files
+
+| File | Purpose |
+|---|---|
+| `scripts/components/CompositeLibrary.js` | App-shipped composite definitions; merges into `components` at module load |
+| `scripts/components/UserComponentStore.js` | `localStorage` CRUD; fires `'user-components-changed'` DOM event |
+| `scripts/components/ComponentSnapshot.js` | Pure `generateSnapshot(def)`  SVG thumbnail for sidebar |
+| `scripts/components/SaveCompositeDialog.js` | 3-phase dialog for user composite creation |
+
+---
+
+### 8.6 Modified Files
+
+| File | Changes |
+|---|---|
+| `scripts/components/ComponentLibrary.js` | Add `isComposite: false, isBuiltIn: true` to all entries |
+| `scripts/components/Component.js` | Add 4 fields to `_initializeFromConfig()` |
+| `scripts/components/ComponentManager.js` | Composite expansion, exit-port override, ungroup block |
+| `scripts/components/ComponentMenu.js` | `buildComponentMenu` to `refreshSidebarMenu`; thumbnails; delete buttons |
+| `scripts/events/ButtonHandlers.js` | `save-as-composite-btn` and `ungroup-btn` visibility gating |
+| `index.html` | Add `save-as-composite-btn` and `save-composite-dialog` |
+| `scripts/App.js` | Import `CompositeLibrary.js`; `loadUserComponents()` before `refreshSidebarMenu()` |
+
+---
+
+### 8.7 Init Sequence (App.js)
+
+```javascript
+import './components/CompositeLibrary.js';   // (1) merges app-shipped composites at import time
+
+// DOMContentLoaded:
+loadUserComponents();        // (2) merges user composites from localStorage into `components`
+refreshSidebarMenu();        // (3) builds sidebar (replaces buildComponentMenu)
+setupComponentButtons();     // (4) unchanged
+setupActionButtons();        // (5) unchanged
+```
+
+---
+
+### 8.8 ComponentSnapshot.js API
+
+```javascript
+/**
+ * Generate a self-contained SVG thumbnail for a component definition.
+ * @param {object} def    - entry from the `components` registry
+ * @param {object} [opts] - { width: 60, height: 60 }
+ * @returns {SVGElement}  - standalone <svg>, no ID conflicts
+ */
+export function generateSnapshot(def, opts = { width: 60, height: 60 }) { ... }
+```
+
+- **Basic**: calls `def.draw(ns)`, viewBox from `localBounds` padded 20%.
+- **Composite**: per-member `componentLibrary[m.type].draw(ns)` in `<g transform>` wrappers; aperture geometry from `ApertureRays.js`; ray polygon per internalParentchild pair; viewBox fits group centroid.
+
+---
+
+### 8.9 SaveCompositeDialog Flow
+
+3-phase dialog:
+
+```
+Phase A    Phase B    Phase C    [Save]
+Name+Category   Pick entry    Pick exit
++ live preview  port member   port member
+```
+
+- Phase A: name input, category dropdown, live SVG preview via `generateSnapshot`.
+- Phase B: `` overlay per member; click to designate entry port.
+- Phase C: `` overlay on remaining members (entry dimmed); click to designate exit port.
+- Save: calls `UserComponentStore.saveUserComponent(def)` with frozen ray props from live instances.
+
+---
+
+### 8.10 Multi-Agent Implementation Plan
+
+#### Phase 1  5 Parallel Workstreams
+
+**Agent A  Schema & Data Layer** _(no dependencies)_
+- `ComponentLibrary.js`: add `isComposite: false, isBuiltIn: true` to ALL entries
+- New `CompositeLibrary.js`: define 1 app-shipped composite; `Object.assign(components, ...)` at module load
+- New `UserComponentStore.js`: `loadUserComponents()`, `saveUserComponent(def)`, `deleteUserComponent(key)`; dispatch `new CustomEvent('user-components-changed')` on `document` on every mutation
+
+**Agent B  Snapshot Renderer** _(no dependencies)_
+- New `ComponentSnapshot.js`
+- `generateSnapshot(def, opts?)`: pure function, no side effects, no DOM ID conflicts
+- Basic path: `def.draw(ns)` + viewBox from `localBounds` padded 20%
+- Composite path: per-member draw in `<g transform>`; ray polygons from `ApertureRays.js` geometry; viewBox fits group centroid
+
+**Agent D  Composite Expansion & Behavior** _(no dependencies)_
+- `Component.js`: add `isCompositeInstance = false`, `compositeKey = null`, `isExitPort = false`, `rayLocked = false` to `_initializeFromConfig()`
+- `ComponentManager.js`:
+  - `_expandComposite(def, spawnPos, externalParentId)`: spawn all members, set flags, wire `internalParentIndex` links, wire external parent to entry member, call `groupSelectedComponents()`, mark exit member `isExitPort = true`, force `currentId` to exit port ID
+  - `addComponent(type)`: if `components[type].isComposite`  call `_expandComposite`
+  - `selectComponent(id)`: after group expansion check; if any groupMember `isExitPort === true`  override `this.currentId`
+  - `ungroupSelectedComponents()`: early return + `console.warn` if any member `isCompositeInstance === true`
+
+**Agent C  Menu Rebuild** _(stubs for Agent A event + Agent B generateSnapshot)_
+- `ComponentMenu.js`: rename `buildComponentMenu`  `refreshSidebarMenu`; keep alias
+- Per-button: embed `generateSnapshot(def)` SVG thumbnail above label
+- Add `` delete button for `isBuiltIn: false` entries  calls `UserComponentStore.deleteUserComponent(key)`
+- `document.addEventListener('user-components-changed', () => refreshSidebarMenu())`
+
+**Agent E  Save Dialog & UI Wiring** _(depends on A store API + B snapshot + D flags)_
+- New `SaveCompositeDialog.js`: 3-phase dialog (8.9)
+- `index.html`: add `<button id="save-as-composite-btn">` in secondary toolbar; add `<dialog id="save-composite-dialog">`
+- `ButtonHandlers.js`: show `save-as-composite-btn` in Mode 2/3 only when NO selected member has `isCompositeInstance === true`; hide `ungroup-btn` when ANY selected has `isCompositeInstance === true`
+- `App.js`: side-effect `import './components/CompositeLibrary.js'`; call `loadUserComponents()` then `refreshSidebarMenu()` replacing `buildComponentMenu()`
+
+#### Phase 2  Integration (sequential)
+
+1. Replace all `buildComponentMenu()` calls  `refreshSidebarMenu()`
+2. Verify `'user-components-changed'` event triggers re-render
+3. Smoke test:
+   - Spawn composite  locked group, correct member count
+   - Click any member  `currentId` resolves to exit port
+   - Attempt ungroup  blocked with warning in console
+   - Ray props frozen; UI controls disabled
+   - Delete user composite  sidebar updates immediately
+   - Save composite  persists across page reload
+   - Thumbnail renders rays for composite entries
+4. Update SUMMARY.md 8 with any deviations
+
+---
+
+### 8.11 Further Considerations
+
+- **Export portability**: Composite member instances export as plain objects with flags. Composite definitions NOT embedded in schematic JSON. `Fileio.js` impact deferred.
+- **Multi-ray future**: `members[].rayPolygonColor` is a single value now. When Phase 3 multi-ray lands, migrate to `rayLayers: [{shape, color, color2, gradient, opacity}]`.
+- **Nested composites**: Blocked  `members[].type` must be a basic component key. Deferred.
+- **ApertureRays.js purity**: Geometry helpers must remain importable without DOM side effects for off-screen snapshot rendering.

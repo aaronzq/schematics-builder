@@ -82,6 +82,7 @@
            <button id="flip-vertical-btn" class="tool-btn" title="Flip Vertical"><span class="material-symbols-outlined" style="transform: rotate(90deg);">flip</span></button>            
            <button id="group-btn" class="tool-btn" title="Group"><span class="material-symbols-outlined">group</span></button>
            <button id="ungroup-btn" class="tool-btn" title="Ungroup"><span class="material-symbols-outlined">group_off</span></button>
+           <button id="save-as-composite-btn" class="tool-btn" title="Save selection as composite component" style="display:none">Save as Composite</button>
            <button id="cut-link-btn" class="tool-btn" title="Remove current link"><span class="material-symbols-outlined">link_off</span></button>
            <button id="re-link-btn" class="tool-btn" title="Re-link to a component"><span class="material-symbols-outlined">add_link</span></button>
            
@@ -115,6 +116,10 @@
       </div>
     </footer>
   </div>
+
+  <dialog id="save-composite-dialog">
+    <!-- SaveCompositeDialog.js manages this dialog's content dynamically -->
+  </dialog>
 
   <script type="module" src="scripts/App.js"></script>
 </body>

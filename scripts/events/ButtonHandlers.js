@@ -27,6 +27,8 @@ export function updateToolbarButtons() {
   let hasGroupedComponent = false;
   let allGrouped = true;
   let canGroup = false;
+  let hasCompositeInstance = false;
+  let canSaveAsComposite = false;
   
   if (hasSelection) {
     componentManager.selectedIds.forEach(id => {
@@ -37,11 +39,16 @@ export function updateToolbarButtons() {
         } else {
           allGrouped = false;
         }
+        if (component.isCompositeInstance === true) {
+          hasCompositeInstance = true;
+        }
       }
     });
     // Can group if we have 2+ components and not ALL are already in the same group
     // This allows grouping mixed selections (grouped + ungrouped)
     canGroup = selectedCount >= 2 && !allGrouped;
+    // Can save as composite only if 2+ selected and none is already part of a composite
+    canSaveAsComposite = selectedCount >= 2 && !hasCompositeInstance;
   }
   
   // Check if focused component has a parent (for cut-link)
@@ -61,6 +68,7 @@ export function updateToolbarButtons() {
     flipV: document.getElementById('flip-vertical-btn'),
     group: document.getElementById('group-btn'),
     ungroup: document.getElementById('ungroup-btn'),
+    saveAsComposite: document.getElementById('save-as-composite-btn'),
     cutLink: document.getElementById('cut-link-btn'),
     reLink: document.getElementById('re-link-btn')
   };
@@ -75,6 +83,7 @@ export function updateToolbarButtons() {
     setButtonVisibility(buttons.flipV, true);
     setButtonVisibility(buttons.group, false);
     setButtonVisibility(buttons.ungroup, false);
+    setButtonVisibility(buttons.saveAsComposite, false);
     setButtonVisibility(buttons.cutLink, canCutLink);
     setButtonVisibility(buttons.reLink, true);
   }
@@ -87,7 +96,8 @@ export function updateToolbarButtons() {
     setButtonVisibility(buttons.flipH, false);
     setButtonVisibility(buttons.flipV, false);
     setButtonVisibility(buttons.group, canGroup);
-    setButtonVisibility(buttons.ungroup, hasGroupedComponent);
+    setButtonVisibility(buttons.ungroup, hasGroupedComponent && !hasCompositeInstance);
+    setButtonVisibility(buttons.saveAsComposite, canSaveAsComposite);
     setButtonVisibility(buttons.cutLink, false);
     setButtonVisibility(buttons.reLink, false);
   }
@@ -100,7 +110,8 @@ export function updateToolbarButtons() {
     setButtonVisibility(buttons.flipH, true);
     setButtonVisibility(buttons.flipV, true);
     setButtonVisibility(buttons.group, false); // Already grouped
-    setButtonVisibility(buttons.ungroup, true);
+    setButtonVisibility(buttons.ungroup, !hasCompositeInstance);
+    setButtonVisibility(buttons.saveAsComposite, canSaveAsComposite);
     setButtonVisibility(buttons.cutLink, canCutLink);
     setButtonVisibility(buttons.reLink, true);
   }
@@ -114,6 +125,7 @@ export function updateToolbarButtons() {
     setButtonVisibility(buttons.flipV, false);
     setButtonVisibility(buttons.group, false);
     setButtonVisibility(buttons.ungroup, false);
+    setButtonVisibility(buttons.saveAsComposite, false);
     setButtonVisibility(buttons.cutLink, false);
     setButtonVisibility(buttons.reLink, false);
   }
