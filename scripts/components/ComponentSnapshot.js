@@ -67,8 +67,9 @@ function _renderBasic(def, width, height) {
         _applyViewBox(svg, lb.minX, lb.minY, lb.maxX - lb.minX, lb.maxY - lb.minY, 0.20);
     }
 
-    svg.setAttribute('width',  width);
-    svg.setAttribute('height', height);
+    svg.setAttribute('width',  '100%');
+    svg.setAttribute('height', '100%');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     return svg;
 }
 
@@ -216,8 +217,9 @@ function _renderComposite(def, width, height) {
 
     _applyViewBox(svg, bMinX, bMinY, bMaxX - bMinX, bMaxY - bMinY, 0.20);
 
-    svg.setAttribute('width',  width);
-    svg.setAttribute('height', height);
+    svg.setAttribute('width',  '100%');
+    svg.setAttribute('height', '100%');
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     return svg;
 }
 
@@ -233,30 +235,53 @@ function _createSvg() {
 /** Return a minimal empty <svg> for error / empty cases. */
 function _makeEmptySvg(width, height) {
     const svg = _createSvg();
-    svg.setAttribute('width',   width);
-    svg.setAttribute('height',  height);
-    svg.setAttribute('viewBox', `0 0 ${width} ${height}`);
+    svg.setAttribute('width',   '100%');
+    svg.setAttribute('height',  '100%');
+    svg.setAttribute('viewBox', `0 0 ${width || 60} ${height || 60}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
     return svg;
 }
 
 /**
  * Apply a viewBox with symmetric padding.
+ *
+ * The viewBox is expanded so that the content occupies at most MAX_FILL of
+ * the icon area (i.e. the content is never larger than MAX_FILL × icon size).
+ * This means small artwork like the Point circle gets natural whitespace rather
+ * than being blown up to fill the entire button.
+ *
  * @param {SVGElement} svg
- * @param {number} x       - left edge of content
- * @param {number} y       - top edge of content
- * @param {number} w       - content width
- * @param {number} h       - content height
- * @param {number} pad     - fractional padding (e.g. 0.20 for 20 %)
+ * @param {number} x        - left edge of content
+ * @param {number} y        - top edge of content
+ * @param {number} w        - content width
+ * @param {number} h        - content height
+ * @param {number} pad      - fractional padding added to content (e.g. 0.20)
  */
 function _applyViewBox(svg, x, y, w, h, pad) {
-    // Avoid zero-dimension viewBox
-    const safeW = w  || 60;
-    const safeH = h  || 60;
+    // Avoid zero-dimension content
+    const safeW = w || 60;
+    const safeH = h || 60;
 
+    // Add the requested proportional padding around the content.
     const px = safeW * pad;
     const py = safeH * pad;
+    const paddedW = safeW + 2 * px;
+    const paddedH = safeH + 2 * py;
 
-    svg.setAttribute('viewBox', `${x - px} ${y - py} ${safeW + 2 * px} ${safeH + 2 * py}`);
+    // Enforce a minimum viewBox size so that tiny components (e.g. Point, r=2.5)
+    // don't fill the icon.  We choose a reference size equal to the largest
+    // dimension of a "typical" component (~40 SVG units for Plane/Lens).
+    const MIN_VIEW = 40;
+    const finalW = Math.max(paddedW, MIN_VIEW);
+    const finalH = Math.max(paddedH, MIN_VIEW);
+
+    // Re-centre so the content stays in the middle of the expanded viewBox.
+    const cx = x - px + paddedW / 2;
+    const cy = y - py + paddedH / 2;
+    const vx = cx - finalW / 2;
+    const vy = cy - finalH / 2;
+
+    svg.setAttribute('viewBox', `${vx} ${vy} ${finalW} ${finalH}`);
 }
 
 /**

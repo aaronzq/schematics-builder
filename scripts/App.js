@@ -32,6 +32,9 @@ export function initializeApp() {
     openSaveCompositeDialog(componentManager);
   });
 
+  // Sidebar resize handle
+  _setupSidebarResize();
+
   console.log('Application initialized');
   
   return { canvas };
@@ -40,3 +43,41 @@ export function initializeApp() {
 
 
 document.addEventListener('DOMContentLoaded', initializeApp);
+
+function _setupSidebarResize() {
+  const sidebar = document.getElementById('sidebar');
+  const handle  = document.getElementById('sidebar-resize-handle');
+  if (!sidebar || !handle) return;
+
+  const MIN_WIDTH = 100;   // px
+  const MAX_WIDTH = 500;   // px
+
+  let dragging = false;
+  let startX   = 0;
+  let startW   = 0;
+
+  handle.addEventListener('mousedown', (e) => {
+    dragging = true;
+    startX   = e.clientX;
+    startW   = sidebar.offsetWidth;
+    handle.classList.add('dragging');
+    document.body.style.cursor    = 'col-resize';
+    document.body.style.userSelect = 'none';
+    e.preventDefault();
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (!dragging) return;
+    const delta    = e.clientX - startX;
+    const newWidth = Math.min(MAX_WIDTH, Math.max(MIN_WIDTH, startW + delta));
+    sidebar.style.width = `${newWidth}px`;
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (!dragging) return;
+    dragging = false;
+    handle.classList.remove('dragging');
+    document.body.style.cursor    = '';
+    document.body.style.userSelect = '';
+  });
+}

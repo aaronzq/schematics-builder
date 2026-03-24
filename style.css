@@ -218,11 +218,35 @@ body, html {
   background: #e0e0e0;
   border-right: 1px solid #ddd;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   padding: 0;
-  min-width: 180px;
-  overflow-y: auto;
+  min-width: 120px;
+  overflow: hidden;
   flex-shrink: 0;
+  position: relative;
+}
+
+/* The scrollable inner column that holds the header + menu */
+.sidebar-inner {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Drag handle for resizing the sidebar */
+.sidebar-resize-handle {
+  width: 5px;
+  cursor: col-resize;
+  background: transparent;
+  flex-shrink: 0;
+  transition: background 0.15s;
+  z-index: 10;
+}
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle.dragging {
+  background: #b0b8c1;
 }
 
 .sidebar-header {
@@ -252,7 +276,7 @@ body, html {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: 0 10px;
+  padding: 0 6px;
   background: transparent;
   border-radius: 0;
   margin: 0;
@@ -270,21 +294,93 @@ body, html {
   text-transform: uppercase;
 }
 
+/* Icon grid: buttons wrap automatically based on sidebar width */
+.category-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 0 4px 4px;
+  margin-top: 2px;
+  margin-bottom: 4px;
+  max-height: 2000px;
+  overflow: hidden;
+  transition: max-height 0.15s ease, margin-top 0.2s ease, margin-bottom 0.2s ease;
+}
+
+.category-content.collapsed {
+  max-height: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+/* Each component button is a fixed square icon cell */
 .component-menu button {
-  padding: 6px 8px;
+  --icon-size: 48px;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  padding: 0;
   cursor: pointer;
   border: 1px solid transparent;
   background: transparent;
-  border-radius: 4px;
-  font-size: 0.9rem;
+  border-radius: 6px;
   transition: all 0.1s;
-  text-align: left;
-  color: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .component-menu button:hover {
   background: #c9c9c9;
-  color: #000;
+  border-color: #b0b0b0;
+}
+
+/* Thumbnail wrapper — fills the button exactly */
+.component-thumbnail {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* The snapshot SVG is scaled to fit within the button via object-fit semantics.
+   We use width/height 100% so it fills the cell; preserveAspectRatio on the
+   SVG element itself (set in ComponentSnapshot) handles the contain+center. */
+.component-thumbnail svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Delete button overlay for user composites */
+.component-delete-btn {
+  position: absolute !important;
+  top: 1px;
+  right: 1px;
+  width: 16px !important;
+  height: 16px !important;
+  min-width: 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  background: rgba(200,60,60,0.85) !important;
+  color: #fff !important;
+  font-size: 11px;
+  line-height: 16px;
+  text-align: center;
+  border: none !important;
+  cursor: pointer;
+  display: none !important;
+  z-index: 5;
+}
+
+.component-menu button:hover .component-delete-btn {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Foldable category styles */
@@ -324,23 +420,7 @@ body, html {
   transform: rotate(-90deg);
 }
 
-.category-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding-left: 8px;
-  margin-top: 2px;
-  margin-bottom: 4px;
-  max-height: 1000px;
-  overflow: hidden;
-  transition: max-height 0.1s ease, margin-top 0.2s ease, margin-bottom 0.2s ease;
-}
 
-.category-content.collapsed {
-  max-height: 0;
-  margin-top: 0;
-  margin-bottom: 0;
-}
 
 /* Secondary Toolbar */
 .secondary-toolbar {

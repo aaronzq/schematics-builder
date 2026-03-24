@@ -57,6 +57,7 @@ export function refreshSidebarMenu() {
 
       const btn = document.createElement('button');
       btn.setAttribute('data-component', type);
+      btn.setAttribute('title', label);  // tooltip in place of visible label
 
       // ── Thumbnail ────────────────────────────────────────────────────────
       try {
@@ -70,12 +71,6 @@ export function refreshSidebarMenu() {
       } catch (err) {
         console.warn(`[ComponentMenu] thumbnail failed for "${type}":`, err);
       }
-
-      // ── Label ────────────────────────────────────────────────────────────
-      const labelSpan = document.createElement('span');
-      labelSpan.className = 'component-label';
-      labelSpan.textContent = label;
-      btn.appendChild(labelSpan);
 
       // ── Delete button (user composites only) ─────────────────────────────
       if (def.isBuiltIn === false) {
