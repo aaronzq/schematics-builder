@@ -654,13 +654,21 @@ export class ComponentManager {
     const spawnedIds = [];   // parallel array matching def.members indices
     const spawnedComponents = [];
 
+    // Offset so the entry port member lands exactly on the spawn position
+    const entryMember = def.members[def.entryMemberIndex];
+    const entryOffsetX = entryMember.relX ?? 0;
+    const entryOffsetY = entryMember.relY ?? 0;
+
     // --- Pass 1: create and render all member components ---
     def.members.forEach((member, index) => {
       const id = this.idCounter++;
       const component = new Component(member.type);
 
-      // Position: spawn origin + member's relative offset
-      component.setPosition(spawnPos.x + member.relX, spawnPos.y + member.relY);
+      // Position: entry port at spawn origin, others relative to it
+      component.setPosition(
+        spawnPos.x + (member.relX - entryOffsetX),
+        spawnPos.y + (member.relY - entryOffsetY)
+      );
 
       // Apply rotation and scale from the definition
       component.setRotation(member.rotation ?? 0);
