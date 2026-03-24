@@ -4,18 +4,20 @@
  * 3-phase <dialog> for saving the current multi-selection as a user composite
  * component definition.
  *
- * Phase A — Name + Category + Preview
- * Phase B — Pick Entry Port
- * Phase C — Pick Exit Port → Save
+ * Phase A — Name + spatial preview of selected components in actual layout
+ * Phase B — Pick Entry Port (click on component in spatial preview)
+ * Phase C — Pick Exit Port (click on component in spatial preview) → Save
  *
- * The dialog element (#save-composite-dialog) must already exist in the DOM
- * (added to index.html by Agent E).  All interior content is built here with
- * document.createElement — no innerHTML.
+ * The dialog renders an SVG preview that mirrors the actual canvas layout —
+ * same positions, same rays, same appearance — so the user can orient
+ * left/right and identify components spatially.
+ *
+ * Category is always "User Components" — no selector needed.
  */
 
 import { components as componentRegistry } from './ComponentLibrary.js';
 import { saveUserComponent } from './UserComponentStore.js';
-import { generateSnapshot } from './ComponentSnapshot.js';
+import { COMPOSITE_DIALOG } from '../config.js';
 
 // ---------------------------------------------------------------------------
 // Module-level dialog state
@@ -30,7 +32,6 @@ let phase = 0;
 /** Mutable working state gathered across phases. */
 const state = {
     label: '',
-    category: 'User Components',
     entryId: null,   // component id chosen as entry port
     exitId: null,    // component id chosen as exit port
     memberIds: [],   // ordered array of selected component ids
@@ -38,6 +39,8 @@ const state = {
 
 /** Reference to the componentManager passed in at open time. */
 let _cm = null;
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
 
 // ---------------------------------------------------------------------------
 // Public API
@@ -58,7 +61,6 @@ export function openSaveCompositeDialog(componentManager) {
 
     // Reset state
     state.label    = '';
-    state.category = 'User Components';
     state.entryId  = null;
     state.exitId   = null;
     state.memberIds = ids;
@@ -72,6 +74,10 @@ export function openSaveCompositeDialog(componentManager) {
         console.error('[SaveCompositeDialog] #save-composite-dialog not found in DOM');
         return;
     }
+
+    // Apply config-driven sizing
+    dialog.style.minWidth = COMPOSITE_DIALOG.MIN_WIDTH + 'px';
+    dialog.style.maxWidth = COMPOSITE_DIALOG.MAX_WIDTH + 'px';
 
     _renderPhase();
     dialog.showModal();
@@ -90,59 +96,37 @@ function _renderPhase() {
     else if (phase === 2) _renderPhaseC();
 }
 
-// ── Phase A ─────────────────────────────────────────────────────────────────
+// ── Phase A — Name + spatial preview ────────────────────────────────────────
 
 function _renderPhaseA() {
     const wrap = _el('div', { className: 'scd-phase' });
 
-    // ── Title ────────────────────────────────────────────────────────────────
-    const title = _el('h3', { className: 'scd-title', textContent: 'Save as Composite (1 / 3)' });
-    wrap.appendChild(title);
+    // ── Header row ──────────────────────────────────────────────────────────
+    const header = _el('div', { className: 'scd-header-row' });
+    const title = _el('h3', { className: 'scd-title', textContent: 'Save Composite' });
+    const stepBadge = _el('span', { className: 'scd-step-badge', textContent: '1 / 3' });
+    header.appendChild(title);
+    header.appendChild(stepBadge);
+    wrap.appendChild(header);
 
-    const subtitle = _el('p', { className: 'scd-subtitle', textContent: 'Name your composite and choose a category.' });
-    wrap.appendChild(subtitle);
-
-    // ── Name input ───────────────────────────────────────────────────────────
-    const nameLabel = _el('label', { className: 'scd-label', textContent: 'Name' });
+    // ── Name input row ──────────────────────────────────────────────────────
+    const nameRow = _el('div', { className: 'scd-name-row' });
     const nameInput = _el('input', {
         className: 'scd-input',
         type: 'text',
-        placeholder: 'e.g. 4f Relay',
+        placeholder: 'Name your composite, e.g. "4f Relay"',
         value: state.label
     });
-    nameLabel.appendChild(nameInput);
-    wrap.appendChild(nameLabel);
+    nameRow.appendChild(nameInput);
+    wrap.appendChild(nameRow);
 
-    // ── Category dropdown ────────────────────────────────────────────────────
-    const catLabel = _el('label', { className: 'scd-label', textContent: 'Category' });
-    const catSelect = _el('select', { className: 'scd-select' });
+    // ── Spatial preview ─────────────────────────────────────────────────────
+    const previewContainer = _el('div', { className: 'scd-spatial-preview' });
+    const svgPreview = _buildSpatialPreview();
+    previewContainer.appendChild(svgPreview);
+    wrap.appendChild(previewContainer);
 
-    // Collect unique categories from registry
-    const catSet = new Set();
-    for (const def of Object.values(componentRegistry)) {
-        if (def.category) catSet.add(def.category);
-    }
-    // Always ensure "User Components" is present
-    catSet.add('User Components');
-
-    for (const cat of catSet) {
-        const opt = _el('option', { value: cat, textContent: cat });
-        if (cat === state.category) opt.selected = true;
-        catSelect.appendChild(opt);
-    }
-
-    catLabel.appendChild(catSelect);
-    wrap.appendChild(catLabel);
-
-    // ── Live preview ─────────────────────────────────────────────────────────
-    const previewTitle = _el('p', { className: 'scd-label', textContent: 'Preview (selection)' });
-    wrap.appendChild(previewTitle);
-
-    const previewArea = _el('div', { className: 'scd-preview-area' });
-    _buildSelectionPreview(previewArea);
-    wrap.appendChild(previewArea);
-
-    // ── Buttons ───────────────────────────────────────────────────────────────
+    // ── Buttons ─────────────────────────────────────────────────────────────
     const btnRow = _el('div', { className: 'scd-btn-row' });
 
     const cancelBtn = _el('button', { className: 'scd-btn scd-btn-secondary', textContent: 'Cancel' });
@@ -157,8 +141,7 @@ function _renderPhaseA() {
             return;
         }
         nameInput.classList.remove('scd-input-error');
-        state.label    = name;
-        state.category = catSelect.value;
+        state.label = name;
         phase = 1;
         _renderPhase();
     });
@@ -168,87 +151,42 @@ function _renderPhaseA() {
     wrap.appendChild(btnRow);
 
     dialog.appendChild(wrap);
-
-    // Focus the name input immediately
     requestAnimationFrame(() => nameInput.focus());
 }
 
-/**
- * Render individual component snapshots side-by-side as a rough preview.
- * @param {HTMLElement} container
- */
-function _buildSelectionPreview(container) {
-    state.memberIds.forEach(id => {
-        const comp = _cm.getComponent(id);
-        if (!comp) return;
-        const def = componentRegistry[comp.type];
-        if (!def) return;
-
-        const item = _el('div', { className: 'scd-preview-item' });
-
-        try {
-            const svgEl = generateSnapshot(def, { width: 48, height: 48 });
-            item.appendChild(svgEl);
-        } catch (e) {
-            const placeholder = _el('div', { className: 'scd-preview-placeholder', textContent: '?' });
-            item.appendChild(placeholder);
-        }
-
-        const lbl = _el('span', { className: 'scd-preview-label', textContent: def.label ?? comp.type });
-        item.appendChild(lbl);
-
-        container.appendChild(item);
-    });
-}
-
-// ── Phase B ─────────────────────────────────────────────────────────────────
+// ── Phase B — Pick entry port ───────────────────────────────────────────────
 
 function _renderPhaseB() {
     const wrap = _el('div', { className: 'scd-phase' });
 
-    const title = _el('h3', { className: 'scd-title', textContent: 'Save as Composite (2 / 3)' });
-    wrap.appendChild(title);
+    // Header
+    const header = _el('div', { className: 'scd-header-row' });
+    const title = _el('h3', { className: 'scd-title', textContent: 'Select Entry Port' });
+    const stepBadge = _el('span', { className: 'scd-step-badge', textContent: '2 / 3' });
+    header.appendChild(title);
+    header.appendChild(stepBadge);
+    wrap.appendChild(header);
 
-    const subtitle = _el('p', { className: 'scd-subtitle', textContent: 'Click the component where light enters.' });
-    wrap.appendChild(subtitle);
+    // Animated instruction
+    const instruction = _buildAnimatedInstruction('entry');
+    wrap.appendChild(instruction);
 
-    const list = _el('div', { className: 'scd-member-list' });
-
-    state.memberIds.forEach(id => {
-        const comp = _cm.getComponent(id);
-        if (!comp) return;
-        const def  = componentRegistry[comp.type];
-        const lbl  = def?.label ?? comp.type;
-
-        const item = _el('div', { className: 'scd-member-item' });
-        if (id === state.entryId) item.classList.add('scd-member-selected');
-
-        // Mini snapshot
-        if (def) {
-            try {
-                const svgEl = generateSnapshot(def, { width: 36, height: 36 });
-                item.appendChild(svgEl);
-            } catch {/* ignore */}
-        }
-
-        const labelSpan = _el('span', { className: 'scd-member-label', textContent: lbl });
-        item.appendChild(labelSpan);
-
-        const badge = _el('span', { className: 'scd-member-badge scd-badge-entry', textContent: '← Entry' });
-        badge.style.display = (id === state.entryId) ? '' : 'none';
-        item.appendChild(badge);
-
-        item.addEventListener('click', () => {
+    // Spatial preview with clickable components
+    const previewContainer = _el('div', { className: 'scd-spatial-preview scd-preview-interactive' });
+    const svgPreview = _buildSpatialPreview({
+        interactive: true,
+        mode: 'entry',
+        onSelect: (id) => {
             state.entryId = id;
-            // Re-render to show updated selection
             _renderPhase();
-        });
-
-        list.appendChild(item);
+        },
+        entryId: state.entryId,
+        exitId: null
     });
+    previewContainer.appendChild(svgPreview);
+    wrap.appendChild(previewContainer);
 
-    wrap.appendChild(list);
-
+    // Buttons
     const btnRow = _el('div', { className: 'scd-btn-row' });
 
     const backBtn = _el('button', { className: 'scd-btn scd-btn-secondary', textContent: '← Back' });
@@ -258,12 +196,10 @@ function _renderPhaseB() {
     cancelBtn.addEventListener('click', _close);
 
     const nextBtn = _el('button', { className: 'scd-btn scd-btn-primary', textContent: 'Next →' });
+    nextBtn.disabled = (state.entryId === null);
+    if (state.entryId === null) nextBtn.classList.add('scd-btn-disabled');
     nextBtn.addEventListener('click', () => {
-        if (state.entryId === null) {
-            subtitle.textContent = '⚠ Please click a component to set as entry port.';
-            subtitle.style.color = '#c00';
-            return;
-        }
+        if (state.entryId === null) return;
         phase = 2;
         _renderPhase();
     });
@@ -276,65 +212,44 @@ function _renderPhaseB() {
     dialog.appendChild(wrap);
 }
 
-// ── Phase C ─────────────────────────────────────────────────────────────────
+// ── Phase C — Pick exit port ────────────────────────────────────────────────
 
 function _renderPhaseC() {
     const wrap = _el('div', { className: 'scd-phase' });
 
-    const title = _el('h3', { className: 'scd-title', textContent: 'Save as Composite (3 / 3)' });
-    wrap.appendChild(title);
+    // Header
+    const header = _el('div', { className: 'scd-header-row' });
+    const title = _el('h3', { className: 'scd-title', textContent: 'Select Exit Port' });
+    const stepBadge = _el('span', { className: 'scd-step-badge', textContent: '3 / 3' });
+    header.appendChild(title);
+    header.appendChild(stepBadge);
+    wrap.appendChild(header);
 
-    const subtitle = _el('p', { className: 'scd-subtitle', textContent: 'Click the component where light exits.' });
-    wrap.appendChild(subtitle);
+    // Animated instruction
+    const instruction = _buildAnimatedInstruction('exit');
+    wrap.appendChild(instruction);
 
-    const list = _el('div', { className: 'scd-member-list' });
-
-    state.memberIds.forEach(id => {
-        const comp = _cm.getComponent(id);
-        if (!comp) return;
-        const def  = componentRegistry[comp.type];
-        const lbl  = def?.label ?? comp.type;
-
-        const isEntry = (id === state.entryId);
-        const isExit  = (id === state.exitId);
-
-        const item = _el('div', { className: 'scd-member-item' });
-        if (isEntry) item.classList.add('scd-member-disabled');
-        if (isExit)  item.classList.add('scd-member-selected');
-
-        if (def) {
-            try {
-                const svgEl = generateSnapshot(def, { width: 36, height: 36 });
-                if (isEntry) svgEl.style.opacity = '0.35';
-                item.appendChild(svgEl);
-            } catch {/* ignore */}
-        }
-
-        const labelSpan = _el('span', { className: 'scd-member-label', textContent: lbl });
-        item.appendChild(labelSpan);
-
-        if (isEntry) {
-            const entryBadge = _el('span', { className: 'scd-member-badge scd-badge-entry', textContent: '← Entry' });
-            item.appendChild(entryBadge);
-        }
-
-        const exitBadge = _el('span', { className: 'scd-member-badge scd-badge-exit', textContent: 'Exit →' });
-        exitBadge.style.display = isExit ? '' : 'none';
-        item.appendChild(exitBadge);
-
-        if (!isEntry) {
-            item.style.cursor = 'pointer';
-            item.addEventListener('click', () => {
-                state.exitId = id;
-                _renderPhase();
-            });
-        }
-
-        list.appendChild(item);
+    // Spatial preview with clickable components
+    const previewContainer = _el('div', { className: 'scd-spatial-preview scd-preview-interactive' });
+    const svgPreview = _buildSpatialPreview({
+        interactive: true,
+        mode: 'exit',
+        onSelect: (id) => {
+            state.exitId = id;
+            _renderPhase();
+        },
+        entryId: state.entryId,
+        exitId: state.exitId
     });
+    previewContainer.appendChild(svgPreview);
+    wrap.appendChild(previewContainer);
 
-    wrap.appendChild(list);
+    // Warning area
+    const warningEl = _el('div', { className: 'scd-warning' });
+    warningEl.style.display = 'none';
+    wrap.appendChild(warningEl);
 
+    // Buttons
     const btnRow = _el('div', { className: 'scd-btn-row' });
 
     const backBtn = _el('button', { className: 'scd-btn scd-btn-secondary', textContent: '← Back' });
@@ -343,16 +258,14 @@ function _renderPhaseC() {
     const cancelBtn = _el('button', { className: 'scd-btn scd-btn-secondary', textContent: 'Cancel' });
     cancelBtn.addEventListener('click', _close);
 
-    const saveBtn = _el('button', { className: 'scd-btn scd-btn-primary', textContent: 'Save Composite' });
+    const saveBtn = _el('button', { className: 'scd-btn scd-btn-primary', textContent: 'Save' });
+    saveBtn.disabled = (state.exitId === null);
+    if (state.exitId === null) saveBtn.classList.add('scd-btn-disabled');
     saveBtn.addEventListener('click', () => {
-        if (state.exitId === null) {
-            subtitle.textContent = '⚠ Please click a component to set as exit port.';
-            subtitle.style.color = '#c00';
-            return;
-        }
+        if (state.exitId === null) return;
         if (state.exitId === state.entryId) {
-            subtitle.textContent = '⚠ Entry and exit ports must be different components.';
-            subtitle.style.color = '#c00';
+            warningEl.textContent = '⚠ Entry and exit must be different components.';
+            warningEl.style.display = 'block';
             return;
         }
         _buildAndSaveComposite();
@@ -367,20 +280,324 @@ function _renderPhaseC() {
 }
 
 // ---------------------------------------------------------------------------
-// Build & save
+// Animated instruction builder
 // ---------------------------------------------------------------------------
 
 /**
- * Assemble the composite definition from the current multi-selection and
- * the choices made in phases A–C, then persist it via saveUserComponent().
+ * Build the animated instruction banner for port selection phases.
+ * Uses inline SVG arrow animations and a pulsing text prompt.
+ * @param {'entry'|'exit'} mode
+ * @returns {HTMLElement}
  */
+function _buildAnimatedInstruction(mode) {
+    const instruction = _el('div', { className: 'scd-instruction' });
+
+    const isEntry = mode === 'entry';
+    const color = isEntry ? '#2196F3' : '#FF9800';
+    const text = isEntry
+        ? 'Click where light enters'
+        : 'Click where light exits';
+
+    // Animated arrow SVG
+    const arrowWrap = _el('div', { className: `scd-anim-arrow ${isEntry ? 'scd-anim-entry' : 'scd-anim-exit'}` });
+    const arrowSvg = document.createElementNS(SVG_NS, 'svg');
+    arrowSvg.setAttribute('width', '36');
+    arrowSvg.setAttribute('height', '22');
+    arrowSvg.setAttribute('viewBox', '0 0 36 22');
+
+    // Arrow path
+    const arrowPath = document.createElementNS(SVG_NS, 'path');
+    arrowPath.setAttribute('d', isEntry
+        ? 'M4 11 L24 11 M18 5 L24 11 L18 17'
+        : 'M12 11 L32 11 M26 5 L32 11 L26 17');
+    arrowPath.setAttribute('stroke', color);
+    arrowPath.setAttribute('stroke-width', '2.5');
+    arrowPath.setAttribute('fill', 'none');
+    arrowPath.setAttribute('stroke-linecap', 'round');
+    arrowPath.setAttribute('stroke-linejoin', 'round');
+
+    // Opacity pulse
+    const opacityAnim = document.createElementNS(SVG_NS, 'animate');
+    opacityAnim.setAttribute('attributeName', 'opacity');
+    opacityAnim.setAttribute('values', '1;0.3;1');
+    opacityAnim.setAttribute('dur', '1.4s');
+    opacityAnim.setAttribute('repeatCount', 'indefinite');
+    arrowPath.appendChild(opacityAnim);
+
+    arrowSvg.appendChild(arrowPath);
+
+    // Translate bounce
+    const bounceAnim = document.createElementNS(SVG_NS, 'animateTransform');
+    bounceAnim.setAttribute('attributeName', 'transform');
+    bounceAnim.setAttribute('type', 'translate');
+    bounceAnim.setAttribute('values', '-3,0;5,0;-3,0');
+    bounceAnim.setAttribute('dur', '1.4s');
+    bounceAnim.setAttribute('repeatCount', 'indefinite');
+    arrowSvg.appendChild(bounceAnim);
+
+    arrowWrap.appendChild(arrowSvg);
+    instruction.appendChild(arrowWrap);
+
+    // Text
+    const instrText = _el('span', {
+        className: 'scd-instruction-text',
+        textContent: text
+    });
+    instrText.style.color = color;
+    instruction.appendChild(instrText);
+
+    return instruction;
+}
+
+// ---------------------------------------------------------------------------
+// Spatial preview — renders selected components in actual layout with rays
+// ---------------------------------------------------------------------------
+
+/**
+ * Build an SVG element that shows the selected components in their actual
+ * spatial layout (same relative positions, orientations) with ray polygons.
+ *
+ * @param {object} [opts]
+ * @param {boolean} [opts.interactive]  - make components clickable
+ * @param {'entry'|'exit'} [opts.mode]  - which port we're selecting
+ * @param {function} [opts.onSelect]    - callback(componentId) on click
+ * @param {number|null} [opts.entryId]  - highlight as entry
+ * @param {number|null} [opts.exitId]   - highlight as exit
+ * @returns {SVGElement}
+ */
+function _buildSpatialPreview(opts = {}) {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    svg.setAttribute('class', 'scd-preview-svg');
+
+    const ids = state.memberIds;
+    if (ids.length === 0) return svg;
+
+    // ── 1. Compute bounding box of all members ──────────────────────────────
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    const compDataList = [];
+
+    ids.forEach(id => {
+        const comp = _cm.getComponent(id);
+        if (!comp) return;
+        const def = componentRegistry[comp.type];
+
+        const lb = def?.localBounds;
+        const s = comp.scale ?? 1;
+        let halfW, halfH;
+        if (lb) {
+            halfW = ((lb.maxX - lb.minX) / 2) * s;
+            halfH = ((lb.maxY - lb.minY) / 2) * s;
+        } else {
+            halfW = halfH = (comp.apertureRadius ?? 15) * s;
+        }
+
+        minX = Math.min(minX, comp.x - halfW);
+        maxX = Math.max(maxX, comp.x + halfW);
+        minY = Math.min(minY, comp.y - halfH);
+        maxY = Math.max(maxY, comp.y + halfH);
+
+        compDataList.push({ id, comp, def, halfW, halfH });
+    });
+
+    // Add padding
+    const contentW = (maxX - minX) || 60;
+    const contentH = (maxY - minY) || 60;
+    const pad = Math.max(contentW, contentH) * 0.18;
+
+    const vbX = minX - pad;
+    const vbY = minY - pad;
+    const vbW = contentW + pad * 2;
+    const vbH = contentH + pad * 2;
+
+    svg.setAttribute('viewBox', `${vbX} ${vbY} ${vbW} ${vbH}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+    // Compute a representative scale for stroke widths (so they look consistent)
+    const viewScale = Math.max(vbW, vbH) / 300;
+
+    // ── 2. Draw ray polygons (behind components) ────────────────────────────
+    const rayGroup = document.createElementNS(SVG_NS, 'g');
+    rayGroup.setAttribute('class', 'scd-ray-group');
+
+    ids.forEach(id => {
+        const comp = _cm.getComponent(id);
+        if (!comp || comp.parent === null) return;
+
+        // Only draw ray if parent is also in this selection
+        if (!ids.includes(comp.parent)) return;
+
+        const parentComp = _cm.getComponent(comp.parent);
+        if (!parentComp) return;
+
+        const childPts = comp.getAperturePointsWorld();
+        const parentPts = parentComp.getAperturePointsWorld();
+
+        if (!childPts || childPts.length < 2 || !parentPts || parentPts.length < 2) return;
+
+        const polygon = document.createElementNS(SVG_NS, 'polygon');
+        polygon.setAttribute('points',
+            `${parentPts[0].x},${parentPts[0].y} ${childPts[0].x},${childPts[0].y} ` +
+            `${childPts[1].x},${childPts[1].y} ${parentPts[1].x},${parentPts[1].y}`
+        );
+        polygon.setAttribute('fill', comp.rayPolygonColor || '#00ffff');
+        polygon.setAttribute('fill-opacity', comp.rayPolygonOpacity ?? 0.2);
+        polygon.setAttribute('stroke', 'none');
+        polygon.setAttribute('pointer-events', 'none');
+        rayGroup.appendChild(polygon);
+    });
+
+    svg.appendChild(rayGroup);
+
+    // ── 3. Draw each component ──────────────────────────────────────────────
+    compDataList.forEach(({ id, comp, def, halfW, halfH }) => {
+        if (!def || !def.draw) return;
+
+        const wrapper = document.createElementNS(SVG_NS, 'g');
+        wrapper.setAttribute('class', 'scd-comp-wrapper');
+
+        // Build the same transform the real component uses
+        const rotation = comp.rotation ?? 0;
+        const scale = comp.scale ?? 1;
+        const transformParts = [`translate(${comp.x},${comp.y})`];
+        if (rotation !== 0) transformParts.push(`rotate(${rotation})`);
+        if (scale !== 1) transformParts.push(`scale(${scale})`);
+
+        // Handle flips
+        if (comp.flipX || comp.flipY) {
+            const fx = comp.flipX ? -1 : 1;
+            const fy = comp.flipY ? -1 : 1;
+            transformParts.push(`scale(${fx},${fy})`);
+        }
+
+        wrapper.setAttribute('transform', transformParts.join(' '));
+
+        // Clone the component artwork
+        let artwork;
+        try {
+            artwork = def.draw(SVG_NS);
+        } catch (e) {
+            return;
+        }
+        _prefixIds(artwork);
+        wrapper.appendChild(artwork);
+
+        // ── Highlight rings for entry/exit ───────────────────────────────────
+        const isEntry = (id === opts.entryId);
+        const isExit = (id === opts.exitId);
+        const isDisabled = (opts.mode === 'exit' && isEntry);
+
+        if (isEntry || isExit) {
+            const ringColor = isEntry ? '#2196F3' : '#FF9800';
+            const r = Math.max(halfW, halfH) / scale + 5 * viewScale;
+            const ring = document.createElementNS(SVG_NS, 'circle');
+            ring.setAttribute('cx', 0);
+            ring.setAttribute('cy', 0);
+            ring.setAttribute('r', r);
+            ring.setAttribute('fill', isEntry ? 'rgba(33,150,243,0.06)' : 'rgba(255,152,0,0.06)');
+            ring.setAttribute('stroke', ringColor);
+            ring.setAttribute('stroke-width', 1.5 * viewScale / scale);
+            ring.setAttribute('stroke-dasharray', `${4 * viewScale / scale} ${3 * viewScale / scale}`);
+            ring.setAttribute('pointer-events', 'none');
+            ring.setAttribute('class', 'scd-port-ring');
+
+            // Animated spinning dash
+            const dashAnim = document.createElementNS(SVG_NS, 'animate');
+            dashAnim.setAttribute('attributeName', 'stroke-dashoffset');
+            dashAnim.setAttribute('values', `0;${14 * viewScale / scale}`);
+            dashAnim.setAttribute('dur', '0.8s');
+            dashAnim.setAttribute('repeatCount', 'indefinite');
+            ring.appendChild(dashAnim);
+            wrapper.appendChild(ring);
+
+            // Port label
+            const portLabel = document.createElementNS(SVG_NS, 'text');
+            portLabel.setAttribute('x', 0);
+            portLabel.setAttribute('y', -r - 3 * viewScale / scale);
+            portLabel.setAttribute('text-anchor', 'middle');
+            portLabel.setAttribute('fill', ringColor);
+            portLabel.setAttribute('font-size', `${9 * viewScale / scale}`);
+            portLabel.setAttribute('font-weight', '600');
+            portLabel.setAttribute('pointer-events', 'none');
+            if (rotation !== 0) {
+                portLabel.setAttribute('transform', `rotate(${-rotation})`);
+            }
+            portLabel.textContent = isEntry ? '● Entry' : '● Exit';
+            wrapper.appendChild(portLabel);
+        }
+
+        // ── Interactive hit area ────────────────────────────────────────────
+        if (opts.interactive && !isDisabled) {
+            const hitR = Math.max(halfW, halfH) / scale + 4 * viewScale;
+            const hitArea = document.createElementNS(SVG_NS, 'circle');
+            hitArea.setAttribute('cx', 0);
+            hitArea.setAttribute('cy', 0);
+            hitArea.setAttribute('r', hitR);
+            hitArea.setAttribute('fill', 'transparent');
+            hitArea.setAttribute('stroke', 'transparent');
+            hitArea.setAttribute('stroke-width', 3 * viewScale / scale);
+            hitArea.setAttribute('class', 'scd-hit-area');
+            hitArea.style.cursor = 'pointer';
+            hitArea.style.pointerEvents = 'all';
+
+            const hoverColor = opts.mode === 'entry'
+                ? { stroke: 'rgba(33,150,243,0.5)', fill: 'rgba(33,150,243,0.08)' }
+                : { stroke: 'rgba(255,152,0,0.5)', fill: 'rgba(255,152,0,0.08)' };
+
+            hitArea.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (opts.onSelect) opts.onSelect(id);
+            });
+
+            hitArea.addEventListener('mouseenter', () => {
+                hitArea.setAttribute('stroke', hoverColor.stroke);
+                hitArea.setAttribute('fill', hoverColor.fill);
+            });
+            hitArea.addEventListener('mouseleave', () => {
+                hitArea.setAttribute('stroke', 'transparent');
+                hitArea.setAttribute('fill', 'transparent');
+            });
+
+            wrapper.appendChild(hitArea);
+        }
+
+        // Dim disabled (entry port in exit-selection phase)
+        if (isDisabled) {
+            wrapper.style.opacity = '0.3';
+            wrapper.style.pointerEvents = 'none';
+        }
+
+        // Component type name label below
+        const nameLabel = document.createElementNS(SVG_NS, 'text');
+        const labelY = (halfH / scale) + 8 * viewScale / scale;
+        nameLabel.setAttribute('x', 0);
+        nameLabel.setAttribute('y', labelY);
+        nameLabel.setAttribute('text-anchor', 'middle');
+        nameLabel.setAttribute('fill', '#888');
+        nameLabel.setAttribute('font-size', `${7 * viewScale / scale}`);
+        nameLabel.setAttribute('font-family', 'Segoe UI, sans-serif');
+        nameLabel.setAttribute('pointer-events', 'none');
+        if (rotation !== 0) {
+            nameLabel.setAttribute('transform', `rotate(${-rotation})`);
+        }
+        nameLabel.textContent = def.label ?? comp.type;
+        wrapper.appendChild(nameLabel);
+
+        svg.appendChild(wrapper);
+    });
+
+    return svg;
+}
+
+// ---------------------------------------------------------------------------
+// Build & save
+// ---------------------------------------------------------------------------
+
 function _buildAndSaveComposite() {
     const ids = state.memberIds;
 
-    // Build an id → index lookup so we can resolve internalParentIndex
     const idToIndex = new Map(ids.map((id, i) => [id, i]));
 
-    // Compute group centroid (average of all member world positions)
+    // Compute group centroid
     let sumX = 0, sumY = 0;
     ids.forEach(id => {
         const comp = _cm.getComponent(id);
@@ -395,7 +612,6 @@ function _buildAndSaveComposite() {
         const relX = comp.x - centroidX;
         const relY = comp.y - centroidY;
 
-        // internalParentIndex: find a member whose id matches comp.parent
         let internalParentIndex = null;
         if (comp.parent !== null && idToIndex.has(comp.parent)) {
             internalParentIndex = idToIndex.get(comp.parent);
@@ -407,7 +623,6 @@ function _buildAndSaveComposite() {
             relY,
             rotation:            comp.rotation   ?? 0,
             scale:               comp.scale       ?? 1,
-            // Freeze ray props from the live instance
             apertureRadius:      comp.apertureRadius    ?? 15,
             coneAngle:           comp.coneAngle         ?? 0,
             rayShape:            comp.rayShape          || 'collimated',
@@ -418,14 +633,14 @@ function _buildAndSaveComposite() {
         };
     });
 
-    // Derive a stable key from the label + timestamp
+    // Derive a stable key
     const keyBase = state.label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     const key = `user_${keyBase}_${Date.now()}`;
 
     const def = {
         key,
         label:           state.label,
-        category:        state.category,
+        category:        'User Components',
         isComposite:     true,
         isBuiltIn:       false,
         members,
@@ -467,4 +682,53 @@ function _el(tag, props = {}) {
         else el.setAttribute(k === 'htmlFor' ? 'for' : k, v);
     }
     return el;
+}
+
+/**
+ * Prefix every element ID (and href/xlink:href references) inside `root`
+ * with a unique random string to prevent collisions with the main canvas.
+ */
+function _prefixIds(root) {
+    const prefix = `scd-${Math.random().toString(36).slice(2)}-`;
+    const elementsWithId = root.querySelectorAll('[id]');
+    const idMap = new Map();
+
+    elementsWithId.forEach(el => {
+        const oldId = el.getAttribute('id');
+        idMap.set(oldId, prefix + oldId);
+    });
+
+    idMap.forEach((newId, oldId) => {
+        const el = root.querySelector(`[id="${oldId}"]`);
+        if (el) el.setAttribute('id', newId);
+    });
+
+    const allEls = [root, ...root.querySelectorAll('*')];
+    allEls.forEach(el => {
+        _rewriteAttr(el, 'href', idMap);
+        _rewriteAttr(el, 'xlink:href', idMap);
+        _rewriteAttr(el, 'fill', idMap);
+        _rewriteAttr(el, 'stroke', idMap);
+        _rewriteAttr(el, 'clip-path', idMap);
+        _rewriteAttr(el, 'filter', idMap);
+        _rewriteAttr(el, 'mask', idMap);
+        _rewriteAttr(el, 'marker-start', idMap);
+        _rewriteAttr(el, 'marker-mid', idMap);
+        _rewriteAttr(el, 'marker-end', idMap);
+    });
+}
+
+function _rewriteAttr(el, attr, idMap) {
+    const val = el.getAttribute(attr);
+    if (!val) return;
+    const urlMatch = val.match(/^url\(#(.+)\)$/);
+    if (urlMatch) {
+        const newId = idMap.get(urlMatch[1]);
+        if (newId) el.setAttribute(attr, `url(#${newId})`);
+        return;
+    }
+    if (val.startsWith('#')) {
+        const newId = idMap.get(val.slice(1));
+        if (newId) el.setAttribute(attr, `#${newId}`);
+    }
 }

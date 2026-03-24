@@ -2622,18 +2622,24 @@ export function generateSnapshot(def, opts = { width: 60, height: 60 }) { ... }
 
 ### 8.9 SaveCompositeDialog Flow
 
-3-phase dialog:
+3-phase compact dialog with spatial preview:
 
 ```
-Phase A    Phase B    Phase C    [Save]
-Name+Category   Pick entry    Pick exit
-+ live preview  port member   port member
+Phase A           Phase B                Phase C                [Save]
+Name + spatial    Click entry port       Click exit port
+preview           in spatial preview     in spatial preview
 ```
 
-- Phase A: name input, category dropdown, live SVG preview via `generateSnapshot`.
-- Phase B: `` overlay per member; click to designate entry port.
-- Phase C: `` overlay on remaining members (entry dimmed); click to designate exit port.
-- Save: calls `UserComponentStore.saveUserComponent(def)` with frozen ray props from live instances.
+**Key design decisions**:
+- **Spatial preview** (not a list): The dialog renders an SVG that mirrors the actual canvas layout — same positions, rotations, scales, flips, and ray polygons. Users can see which component is on the left vs right.
+- **No category selector**: All user-created composites go to the "User Components" category automatically.
+- **Config-driven sizing**: Dialog width and preview height are exported from `config.js` (`COMPOSITE_DIALOG`) so they can be tuned from one place. Inline styles apply `MIN_WIDTH`/`MAX_WIDTH` at open-time; CSS sets matching preview heights.
+- **Animated instructions**: Entry/exit port selection phases show a bouncing arrow animation with color-coded prompts (blue for entry, orange for exit). The arrow and text are vertically centered on the same line height.
+- **Click-on-component**: Users click directly on components in the spatial preview SVG to designate ports. Hit areas show colored hover highlights. Selected ports get animated dashed-ring indicators.
+- **Phase A**: Name input + read-only spatial preview of the selection.
+- **Phase B**: Same spatial preview with clickable hit areas; animated blue instruction "Click where light enters →".
+- **Phase C**: Entry port dimmed + locked; remaining components clickable; animated orange instruction "Click where light exits →".
+- Save: calls `UserComponentStore.saveUserComponent(def)` with category forced to `'User Components'` and frozen ray props from live instances.
 
 ---
 

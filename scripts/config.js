@@ -125,4 +125,12 @@ export const CANVAS_CONFIG = {
   PAN_SPEED: 1.0
 };
 
+// ===== Save-composite dialog sizing =====
+export const COMPOSITE_DIALOG = {
+  MIN_WIDTH: 480,
+  MAX_WIDTH: 620,
+  PREVIEW_MIN_HEIGHT: 220,
+  PREVIEW_MAX_HEIGHT: 320
+};
+
 

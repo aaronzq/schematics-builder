@@ -846,3 +846,202 @@ input[type="range"].single-knob {
   margin: 4px 0 0 0;
   color: #333;
 }
+
+/* =========================================================================
+   Save Composite Dialog
+   ========================================================================= */
+
+#save-composite-dialog {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.22);
+  padding: 0;
+  min-width: 480px;
+  max-width: 620px;
+  background: #fff;
+  overflow: visible;
+}
+
+#save-composite-dialog::backdrop {
+  background: rgba(0,0,0,0.35);
+}
+
+.scd-phase {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px 20px 14px;
+}
+
+/* Header row: title + step badge */
+.scd-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.scd-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #222;
+}
+
+.scd-step-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #999;
+  background: #f0f0f0;
+  border-radius: 10px;
+  padding: 2px 10px;
+  letter-spacing: 0.04em;
+}
+
+/* Name input */
+.scd-name-row {
+  display: flex;
+}
+
+.scd-input {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1.5px solid #ccc;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.scd-input:focus {
+  border-color: #555;
+}
+
+.scd-input-error {
+  border-color: #e53935 !important;
+  animation: scd-shake 0.3s ease;
+}
+
+@keyframes scd-shake {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-4px); }
+  50%      { transform: translateX(4px); }
+  75%      { transform: translateX(-2px); }
+}
+
+/* Spatial preview area */
+.scd-spatial-preview {
+  background: #f7f7f7;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  min-height: 220px;
+  max-height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.scd-spatial-preview.scd-preview-interactive {
+  cursor: default;
+}
+
+.scd-preview-svg {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  max-height: 320px;
+}
+
+/* Animated instruction banner */
+.scd-instruction {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #f4f8ff;
+  border: 1px solid #d0dff4;
+  line-height: 1;
+}
+
+.scd-instruction:has(.scd-anim-exit) {
+  background: #fff8f0;
+  border-color: #f4dfc0;
+}
+
+.scd-anim-arrow {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  height: 22px;
+}
+
+.scd-instruction-text {
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 22px;
+  animation: scd-text-pulse 2s ease-in-out infinite;
+}
+
+@keyframes scd-text-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+
+/* Warning message */
+.scd-warning {
+  font-size: 0.8rem;
+  color: #c00;
+  font-weight: 600;
+  text-align: center;
+  padding: 4px;
+}
+
+/* Button row */
+.scd-btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-top: 4px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.scd-btn {
+  padding: 6px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.scd-btn-primary {
+  background: #333;
+  color: #fff;
+}
+
+.scd-btn-primary:hover {
+  background: #555;
+}
+
+.scd-btn-primary.scd-btn-disabled {
+  background: #bbb;
+  cursor: default;
+}
+
+.scd-btn-secondary {
+  background: #eee;
+  color: #444;
+}
+
+.scd-btn-secondary:hover {
+  background: #ddd;
+}
+
+/* Interactive hit-area hover (SVG elements — styled via JS) */
+.scd-hit-area {
+  transition: fill 0.15s, stroke 0.15s;
+}
