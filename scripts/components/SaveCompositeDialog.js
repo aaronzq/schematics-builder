@@ -381,20 +381,28 @@ function _buildSpatialPreview(opts = {}) {
         if (!comp) return;
         const def = componentRegistry[comp.type];
 
-        const lb = def?.localBounds;
         const s = comp.scale ?? 1;
+        const lb = def?.localBounds ?? comp.localBounds;
+
+        // Use the component's own getBoundingBox() which correctly accounts for
+        // centerPoint offset, rotation, and scale — giving a true world-space AABB.
+        const bb = comp.getBoundingBox();
+        minX = Math.min(minX, bb.minX);
+        maxX = Math.max(maxX, bb.maxX);
+        minY = Math.min(minY, bb.minY);
+        maxY = Math.max(maxY, bb.maxY);
+
+        // halfW/halfH are the max extents from centerPoint in world space.
+        // Used for ring/hit-area radii (divided by scale inside the wrapper transform).
         let halfW, halfH;
         if (lb) {
-            halfW = ((lb.maxX - lb.minX) / 2) * s;
-            halfH = ((lb.maxY - lb.minY) / 2) * s;
+            const cx = comp.centerPoint?.x ?? 0;
+            const cy = comp.centerPoint?.y ?? 0;
+            halfW = Math.max(Math.abs(lb.maxX - cx), Math.abs(lb.minX - cx)) * s;
+            halfH = Math.max(Math.abs(lb.maxY - cy), Math.abs(lb.minY - cy)) * s;
         } else {
             halfW = halfH = (comp.apertureRadius ?? 15) * s;
         }
-
-        minX = Math.min(minX, comp.x - halfW);
-        maxX = Math.max(maxX, comp.x + halfW);
-        minY = Math.min(minY, comp.y - halfH);
-        maxY = Math.max(maxY, comp.y + halfH);
 
         compDataList.push({ id, comp, def, halfW, halfH });
     });
@@ -455,19 +463,18 @@ function _buildSpatialPreview(opts = {}) {
         const wrapper = document.createElementNS(SVG_NS, 'g');
         wrapper.setAttribute('class', 'scd-comp-wrapper');
 
-        // Build the same transform the real component uses
+        // Mirror Component._updateTransform exactly:
+        // translate(x,y) → rotate(θ) → matrix(s·a, s·b, s·c, s·d, 0, 0) → translate(-cx, -cy)
         const rotation = comp.rotation ?? 0;
-        const scale = comp.scale ?? 1;
+        const scale    = comp.scale    ?? 1;
+        const cx = comp.centerPoint?.x ?? 0;
+        const cy = comp.centerPoint?.y ?? 0;
+        const { a, b, c, d } = comp._getFlipMatrix();
+
         const transformParts = [`translate(${comp.x},${comp.y})`];
         if (rotation !== 0) transformParts.push(`rotate(${rotation})`);
-        if (scale !== 1) transformParts.push(`scale(${scale})`);
-
-        // Handle flips
-        if (comp.flipX || comp.flipY) {
-            const fx = comp.flipX ? -1 : 1;
-            const fy = comp.flipY ? -1 : 1;
-            transformParts.push(`scale(${fx},${fy})`);
-        }
+        transformParts.push(`matrix(${scale*a},${scale*b},${scale*c},${scale*d},0,0)`);
+        if (cx !== 0 || cy !== 0) transformParts.push(`translate(${-cx},${-cy})`);
 
         wrapper.setAttribute('transform', transformParts.join(' '));
 
