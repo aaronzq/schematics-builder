@@ -1,5 +1,5 @@
 import { componentManager } from '../components/index.js';
-import { LINK_HOVER_BOX_COLOR } from '../config.js';
+import { LINK_HOVER_BOX_COLOR, HOVER_BOX_FILL, HOVER_BOX_STROKE, HOVER_BOX_STROKE_WIDTH } from '../config.js';
 
 let hoverBox = null;
 let selectionHoverBoxes = new Map(); // Track hover boxes during selection
@@ -8,10 +8,9 @@ function createHoverBox() {
   const ns = 'http://www.w3.org/2000/svg';
   const rect = document.createElementNS(ns, 'rect');
   rect.setAttribute('id', 'hover-box');
-  rect.setAttribute('fill', 'none');
-  rect.setAttribute('stroke', '#555');
-  rect.setAttribute('stroke-width', '2.5');
-  // rect.setAttribute('stroke-dasharray', '5,5');
+  rect.setAttribute('fill', HOVER_BOX_FILL);
+  rect.setAttribute('stroke', HOVER_BOX_STROKE);
+  rect.setAttribute('stroke-width', HOVER_BOX_STROKE_WIDTH);
   rect.setAttribute('pointer-events', 'none');
   return rect;
 }
@@ -20,9 +19,9 @@ export function createComponentHoverBox(component) {
   const ns = 'http://www.w3.org/2000/svg';
   const rect = document.createElementNS(ns, 'rect');
   rect.setAttribute('class', 'selection-hover-box');
-  rect.setAttribute('fill', 'none');
-  rect.setAttribute('stroke', '#555');
-  rect.setAttribute('stroke-width', '2.5');
+  rect.setAttribute('fill', HOVER_BOX_FILL);
+  rect.setAttribute('stroke', HOVER_BOX_STROKE);
+  rect.setAttribute('stroke-width', HOVER_BOX_STROKE_WIDTH);
   rect.setAttribute('pointer-events', 'none');
   
   const { x, y } = component.getPosition();
@@ -294,9 +293,9 @@ export function showRelinkHoverBoxes(validComponentIds, hoverBoxesArray) {
     rect.setAttribute('y', lb.minY);
     rect.setAttribute('width', lb.maxX - lb.minX);
     rect.setAttribute('height', lb.maxY - lb.minY);
-    rect.setAttribute('fill', 'none');
+    rect.setAttribute('fill', HOVER_BOX_FILL);
     rect.setAttribute('stroke', LINK_HOVER_BOX_COLOR);
-    rect.setAttribute('stroke-width', '2.5');
+    rect.setAttribute('stroke-width', HOVER_BOX_STROKE_WIDTH);
     rect.setAttribute('pointer-events', 'none');
     rect.setAttribute('transform', `translate(${x}, ${y}) rotate(${rotation}) matrix(${s*a}, ${s*b}, ${s*c}, ${s*d}, 0, 0) translate(${-cx}, ${-cy})`);
     

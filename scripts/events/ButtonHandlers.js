@@ -23,31 +23,75 @@ export function updateToolbarButtons() {
   const hasFocus = componentManager.currentId !== null;
   const hasSelection = selectedCount > 0;
   
-  // Check if any selected component is grouped
-  let hasGroupedComponent = false;
-  let allGrouped = true;
+  // --- Analyse selection for group / ungroup / composite toolbar logic ---
+  //
+  // Key principle: a composite instance is an OPAQUE ATOM.  Its internal
+  // isGrouped / groupMembers are implementation details and must NOT
+  // influence outer-level group / ungroup decisions.
+  //
+  // "Outer-grouped" means a component (or composite unit) has group
+  // members that extend BEYOND its own composite.  Composite-internal
+  // grouping is invisible here.
+  //
+  let hasOuterGroup = false;   // any selected item is in an outer group
+  let allOuterGrouped = true;  // every selected item belongs to an outer group
   let canGroup = false;
   let hasCompositeInstance = false;
   let canSaveAsComposite = false;
   
   if (hasSelection) {
-    componentManager.selectedIds.forEach(id => {
+    // Collect all composite member IDs within the selection so we can
+    // distinguish internal vs. external group relationships.
+    const selectedArray = Array.from(componentManager.selectedIds);
+    const compositeIdsInSelection = new Set();
+    selectedArray.forEach(id => {
+      const comp = componentManager.getComponent(id);
+      if (comp && comp.isCompositeInstance) {
+        compositeIdsInSelection.add(id);
+      }
+    });
+    hasCompositeInstance = compositeIdsInSelection.size > 0;
+
+    selectedArray.forEach(id => {
       const component = componentManager.getComponent(id);
-      if (component) {
+      if (!component) return;
+
+      if (component.isCompositeInstance) {
+        // For a composite member, check if it has group members OUTSIDE
+        // its own composite instance (= an outer group exists).
         if (component.isGrouped) {
-          hasGroupedComponent = true;
+          const instId = component.compositeInstanceId;
+          const hasExternalMember = [...component.groupMembers].some(
+            memberId => {
+              const m = componentManager.getComponent(memberId);
+              // External if non-composite OR a different composite instance
+              return m && (!m.isCompositeInstance || m.compositeInstanceId !== instId);
+            }
+          );
+          if (hasExternalMember) {
+            hasOuterGroup = true;
+          } else {
+            // All group members are composite-internal → not outer-grouped
+            allOuterGrouped = false;
+          }
         } else {
-          allGrouped = false;
+          allOuterGrouped = false;
         }
-        if (component.isCompositeInstance === true) {
-          hasCompositeInstance = true;
+      } else {
+        // Regular (non-composite) component
+        if (component.isGrouped) {
+          hasOuterGroup = true;
+        } else {
+          allOuterGrouped = false;
         }
       }
     });
-    // Can group if we have 2+ components and not ALL are already in the same group
-    // This allows grouping mixed selections (grouped + ungrouped)
-    canGroup = selectedCount >= 2 && !allGrouped;
-    // Can save as composite only if 2+ selected and none is already part of a composite
+
+    // Can group if 2+ items selected and not ALL are already in the same
+    // outer group.  Composites that are only internally grouped count as
+    // "ungrouped" for this purpose.
+    canGroup = selectedCount >= 2 && !allOuterGrouped;
+    // Can save as composite only if 2+ selected and none is already a composite
     canSaveAsComposite = selectedCount >= 2 && !hasCompositeInstance;
   }
   
@@ -96,7 +140,7 @@ export function updateToolbarButtons() {
     setButtonVisibility(buttons.flipH, false);
     setButtonVisibility(buttons.flipV, false);
     setButtonVisibility(buttons.group, canGroup);
-    setButtonVisibility(buttons.ungroup, hasGroupedComponent && !hasCompositeInstance);
+    setButtonVisibility(buttons.ungroup, hasOuterGroup);
     setButtonVisibility(buttons.saveAsComposite, canSaveAsComposite);
     setButtonVisibility(buttons.cutLink, false);
     setButtonVisibility(buttons.reLink, false);
@@ -110,7 +154,7 @@ export function updateToolbarButtons() {
     setButtonVisibility(buttons.flipH, true);
     setButtonVisibility(buttons.flipV, true);
     setButtonVisibility(buttons.group, false); // Already grouped
-    setButtonVisibility(buttons.ungroup, !hasCompositeInstance);
+    setButtonVisibility(buttons.ungroup, hasOuterGroup);
     setButtonVisibility(buttons.saveAsComposite, canSaveAsComposite);
     setButtonVisibility(buttons.cutLink, canCutLink);
     setButtonVisibility(buttons.reLink, true);

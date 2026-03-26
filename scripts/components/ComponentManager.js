@@ -4,7 +4,7 @@ import { autoCenter } from '../Canvas.js';
 import { showRotationHandle, removeRotationHandle } from '../events/RotationHandle.js';
 import { showScaleHandle, removeScaleHandle } from '../events/ScaleHandle.js';
 import { showArrowHandle } from '../events/ArrowHandle.js';
-import { removeUnifiedBoundingBox } from '../events/InteractionHandlers.js';
+import { showUnifiedBoundingBox, removeUnifiedBoundingBox } from '../events/InteractionHandlers.js';
 import { updateToolbarButtons } from '../events/ButtonHandlers.js';
 import { applyApertureScaling } from '../rays/ApertureScaling.js';
 import { updateRays } from '../rays/DrawRays.js';
@@ -13,6 +13,7 @@ export class ComponentManager {
   constructor() {
     this.components = new Map();
     this.idCounter = 0;
+    this.compositeInstanceCounter = 0;
     this.currentId = null;
     this.selectedIds = new Set();
     this.nextPosition = { x: 0, y: 0 };
@@ -115,20 +116,24 @@ export class ComponentManager {
     this.currentId = id;
     this.updateNextPositionFromComponent(id);
 
-    // Composite: always force currentId to be the exit port member
-    if (component && component.isGrouped && component.groupMembers) {
-      for (const memberId of component.groupMembers) {
-        const member = this.components.get(memberId);
-        if (member && member.isExitPort) {
-          this.currentId = memberId;
-          this.updateNextPositionFromComponent(memberId);
-          break;
-        }
-      }
-      // Also check the component itself
+    // Composite: resolve currentId to the exit port of the SAME composite instance.
+    // Only applies if the clicked component itself is a composite member.
+    // Non-composite components grouped with a composite remain their own currentId.
+    if (component && component.isCompositeInstance && component.compositeInstanceId != null) {
+      const instId = component.compositeInstanceId;
+      // Check the component itself first
       if (component.isExitPort) {
-        this.currentId = id;
-        this.updateNextPositionFromComponent(id);
+        // Already the exit port — keep currentId as is
+      } else {
+        // Search group members for the exit port of the same instance
+        for (const memberId of (component.groupMembers || [])) {
+          const member = this.components.get(memberId);
+          if (member && member.isExitPort && member.compositeInstanceId === instId) {
+            this.currentId = memberId;
+            this.updateNextPositionFromComponent(memberId);
+            break;
+          }
+        }
       }
     }
 
@@ -651,6 +656,7 @@ export class ComponentManager {
       throw new Error('Components group (#schematics) not found in canvas');
     }
 
+    const compositeInstId = ++this.compositeInstanceCounter;
     const spawnedIds = [];   // parallel array matching def.members indices
     const spawnedComponents = [];
 
@@ -677,6 +683,7 @@ export class ComponentManager {
       // Apply composite instance flags and frozen ray properties
       component.isCompositeInstance = true;
       component.compositeKey = def.key;
+      component.compositeInstanceId = compositeInstId;
       component.rayLocked = true;
       component.apertureRadius = member.apertureRadius;
       component.coneAngle = member.coneAngle;
@@ -776,17 +783,6 @@ export class ComponentManager {
    * Ungroup all components in the group containing the selected component(s)
    */
   ungroupSelectedComponents() {
-    // Block ungrouping of composite instances
-    const allIds = [...this.selectedIds];
-    const hasCompositeInstance = allIds.some(id => {
-      const comp = this.components.get(id);
-      return comp && comp.isCompositeInstance;
-    });
-    if (hasCompositeInstance) {
-      console.warn('[ComponentManager] Cannot ungroup a composite component instance.');
-      return;
-    }
-
     const selectedIds = Array.from(this.selectedIds);
     const groupedIds = new Set();
 
@@ -799,62 +795,103 @@ export class ComponentManager {
       }
     });
 
-    // Ungroup all collected components
-    if (groupedIds.size > 0) {
-      groupedIds.forEach(id => {
-        const component = this.components.get(id);
-        if (component) {
-          component.clearGroup();
+    if (groupedIds.size === 0) {
+      console.log('No grouped components to ungroup');
+      return false;
+    }
+
+    // --- Selective ungroup: each composite instance stays grouped internally ---
+    // Partition into composite members (by instance) and non-composite members
+    const compositeInstanceMap = new Map(); // compositeInstanceId → Set<id>
+    const nonCompositeIds = new Set();
+    groupedIds.forEach(id => {
+      const comp = this.components.get(id);
+      if (comp && comp.isCompositeInstance && comp.compositeInstanceId != null) {
+        if (!compositeInstanceMap.has(comp.compositeInstanceId)) {
+          compositeInstanceMap.set(comp.compositeInstanceId, new Set());
+        }
+        compositeInstanceMap.get(comp.compositeInstanceId).add(id);
+      } else {
+        nonCompositeIds.add(id);
+      }
+    });
+
+    // If there is only ONE composite instance and NO non-composite members,
+    // this is a single atomic composite — nothing to ungroup.
+    if (nonCompositeIds.size === 0 && compositeInstanceMap.size <= 1) {
+      console.warn('[ComponentManager] Cannot ungroup a single composite component — it is an atomic unit.');
+      return false;
+    }
+
+    // Clear group on all non-composite members
+    nonCompositeIds.forEach(id => {
+      const comp = this.components.get(id);
+      if (comp) comp.clearGroup();
+    });
+
+    // Rebuild each composite instance's group sets so they only reference
+    // members of the SAME instance (removing cross-instance links).
+    compositeInstanceMap.forEach((instanceIds) => {
+      instanceIds.forEach(id => {
+        const comp = this.components.get(id);
+        if (comp) {
+          const internalMembers = [...instanceIds].filter(otherId => otherId !== id);
+          if (internalMembers.length > 0) {
+            comp.setGroupMembers(internalMembers);
+          } else {
+            comp.clearGroup();
+          }
         }
       });
-      
-      // Remove group UI elements
-      removeUnifiedBoundingBox();
-      removeRotationHandle();
-      removeScaleHandle();
-      
-      // Preserve currentId if it exists, otherwise clear selection
-      const preservedCurrentId = this.currentId;
-      
-      // Clear all selections
-      this.selectedIds.forEach(id => {
-        const element = document.querySelector(`[data-id="${id}"]`);
-        if (element) {
-          element.classList.remove('selected');
-        }
-      });
-      this.selectedIds.clear();
-      
-      // If there was a currentId, restore it as single selection (Mode 1)
-      if (preservedCurrentId !== null && this.components.has(preservedCurrentId)) {
-        this.selectedIds.add(preservedCurrentId);
-        this.currentId = preservedCurrentId;
-        
-        const element = document.querySelector(`[data-id="${preservedCurrentId}"]`);
-        if (element) {
-          element.classList.add('selected');
-        }
-        
-        // Show individual component handles (Mode 1)
+    });
+
+    // Remove group UI elements
+    removeUnifiedBoundingBox();
+    removeRotationHandle();
+    removeScaleHandle();
+
+    // Preserve currentId if it exists, otherwise clear selection
+    const preservedCurrentId = this.currentId;
+
+    // Clear all selections
+    this.selectedIds.forEach(id => {
+      const element = document.querySelector(`[data-id="${id}"]`);
+      if (element) {
+        element.classList.remove('selected');
+      }
+    });
+    this.selectedIds.clear();
+
+    // If there was a currentId, restore it as single selection (Mode 1)
+    // For composite exit ports, selectComponent() will re-expand group naturally
+    if (preservedCurrentId !== null && this.components.has(preservedCurrentId)) {
+      this.selectComponent(preservedCurrentId);
+
+      // Show appropriate handles
+      if (this.selectedIds.size > 1) {
+        // Composite re-expanded into its group
+        showArrowHandle(this.currentId);
+        showUnifiedBoundingBox();
+      } else {
         showRotationHandle(preservedCurrentId);
         showScaleHandle(preservedCurrentId);
         showArrowHandle(preservedCurrentId);
-        
-        console.log(`Ungrouped ${groupedIds.size} components: [${Array.from(groupedIds).join(', ')}]`);
-        console.log(`Transitioned to Mode 1 with component ${preservedCurrentId} selected`);
-      } else {
-        // No currentId - fully deselect
-        this.currentId = null;
-        console.log(`Ungrouped ${groupedIds.size} components: [${Array.from(groupedIds).join(', ')}] - all deselected`);
       }
-      
-      // Update toolbar button visibility
-      updateToolbarButtons();
-      return true;
+
+      console.log(`Ungrouped ${nonCompositeIds.size} non-composite component(s): [${Array.from(nonCompositeIds).join(', ')}]`);
+      if (compositeIds.size > 0) {
+        console.log(`Composite members preserved: [${Array.from(compositeIds).join(', ')}]`);
+      }
+      console.log(`Post-ungroup selection: currentId=${this.currentId}, selectedIds=[${Array.from(this.selectedIds).join(', ')}]`);
+    } else {
+      // No currentId - fully deselect
+      this.currentId = null;
+      console.log(`Ungrouped ${nonCompositeIds.size} non-composite component(s) — all deselected`);
     }
 
-    console.log('No grouped components to ungroup');
-    return false;
+    // Update toolbar button visibility
+    updateToolbarButtons();
+    return true;
   }
 
   /**

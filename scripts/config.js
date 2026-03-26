@@ -76,7 +76,16 @@ export const UNIFIED_BBOX_STROKE_WIDTH = 2.5;
 export const UNIFIED_BBOX_STROKE_DASHARRAY = '10,5';
 export const UNIFIED_BBOX_PADDING = 10;
 
+// ===== Composite instance bounding box (grey — visually distinct from group) =====
+export const COMPOSITE_BBOX_FILL = 'rgba(100, 100, 100, 0.05)';
+export const COMPOSITE_BBOX_STROKE = '#555';
+export const COMPOSITE_BBOX_STROKE_WIDTH = 2;
+export const COMPOSITE_BBOX_STROKE_DASHARRAY = '6,4';
 
+// ===== Hover box configuration =====
+export const HOVER_BOX_FILL = 'none';
+export const HOVER_BOX_STROKE = '#555';
+export const HOVER_BOX_STROKE_WIDTH = 2.5;
 
 // ===== Debug visualization =====
 export const SHOW_DEBUG_DRAWING = true;

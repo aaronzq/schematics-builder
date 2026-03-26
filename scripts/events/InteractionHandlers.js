@@ -14,6 +14,10 @@ import {
   UNIFIED_BBOX_STROKE_WIDTH,
   UNIFIED_BBOX_STROKE_DASHARRAY,
   UNIFIED_BBOX_PADDING,
+  COMPOSITE_BBOX_FILL,
+  COMPOSITE_BBOX_STROKE,
+  COMPOSITE_BBOX_STROKE_WIDTH,
+  COMPOSITE_BBOX_STROKE_DASHARRAY,
   DRAGGING_SNAP_INCREMENT
 } from '../config.js';
 import { updateRays } from '../rays/DrawRays.js';
@@ -84,6 +88,30 @@ function calculateUnifiedBounds(components) {
   };
 }
 
+/**
+ * Check if the current selection is entirely a composite instance group.
+ */
+function _isCompositeGroup() {
+  if (componentManager.selectedIds.size < 2) return false;
+  for (const id of componentManager.selectedIds) {
+    const comp = componentManager.getComponent(id);
+    if (!comp || !comp.isCompositeInstance) return false;
+  }
+  return true;
+}
+
+/**
+ * Find the exit-port member ID within the current selection (composite only).
+ * Returns null if no exit port found.
+ */
+function _getCompositeExitPortId() {
+  for (const id of componentManager.selectedIds) {
+    const comp = componentManager.getComponent(id);
+    if (comp && comp.isExitPort) return id;
+  }
+  return null;
+}
+
 function showUnifiedBoundingBox() {
   // Remove existing unified bounding box
   removeUnifiedBoundingBox();
@@ -97,14 +125,21 @@ function showUnifiedBoundingBox() {
   const canvas = document.getElementById('canvas');
   if (!canvas) return;
 
+  // Use grey style for composite instance groups, blue for regular groups
+  const isComposite = _isCompositeGroup();
+  const bboxFill        = isComposite ? COMPOSITE_BBOX_FILL        : UNIFIED_BBOX_FILL;
+  const bboxStroke      = isComposite ? COMPOSITE_BBOX_STROKE      : UNIFIED_BBOX_STROKE;
+  const bboxStrokeWidth = isComposite ? COMPOSITE_BBOX_STROKE_WIDTH : UNIFIED_BBOX_STROKE_WIDTH;
+  const bboxDashArray   = isComposite ? COMPOSITE_BBOX_STROKE_DASHARRAY : UNIFIED_BBOX_STROKE_DASHARRAY;
+
   // Create unified bounding box
   const ns = 'http://www.w3.org/2000/svg';
   unifiedBoundingBox = document.createElementNS(ns, 'rect');
   unifiedBoundingBox.setAttribute('id', 'unified-bounding-box');
-  unifiedBoundingBox.setAttribute('fill', UNIFIED_BBOX_FILL);
-  unifiedBoundingBox.setAttribute('stroke', UNIFIED_BBOX_STROKE);
-  unifiedBoundingBox.setAttribute('stroke-width', UNIFIED_BBOX_STROKE_WIDTH);
-  unifiedBoundingBox.setAttribute('stroke-dasharray', UNIFIED_BBOX_STROKE_DASHARRAY);
+  unifiedBoundingBox.setAttribute('fill', bboxFill);
+  unifiedBoundingBox.setAttribute('stroke', bboxStroke);
+  unifiedBoundingBox.setAttribute('stroke-width', bboxStrokeWidth);
+  unifiedBoundingBox.setAttribute('stroke-dasharray', bboxDashArray);
   unifiedBoundingBox.setAttribute('pointer-events', 'none');
   unifiedBoundingBox.setAttribute('x', bounds.x);
   unifiedBoundingBox.setAttribute('y', bounds.y);
@@ -265,7 +300,7 @@ export function setupComponentDragging() {
       removeRotationHandle();
       removeScaleHandle();
       removeArrowHandle();
-      showArrowHandle(draggedId);
+      showArrowHandle(componentManager.currentId);
       showUnifiedBoundingBox();
       showGroupRotationHandle();
       showGroupScaleHandle();
@@ -324,21 +359,42 @@ export function setupComponentDragging() {
     // Check if click is within unified bbox
     if (!isPointInUnifiedBbox(svgPt.x, svgPt.y)) return;
 
-    // Start group drag from empty space (Mode 3 → Mode 2 transition)
+    // Start group drag from empty space
     isDragging = true;
     hasMoved = false;
     isGroupDrag = true;
     
-    // Clear currentId (transition to Mode 2: no focus)
-    const hadCurrentId = componentManager.currentId !== null;
-    componentManager.currentId = null;
-    
-    // Remove arrow handle since we're now in Mode 2
-    removeArrowHandle();
-    
-    if (hadCurrentId) {
-      console.log(`Drag from empty space: Mode 3 → Mode 2 (cleared currentId)`);
-      updateToolbarButtons(); // Update toolbar when transitioning modes
+    // For composite groups, keep currentId on exit port (treat as single component).
+    // For regular groups, clear currentId (Mode 3 → Mode 2 transition).
+    if (_isCompositeGroup()) {
+      // Composite: preserve the current exit port if it's already set and valid,
+      // otherwise fall back to the first exit port found.
+      const curComp = componentManager.currentId !== null
+        ? componentManager.getComponent(componentManager.currentId) : null;
+      if (curComp && curComp.isExitPort) {
+        // Already on a valid exit port — keep it
+        showArrowHandle(componentManager.currentId);
+      } else {
+        const exitPortId = _getCompositeExitPortId();
+        if (exitPortId !== null) {
+          componentManager.currentId = exitPortId;
+          componentManager.updateNextPositionFromComponent(exitPortId);
+          showArrowHandle(exitPortId);
+        }
+      }
+      console.log(`Drag from empty space in composite: keeping currentId on exit port ${componentManager.currentId}`);
+    } else {
+      // Regular group: clear currentId (transition to Mode 2: no focus)
+      const hadCurrentId = componentManager.currentId !== null;
+      componentManager.currentId = null;
+      
+      // Remove arrow handle since we're now in Mode 2
+      removeArrowHandle();
+      
+      if (hadCurrentId) {
+        console.log(`Drag from empty space: Mode 3 → Mode 2 (cleared currentId)`);
+        updateToolbarButtons(); // Update toolbar when transitioning modes
+      }
     }
     
     // Store initial positions of all selected components
@@ -815,6 +871,19 @@ export function setupSelectionBox() {
         if (allInSameGroup) {
           // Mode 3: All components are in the same group - set first as currentId
           componentManager.currentId = selectedIds[0];
+          // If the chosen component is a composite member, resolve to its exit port
+          const focusComp = componentManager.getComponent(selectedIds[0]);
+          if (focusComp && focusComp.isCompositeInstance && focusComp.compositeInstanceId != null) {
+            const instId = focusComp.compositeInstanceId;
+            for (const sid of componentManager.selectedIds) {
+              const m = componentManager.getComponent(sid);
+              if (m && m.isExitPort && m.compositeInstanceId === instId) {
+                componentManager.currentId = sid;
+                componentManager.updateNextPositionFromComponent(sid);
+                break;
+              }
+            }
+          }
           console.log(`Selection box: Mode 3 (same group) - currentId: ${componentManager.currentId}`);
           updateToolbarButtons(); // Update toolbar after setting currentId
         } else {
