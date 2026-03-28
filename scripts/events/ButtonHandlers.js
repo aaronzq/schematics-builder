@@ -121,6 +121,7 @@ export function updateToolbarButtons() {
     group: document.getElementById('group-btn'),
     ungroup: document.getElementById('ungroup-btn'),
     saveAsComposite: document.getElementById('save-as-composite-btn'),
+    saveCompositeSep: document.getElementById('save-composite-separator'),
     cutLink: document.getElementById('cut-link-btn'),
     reLink: document.getElementById('re-link-btn')
   };
@@ -136,6 +137,7 @@ export function updateToolbarButtons() {
     setButtonVisibility(buttons.group, false);
     setButtonVisibility(buttons.ungroup, false);
     setButtonVisibility(buttons.saveAsComposite, false);
+    setButtonVisibility(buttons.saveCompositeSep, false);
     setButtonVisibility(buttons.cutLink, canCutLink);
     setButtonVisibility(buttons.reLink, true);
   }
@@ -150,6 +152,7 @@ export function updateToolbarButtons() {
     setButtonVisibility(buttons.group, canGroup);
     setButtonVisibility(buttons.ungroup, hasOuterGroup);
     setButtonVisibility(buttons.saveAsComposite, canSaveAsComposite);
+    setButtonVisibility(buttons.saveCompositeSep, canSaveAsComposite);
     setButtonVisibility(buttons.cutLink, false);
     setButtonVisibility(buttons.reLink, false);
   }
@@ -164,6 +167,7 @@ export function updateToolbarButtons() {
     setButtonVisibility(buttons.group, false); // Already grouped
     setButtonVisibility(buttons.ungroup, hasOuterGroup);
     setButtonVisibility(buttons.saveAsComposite, canSaveAsComposite);
+    setButtonVisibility(buttons.saveCompositeSep, canSaveAsComposite);
     setButtonVisibility(buttons.cutLink, canCutLink);
     setButtonVisibility(buttons.reLink, true);
   }
@@ -178,6 +182,7 @@ export function updateToolbarButtons() {
     setButtonVisibility(buttons.group, false);
     setButtonVisibility(buttons.ungroup, false);
     setButtonVisibility(buttons.saveAsComposite, false);
+    setButtonVisibility(buttons.saveCompositeSep, false);
     setButtonVisibility(buttons.cutLink, false);
     setButtonVisibility(buttons.reLink, false);
   }
