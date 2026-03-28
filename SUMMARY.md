@@ -215,16 +215,18 @@ The secondary toolbar buttons dynamically show/hide based on the current selecti
 **Link Management Buttons** (Mode 1 & 3 only):
 - `cut-link-btn` - Remove parent-child link from the current component (currentId)
   - Visibility: Only shown when `currentId` is set AND that component has a parent
+  - **Composite-aware**: When `currentId` is a composite exit port, the button checks and operates on the **entry port's** external parent instead (the composite is treated as a single opaque unit)
   - Removes the component's parent relationship
   - Updates children array of former parent
   - Automatically updates ray visualization and toolbar buttons
 - `re-link-btn` - Change parent of the current component (currentId)
   - Visibility: Always shown when `currentId` is set
   - Enters interactive re-link mode with visual feedback
+  - **Composite-aware**: When `currentId` is a composite exit port, re-link mode operates on the **entry port** and excludes all sibling members of the same composite instance from valid parent candidates
   - Shows dotted red line from component to current parent (if exists)
   - Click any other component to set as new parent
   - Includes cycle detection to prevent circular parent relationships
-  - Cannot link component to itself
+  - Cannot link component to itself or to any member of the same composite instance
   - Click canvas to cancel
   - Automatically updates ray visualization and toolbar buttons
 
@@ -2556,9 +2558,12 @@ When a composite component is spawned:
    - `isCompositeInstance = true`
    - `compositeKey = string`
    - `isExitPort = true` on the exit member only
+   - `isEntryPort = true` on the entry member only
    - `rayLocked = true`  all ray/aperture config UI disabled
 4. **`currentId` override**: `selectComponent(id)` always resolves `currentId` to the exit port member's ID.
-5. **Ungroup blocked**: `ungroupSelectedComponents()` returns early with `console.warn` if any member has `isCompositeInstance === true`.
+5. **Link operations resolve to entry port**: Cut-link and re-link check `currentId` for `isExitPort`; if true, they transparently redirect to the entry port so the composite's **external parent link** is managed correctly.
+6. **Composite siblings excluded from re-link targets**: `getValidParentComponents()` excludes all members sharing the same `compositeInstanceId` to prevent internal rewiring.
+7. **Ungroup blocked**: `ungroupSelectedComponents()` returns early with `console.warn` if any member has `isCompositeInstance === true`.
 6. **External parent wiring**: Entry port receives external parent; exit port exposes arrow handle.
 7. **`save-as-composite-btn`** hidden when any selected component has `isCompositeInstance === true`.
 
@@ -2581,7 +2586,7 @@ When a composite component is spawned:
 |---|---|
 | `scripts/components/ComponentLibrary.js` | Add `isComposite: false, isBuiltIn: true` to all entries |
 | `scripts/components/Component.js` | Add 4 fields to `_initializeFromConfig()` |
-| `scripts/components/ComponentManager.js` | Composite expansion, exit-port override, ungroup block |
+| `scripts/components/ComponentManager.js` | Composite expansion, exit-port override, ungroup block, `getCompositeEntryPortId()`, `getCompositeSiblingIds()` |
 | `scripts/components/ComponentMenu.js` | `buildComponentMenu` to `refreshSidebarMenu`; thumbnails; delete buttons |
 | `scripts/events/ButtonHandlers.js` | `save-as-composite-btn` and `ungroup-btn` visibility gating |
 | `index.html` | Add `save-as-composite-btn` and `save-composite-dialog` |

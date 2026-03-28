@@ -726,7 +726,8 @@ export class ComponentManager {
       }
     }
 
-    // --- Mark exit port ---
+    // --- Mark entry / exit ports ---
+    spawnedComponents[def.entryMemberIndex].isEntryPort = true;
     spawnedComponents[def.exitMemberIndex].isExitPort = true;
 
     // --- Group all spawned members together ---
@@ -892,6 +893,35 @@ export class ComponentManager {
     // Update toolbar button visibility
     updateToolbarButtons();
     return true;
+  }
+
+  /**
+   * Given a composite exit-port ID, find the entry-port ID of the same instance.
+   * Returns null when the given id is not a composite exit port.
+   */
+  getCompositeEntryPortId(exitPortId) {
+    const exitComp = this.components.get(exitPortId);
+    if (!exitComp || !exitComp.isExitPort || !exitComp.isCompositeInstance) return null;
+    const instId = exitComp.compositeInstanceId;
+    for (const [id, comp] of this.components) {
+      if (comp.isEntryPort && comp.compositeInstanceId === instId) return id;
+    }
+    return null;
+  }
+
+  /**
+   * Collect all component IDs that belong to the same composite instance.
+   * Returns an empty set when the given id is not a composite member.
+   */
+  getCompositeSiblingIds(memberId) {
+    const comp = this.components.get(memberId);
+    if (!comp || !comp.isCompositeInstance || comp.compositeInstanceId == null) return new Set();
+    const instId = comp.compositeInstanceId;
+    const siblings = new Set();
+    for (const [id, c] of this.components) {
+      if (c.compositeInstanceId === instId) siblings.add(id);
+    }
+    return siblings;
   }
 
   /**

@@ -96,6 +96,7 @@ export class Component {
     this.compositeKey = null;          // back-reference to composite definition key
     this.compositeInstanceId = null;   // unique ID per composite expansion (distinguishes instances)
     this.isExitPort = false;           // true if this is the designated exit port of a composite
+    this.isEntryPort = false;          // true if this is the designated entry port of a composite
     this.rayLocked = false;            // true = ray/aperture config UI is frozen
   }
 

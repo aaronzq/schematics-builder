@@ -95,11 +95,19 @@ export function updateToolbarButtons() {
     canSaveAsComposite = selectedCount >= 2 && !hasCompositeInstance;
   }
   
-  // Check if focused component has a parent (for cut-link)
+  // Check if focused component has a parent (for cut-link).
+  // For composite instances currentId is the exit port, but the external
+  // parent link lives on the entry port — check that instead.
   let canCutLink = false;
   if (hasFocus) {
     const component = componentManager.getComponent(componentManager.currentId);
-    canCutLink = component && component.parent !== null;
+    if (component && component.isExitPort && component.isCompositeInstance) {
+      const entryId = componentManager.getCompositeEntryPortId(componentManager.currentId);
+      const entryComp = entryId !== null ? componentManager.getComponent(entryId) : null;
+      canCutLink = entryComp && entryComp.parent !== null;
+    } else {
+      canCutLink = component && component.parent !== null;
+    }
   }
   
   // Get all button elements
@@ -320,7 +328,14 @@ export function setupActionButtons() {
   if (cutLinkBtn) {
     cutLinkBtn.addEventListener('click', () => {
       if (componentManager.currentId !== null) {
-        if (componentManager.cutParentLink(componentManager.currentId)) {
+        // For composites, cut the entry port's external parent link
+        let targetId = componentManager.currentId;
+        const comp = componentManager.getComponent(targetId);
+        if (comp && comp.isExitPort && comp.isCompositeInstance) {
+          const entryId = componentManager.getCompositeEntryPortId(targetId);
+          if (entryId !== null) targetId = entryId;
+        }
+        if (componentManager.cutParentLink(targetId)) {
           updateRays();
         }
       } else {
@@ -360,16 +375,24 @@ let relinkMode = {
  * Start re-link mode - shows visual feedback and waits for user to click a new parent
  */
 function startRelinkMode(childId) {
-  const childComponent = componentManager.getComponent(childId);
+  // For composite instances, re-link operates on the entry port (external parent link)
+  let effectiveChildId = childId;
+  const comp = componentManager.getComponent(childId);
+  if (comp && comp.isExitPort && comp.isCompositeInstance) {
+    const entryId = componentManager.getCompositeEntryPortId(childId);
+    if (entryId !== null) effectiveChildId = entryId;
+  }
+
+  const childComponent = componentManager.getComponent(effectiveChildId);
   if (!childComponent) return;
   
   // Store re-link state
   relinkMode.active = true;
-  relinkMode.childId = childId;
+  relinkMode.childId = effectiveChildId;
   relinkMode.currentParentId = childComponent.parent;
   
   // Find all valid components (those that won't create a cycle)
-  relinkMode.validComponentIds = getValidParentComponents(childId);
+  relinkMode.validComponentIds = getValidParentComponents(effectiveChildId);
   
   // Show hover boxes on all valid components
   showRelinkHoverBoxes(relinkMode.validComponentIds, relinkMode.hoverBoxes);
@@ -623,9 +646,12 @@ function getValidParentComponents(childId) {
   };
   checkDescendants(childId);
   
-  // All components except self and descendants are valid
+  // Also exclude all members of the same composite instance (treat composite as atom)
+  const compositeSiblings = componentManager.getCompositeSiblingIds(childId);
+
+  // All components except self, descendants, and composite siblings are valid
   componentManager.components.forEach((component, id) => {
-    if (id !== childId && !descendants.has(id)) {
+    if (id !== childId && !descendants.has(id) && !compositeSiblings.has(id)) {
       validIds.add(id);
     }
   });
