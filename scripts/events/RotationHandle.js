@@ -7,6 +7,7 @@ import {
   VALUE_DISPLAY_DISTANCE
 } from '../config.js';
 import { showScaleHandle, showGroupScaleHandle } from './ScaleHandle.js';
+import { showArrowHandle } from './ArrowHandle.js';
 import { showValueDisplay, hideValueDisplay } from './ValueDisplay.js';
 import { 
   clearSelectionHoverBoxes, 
@@ -262,6 +263,11 @@ function setupGroupRotationHandleDrag(handle, centroid) {
         scaleIcon.setAttribute('transform', `rotate(${angleDiff} ${scaleHandleX} ${scaleHandleY})`);
       }
     }
+
+    // Refresh the spawning arrow for the current (exit-port) component
+    if (componentManager.currentId != null) {
+      showArrowHandle(componentManager.currentId);
+    }
     updateRays();
   } 
 
@@ -369,6 +375,7 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
     updateHoverBoxTransform(component);
 
     showScaleHandle(componentId);
+    showArrowHandle(componentId);
     updateRays();
   } 
 

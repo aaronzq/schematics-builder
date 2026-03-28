@@ -203,6 +203,17 @@ export class ComponentManager {
     const component = this.components.get(id);
     if (!component) return false;
 
+    // Rotate arrowVector by the delta angle so the spawn arrow follows the component
+    const prevAngle = component.getRotation();
+    const deltaRad = (angle - prevAngle) * Math.PI / 180;
+    const cos = Math.cos(deltaRad);
+    const sin = Math.sin(deltaRad);
+    const av = component.getArrowVector();
+    component.setArrowVector(
+      av.x * cos - av.y * sin,
+      av.x * sin + av.y * cos
+    );
+
     component.setRotation(angle);
 
     console.log(`Updated rotation of component [ID: ${id}] to ${angle} degrees`);
@@ -556,11 +567,13 @@ export class ComponentManager {
       const component = this.components.get(id);
       if (component) {
         const pos = component.getPosition();
+        const av = component.getArrowVector();
         states.set(id, {
           x: pos.x,
           y: pos.y,
           rotation: component.getRotation(),
-          scale: component.getScale()
+          scale: component.getScale(),
+          arrowVector: { x: av.x, y: av.y }
         });
       }
     });
@@ -589,6 +602,10 @@ export class ComponentManager {
   updateGroupRotation(ids, centroid, angle, initialStates) {
     const idsArray = Array.isArray(ids) ? ids : Array.from(ids);
     
+    const angleRad = angle * Math.PI / 180;
+    const cos = Math.cos(angleRad);
+    const sin = Math.sin(angleRad);
+
     idsArray.forEach(id => {
       const component = this.components.get(id);
       const initialState = initialStates.get(id);
@@ -600,7 +617,6 @@ export class ComponentManager {
         const distance = Math.sqrt(initialDx * initialDx + initialDy * initialDy);
         
         // Calculate new position
-        const angleRad = angle * Math.PI / 180;
         const newX = centroid.x + distance * Math.cos(initialAngle + angleRad);
         const newY = centroid.y + distance * Math.sin(initialAngle + angleRad);
         
@@ -610,6 +626,15 @@ export class ComponentManager {
         // Update rotation
         const newRotation = initialState.rotation + angle;
         component.setRotation(newRotation);
+
+        // Rotate arrowVector from its initial direction by the cumulative angle
+        const av = initialState.arrowVector;
+        if (av) {
+          component.setArrowVector(
+            av.x * cos - av.y * sin,
+            av.x * sin + av.y * cos
+          );
+        }
       }
     });
   }
