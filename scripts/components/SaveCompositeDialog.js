@@ -644,6 +644,9 @@ function _buildAndSaveComposite() {
     const keyBase = state.label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     const key = `user_${keyBase}_${Date.now()}`;
 
+    // Capture a clean SVG snapshot from the live components
+    const snapshotSvg = _buildSnapshotSvg(ids);
+
     const def = {
         key,
         label:           state.label,
@@ -652,7 +655,8 @@ function _buildAndSaveComposite() {
         isBuiltIn:       false,
         members,
         entryMemberIndex: idToIndex.get(state.entryId) ?? 0,
-        exitMemberIndex:  idToIndex.get(state.exitId)  ?? (ids.length - 1)
+        exitMemberIndex:  idToIndex.get(state.exitId)  ?? (ids.length - 1),
+        snapshotSvg
     };
 
     try {
@@ -665,6 +669,105 @@ function _buildAndSaveComposite() {
     }
 
     _close();
+}
+
+/**
+ * Build a clean SVG snapshot of the selected components — artwork + ray
+ * polygons only, no interactive overlays, labels, or rings.  The SVG is
+ * serialised to a string so it can be persisted in localStorage.
+ *
+ * Uses the same world-space transform chain as _buildSpatialPreview but
+ * strips all dialog-specific decorations.
+ *
+ * @param {string[]} ids - ordered component IDs
+ * @returns {string}     - serialised SVG markup
+ */
+function _buildSnapshotSvg(ids) {
+    const svg = document.createElementNS(SVG_NS, 'svg');
+    if (!ids || ids.length === 0) return '';
+
+    // ── 1. Compute bounding box ─────────────────────────────────────────────
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    const compDataList = [];
+
+    ids.forEach(id => {
+        const comp = _cm.getComponent(id);
+        if (!comp) return;
+        const def = componentRegistry[comp.type];
+
+        const bb = comp.getBoundingBox();
+        minX = Math.min(minX, bb.minX);
+        maxX = Math.max(maxX, bb.maxX);
+        minY = Math.min(minY, bb.minY);
+        maxY = Math.max(maxY, bb.maxY);
+
+        compDataList.push({ id, comp, def });
+    });
+
+    const contentW = (maxX - minX) || 60;
+    const contentH = (maxY - minY) || 60;
+    const pad = Math.max(contentW, contentH) * 0.18;
+
+    svg.setAttribute('viewBox',
+        `${minX - pad} ${minY - pad} ${contentW + pad * 2} ${contentH + pad * 2}`);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+    // ── 2. Ray polygons (behind components) ─────────────────────────────────
+    const rayGroup = document.createElementNS(SVG_NS, 'g');
+
+    ids.forEach(id => {
+        const comp = _cm.getComponent(id);
+        if (!comp || comp.parent === null) return;
+        if (!ids.includes(comp.parent)) return;
+
+        const parentComp = _cm.getComponent(comp.parent);
+        if (!parentComp) return;
+
+        const childPts  = comp.getAperturePointsWorld();
+        const parentPts = parentComp.getAperturePointsWorld();
+        if (!childPts || childPts.length < 2 || !parentPts || parentPts.length < 2) return;
+
+        const polygon = document.createElementNS(SVG_NS, 'polygon');
+        polygon.setAttribute('points',
+            `${parentPts[0].x},${parentPts[0].y} ${childPts[0].x},${childPts[0].y} ` +
+            `${childPts[1].x},${childPts[1].y} ${parentPts[1].x},${parentPts[1].y}`);
+        polygon.setAttribute('fill', comp.rayPolygonColor || '#00ffff');
+        polygon.setAttribute('fill-opacity', comp.rayPolygonOpacity ?? 0.2);
+        polygon.setAttribute('stroke', 'none');
+        rayGroup.appendChild(polygon);
+    });
+
+    svg.appendChild(rayGroup);
+
+    // ── 3. Component artwork ────────────────────────────────────────────────
+    compDataList.forEach(({ comp, def }) => {
+        if (!def || !def.draw) return;
+
+        const wrapper = document.createElementNS(SVG_NS, 'g');
+
+        // Mirror Component._updateTransform exactly
+        const rotation = comp.rotation ?? 0;
+        const scale    = comp.scale    ?? 1;
+        const cx = comp.centerPoint?.x ?? 0;
+        const cy = comp.centerPoint?.y ?? 0;
+        const { a, b, c, d } = comp._getFlipMatrix();
+
+        const tp = [`translate(${comp.x},${comp.y})`];
+        if (rotation !== 0) tp.push(`rotate(${rotation})`);
+        tp.push(`matrix(${scale*a},${scale*b},${scale*c},${scale*d},0,0)`);
+        if (cx !== 0 || cy !== 0) tp.push(`translate(${-cx},${-cy})`);
+        wrapper.setAttribute('transform', tp.join(' '));
+
+        let artwork;
+        try { artwork = def.draw(SVG_NS); } catch { return; }
+        _prefixIds(artwork);
+        wrapper.appendChild(artwork);
+        svg.appendChild(wrapper);
+    });
+
+    // Serialise to string
+    const serialiser = new XMLSerializer();
+    return serialiser.serializeToString(svg);
 }
 
 // ---------------------------------------------------------------------------

@@ -33,11 +33,47 @@ export function generateSnapshot(def, opts = {}) {
         return _makeEmptySvg(width, height);
     }
 
+    // If a serialised SVG snapshot was captured at save time, use it directly.
+    if (def.snapshotSvg) {
+        return _renderFromSavedSvg(def.snapshotSvg, width, height);
+    }
+
     if (def.isComposite) {
         return _renderComposite(def, width, height);
     }
 
     return _renderBasic(def, width, height);
+}
+
+// ---------------------------------------------------------------------------
+// Saved-SVG rendering (pixel-perfect snapshot captured at save time)
+// ---------------------------------------------------------------------------
+
+function _renderFromSavedSvg(svgString, width, height) {
+    try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgString, 'image/svg+xml');
+        const parsedSvg = doc.documentElement;
+
+        // Check for parse errors
+        if (parsedSvg.querySelector('parsererror')) {
+            console.warn('[ComponentSnapshot] Failed to parse saved SVG snapshot.');
+            return _makeEmptySvg(width, height);
+        }
+
+        // Prefix IDs to avoid collisions with the main canvas
+        _prefixIds(parsedSvg);
+
+        // Ensure it scales properly in the sidebar button
+        parsedSvg.setAttribute('width', '100%');
+        parsedSvg.setAttribute('height', '100%');
+        parsedSvg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+        return parsedSvg;
+    } catch (e) {
+        console.warn('[ComponentSnapshot] Error restoring saved SVG:', e);
+        return _makeEmptySvg(width, height);
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -117,25 +153,50 @@ function _renderComposite(def, width, height) {
         const mAC = (memberDef  && memberDef.apertureCenter)  || { x: 0, y: 0 };
         const pAC = (parentDef && parentDef.apertureCenter) || { x: 0, y: 0 };
 
+        // centerPoint offset — _localToWorld subtracts this before placing at (relX,relY)
+        const mCP = (memberDef  && memberDef.centerPoint)  || { x: 0, y: 0 };
+        const pCP = (parentDef && parentDef.centerPoint) || { x: 0, y: 0 };
+
         const mR = member.apertureRadius ?? 15;
         const pR = parentMember.apertureRadius ?? 15;
 
-        // Local aperture points → offset by member's relX/relY
+        // Member rotation
+        const mRot = (member.rotation ?? 0) * Math.PI / 180;
+        const mCos = Math.cos(mRot), mSin = Math.sin(mRot);
+
+        // Parent rotation
+        const pRot = (parentMember.rotation ?? 0) * Math.PI / 180;
+        const pCos = Math.cos(pRot), pSin = Math.sin(pRot);
+
+        // Local aperture points → apply full _localToWorld logic:
+        //   local  = (apertureCenter - centerPoint) + upVector * (±radius)
+        //   world  = relXY + rotate(local, rotation)
+        const mUpLx = (mAC.x - mCP.x) + mUp.x * mR;
+        const mUpLy = (mAC.y - mCP.y) + mUp.y * mR;
+        const mLoLx = (mAC.x - mCP.x) - mUp.x * mR;
+        const mLoLy = (mAC.y - mCP.y) - mUp.y * mR;
+
         const mUpper = {
-            x: member.relX + mAC.x + mUp.x * mR,
-            y: member.relY + mAC.y + mUp.y * mR
+            x: member.relX + mUpLx * mCos - mUpLy * mSin,
+            y: member.relY + mUpLx * mSin + mUpLy * mCos
         };
         const mLower = {
-            x: member.relX + mAC.x - mUp.x * mR,
-            y: member.relY + mAC.y - mUp.y * mR
+            x: member.relX + mLoLx * mCos - mLoLy * mSin,
+            y: member.relY + mLoLx * mSin + mLoLy * mCos
         };
+
+        const pUpLx = (pAC.x - pCP.x) + pUp.x * pR;
+        const pUpLy = (pAC.y - pCP.y) + pUp.y * pR;
+        const pLoLx = (pAC.x - pCP.x) - pUp.x * pR;
+        const pLoLy = (pAC.y - pCP.y) - pUp.y * pR;
+
         const pUpper = {
-            x: parentMember.relX + pAC.x + pUp.x * pR,
-            y: parentMember.relY + pAC.y + pUp.y * pR
+            x: parentMember.relX + pUpLx * pCos - pUpLy * pSin,
+            y: parentMember.relY + pUpLx * pSin + pUpLy * pCos
         };
         const pLower = {
-            x: parentMember.relX + pAC.x - pUp.x * pR,
-            y: parentMember.relY + pAC.y - pUp.y * pR
+            x: parentMember.relX + pLoLx * pCos - pLoLy * pSin,
+            y: parentMember.relY + pLoLx * pSin + pLoLy * pCos
         };
 
         const color   = member.rayPolygonColor || '#00ffff';
@@ -175,31 +236,38 @@ function _renderComposite(def, width, height) {
 
         _prefixIds(artwork);
 
-        // Build transform: translate(relX, relY) rotate(rotation) scale(scale)
+        // Build transform matching the real canvas chain:
+        // translate(relX, relY) → rotate → scale → translate(-cx, -cy)
         const relX     = member.relX      ?? 0;
         const relY     = member.relY      ?? 0;
         const rotation = member.rotation  ?? 0;
         const scale    = member.scale     ?? 1;
+        const cx       = memberDef.centerPoint?.x ?? 0;
+        const cy       = memberDef.centerPoint?.y ?? 0;
 
         const transformParts = [`translate(${relX},${relY})`];
         if (rotation !== 0)    transformParts.push(`rotate(${rotation})`);
         if (scale    !== 1)    transformParts.push(`scale(${scale})`);
+        if (cx !== 0 || cy !== 0) transformParts.push(`translate(${-cx},${-cy})`);
 
         const wrapper = document.createElementNS(SVG_NS, 'g');
         wrapper.setAttribute('transform', transformParts.join(' '));
         wrapper.appendChild(artwork);
         svg.appendChild(wrapper);
 
-        // Expand bounding box estimate using memberDef.localBounds (or apertureRadius fallback)
+        // Expand bounding box estimate using memberDef.localBounds (or apertureRadius fallback).
+        // After translate(-cx,-cy), the artwork origin shifts so that centerPoint sits at (relX,relY).
+        // The local bounds corners must be offset by (-cx,-cy) before applying relX/relY.
         const lb = memberDef.localBounds;
         if (lb) {
-            // Apply scale (rotation ignored for tight bounding — just use worst-case extent)
-            const halfW = ((lb.maxX - lb.minX) / 2) * scale;
-            const halfH = ((lb.maxY - lb.minY) / 2) * scale;
-            bMinX = Math.min(bMinX, relX - halfW);
-            bMaxX = Math.max(bMaxX, relX + halfW);
-            bMinY = Math.min(bMinY, relY - halfH);
-            bMaxY = Math.max(bMaxY, relY + halfH);
+            const lbMinX = (lb.minX - cx) * scale;
+            const lbMaxX = (lb.maxX - cx) * scale;
+            const lbMinY = (lb.minY - cy) * scale;
+            const lbMaxY = (lb.maxY - cy) * scale;
+            bMinX = Math.min(bMinX, relX + lbMinX);
+            bMaxX = Math.max(bMaxX, relX + lbMaxX);
+            bMinY = Math.min(bMinY, relY + lbMinY);
+            bMaxY = Math.max(bMaxY, relY + lbMaxY);
         } else {
             // Fallback: use apertureRadius as half-size estimate
             const r = member.apertureRadius ?? 15;
