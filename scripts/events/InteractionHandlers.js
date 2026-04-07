@@ -601,16 +601,24 @@ export function setupCanvasZoom() {
   // Track if a gesture is in progress (Mac only)
   let isGesturing = false;
 
-  // Handle mouse wheel and trackpad zoom
+  // Handle mouse wheel and trackpad zoom/pan
   canvas.addEventListener('wheel', (e) => {
-    // // On Mac, only respond to wheel events during explicit pinch (e.ctrlKey) or if gesture is active
-    // // This prevents two-finger scroll from triggering zoom
-    // if (isMac && !e.ctrlKey && !isGesturing) {
-    //   return; // Ignore regular scroll on Mac trackpad
-    // }
-
     // Prevent default scrolling behavior
     e.preventDefault();
+
+    // On Mac trackpad, two-finger scroll (no ctrlKey, no gesture) → pan
+    // Pinch-to-zoom sets ctrlKey or triggers gesture events
+    if (isMac && !e.ctrlKey && !isGesturing) {
+      // Two-finger scroll on Mac trackpad → pan the canvas
+      const svg = document.getElementById('canvas');
+      const scale = svg.viewBox.baseVal.width / svg.clientWidth;
+      const deltaX = e.deltaX * scale;
+      const deltaY = e.deltaY * scale;
+      import('../Canvas.js').then(module => {
+        module.canvas.pan(deltaX, deltaY);
+      });
+      return;
+    }
 
     // Get mouse position in SVG coordinates
     const svg = document.getElementById('canvas');
