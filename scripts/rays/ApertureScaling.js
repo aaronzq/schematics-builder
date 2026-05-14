@@ -152,14 +152,54 @@ function flipUpVector(comp) {
 export function applyApertureScaling(child, parent) {
     if (!parent) return;
 
+    // Composite members have their ray geometry frozen against *external* cascades
+    // (e.g. a component outside the composite rescaling into it).
+    // However, intra-composite cascades — where the parent is a sibling in the same
+    // composite instance — must still propagate so that adjusting the entry port
+    // correctly updates all downstream members.
+    const sameCompositeInstance =
+        child.isCompositeInstance &&
+        parent.isCompositeInstance &&
+        child.compositeInstanceId === parent.compositeInstanceId;
+    if (child.rayLocked && !sameCompositeInstance) return;
+
+    // Manual: user controls radius directly — skip auto-scaling
+    if (child.rayShape === 'manual') return;
+
+    // Convergent: child aperture is independent of parent — skip auto-scaling.
+    // The polygon converges to the child's own aperture centre; the user controls
+    // apertureRadius freely via the slider.
+    if (child.rayShape === 'convergent') return;
+
+    // Divergent: aperture size depends on whether the parent already has a cone angle.
+    if (child.rayShape === 'divergent') {
+        const childCenter  = child.getApertureCenterWorld();
+        const parentCenter = parent.getApertureCenterWorld();
+        const dx   = childCenter.x - parentCenter.x;
+        const dy   = childCenter.y - parentCenter.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist > 1e-6) {
+            if (parent.coneAngle && parent.coneAngle !== 0) {
+                // Inherit parent cone angle → recalculate child aperture radius
+                child.coneAngle = parent.coneAngle;
+                const newRadius = dist * Math.tan(parent.coneAngle * Math.PI / 180);
+                child.setApertureRadius(parseFloat(newRadius.toFixed(2)));
+            } else {
+                // Keep child aperture radius → derive cone angle from geometry
+                child.coneAngle = parseFloat(
+                    (Math.atan2(child.apertureRadius, dist) * 180 / Math.PI).toFixed(2)
+                );
+            }
+        }
+        return;
+    }
+
+    // Collimated and Array: scale child's apertureRadius to match parent projection.
+    // For array, segments scale proportionally since they are derived from apertureRadius.
     // 1. Scale to match parent projection
     scaleApertureToParent(child, parent);
 
     // 2. Crossing check — if rays cross, flip upVector and re-scale.
-    // Skip when either aperture radius is 0: the two aperture points of that
-    // component collapse to a single coordinate, causing the segment-intersection
-    // test to produce false positives (the shared endpoint satisfies t=0 or u=0,
-    // which is within [0,1]).  A flip is also meaningless for a zero-radius aperture.
     if (child.apertureRadius > 0 && parent.apertureRadius > 0 && checkLinesCross(child, parent)) {
         flipUpVector(child);
         scaleApertureToParent(child, parent);
@@ -181,7 +221,17 @@ export function recursivelyUpdateChildrenApertures(root, getComponent) {
         const child = getComponent(childId);
         if (!child) continue;
 
-        const parent = getComponent(child.parent);
+        const rawParent = getComponent(child.parent);
+        // If the parent is a non-exit composite member, resolve to exit port
+        const parent = (rawParent && rawParent.isCompositeInstance && !rawParent.isExitPort)
+            ? (() => {
+                for (const mId of (rawParent.groupMembers || [])) {
+                    const m = getComponent(mId);
+                    if (m && m.isExitPort && m.compositeInstanceId === rawParent.compositeInstanceId) return m;
+                }
+                return rawParent;
+              })()
+            : rawParent;
         if (!parent) continue;
 
         applyApertureScaling(child, parent);

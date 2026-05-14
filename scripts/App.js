@@ -5,6 +5,8 @@ import { setupFilenameEditor } from './Fileio.js';
 import { loadUserComponents } from './components/UserComponentStore.js';
 import { openSaveCompositeDialog } from './components/SaveCompositeDialog.js';
 import { componentManager } from './components/index.js';
+import { initDebugLayer } from './utils/DebugLayer.js';
+import { setupRayMenu } from './rays/RayMenu.js';
 import './components/CompositeLibrary.js';
 
 export function initializeApp() {
@@ -26,6 +28,8 @@ export function initializeApp() {
   setupSelectionBox();
   setupFilenameEditor();
   updateToolbarButtons();
+  initDebugLayer();
+  setupRayMenu();              // Initialize ray panel (Phase 3)
 
   // Wire Save as Composite button
   document.getElementById('save-as-composite-btn')?.addEventListener('click', () => {

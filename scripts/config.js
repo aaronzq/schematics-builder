@@ -54,6 +54,10 @@ export const LINK_HOVER_BOX_COLOR = '#ffba0c';
 // ===== Component defaults =====
 export const DEFAULT_APERTURE_RADIUS = 15;  // Default aperture radius for components
 export const DEFAULT_CONE_ANGLE = 0;        // Default cone angle in degrees (0 = collimated)
+export const DEFAULT_APERTURE_CENTER_OFFSET = 0;  // Signed offset along upVector (manual/array)
+export const DEFAULT_ARRAY_SEGMENTS = 5;    // Default number of segments for array ray shape
+export const DEFAULT_ARRAY_GAP = 0;         // Default gap between array segments (local units)
+export const MAX_ARRAY_SEGMENTS = 10;       // Maximum number of array segments
 
 // ===== Ray rendering =====
 export const DEFAULT_SOLID_RAY_COLOR = '#00ffff';
@@ -94,6 +98,9 @@ export const FORWARD_VECTOR_LENGTH = 60;
 export const CENTER_MARKER_RADIUS = 2;
 export const APERTURE_POINT_RADIUS = 3;
 export const LOWER_APERTURE_POINT_RADIUS = 2;
+export const ARRAY_SEGMENT_POINT_RADIUS = 2;    // Radius of array segment boundary dots
+export const ARRAY_SEGMENT_POINT_COLOR = '#888'; // Color of array segment debug dots
+export const MANUAL_CENTER_MARKER_COLOR = '#e88c22'; // Color of manual/array offset center marker
 
 // ===== Component defaults =====
 export const DEFAULT_COMPONENT_VISIBLE = true;
@@ -106,7 +113,8 @@ export const RAY_SHAPES = {
   COLLIMATED: 'collimated',
   DIVERGENT: 'divergent',
   CONVERGENT: 'convergent',
-  MANUAL: 'manual'
+  MANUAL: 'manual',
+  ARRAY: 'array'
 };
 
 // ===== Component type aliases =====

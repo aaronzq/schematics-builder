@@ -107,6 +107,18 @@ bookmark_star
           </div>
         </main>
       </div>
+
+      <!-- Ray Configuration Panel (right column) -->
+      <aside class="ray-panel" id="ray-panel">
+        <div class="ray-panel-inner">
+          <div class="ray-panel-header">
+            <h2>Ray Configuration</h2>
+          </div>
+          <div id="ray-panel-body">
+            <!-- Populated by RayMenu.js when a component is selected -->
+          </div>
+        </div>
+      </aside>
     </div>
     <footer class="footer">
       <div class="footer-content">
@@ -125,6 +137,8 @@ bookmark_star
   <dialog id="save-composite-dialog">
     <!-- SaveCompositeDialog.js manages this dialog's content dynamically -->
   </dialog>
+
+  <!-- ray-menu-dialog removed: ray config is now in the right panel (#ray-panel) -->
 
   <script type="module" src="scripts/App.js"></script>
 </body>

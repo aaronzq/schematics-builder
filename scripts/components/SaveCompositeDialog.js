@@ -437,16 +437,11 @@ function _buildSpatialPreview(opts = {}) {
         const parentComp = _cm.getComponent(comp.parent);
         if (!parentComp) return;
 
-        const childPts = comp.getAperturePointsWorld();
-        const parentPts = parentComp.getAperturePointsWorld();
-
-        if (!childPts || childPts.length < 2 || !parentPts || parentPts.length < 2) return;
+        const pointsStr = _rayPolygonPoints(comp, parentComp);
+        if (!pointsStr) return;
 
         const polygon = document.createElementNS(SVG_NS, 'polygon');
-        polygon.setAttribute('points',
-            `${parentPts[0].x},${parentPts[0].y} ${childPts[0].x},${childPts[0].y} ` +
-            `${childPts[1].x},${childPts[1].y} ${parentPts[1].x},${parentPts[1].y}`
-        );
+        polygon.setAttribute('points', pointsStr);
         polygon.setAttribute('fill', comp.rayPolygonColor || '#00ffff');
         polygon.setAttribute('fill-opacity', comp.rayPolygonOpacity ?? 0.2);
         polygon.setAttribute('stroke', 'none');
@@ -599,6 +594,33 @@ function _buildSpatialPreview(opts = {}) {
 // Build & save
 // ---------------------------------------------------------------------------
 
+/**
+ * Return an SVG `points` string for a ray polygon connecting parent → child,
+ * respecting the child's rayShape.
+ * Returns null when geometry is unavailable.
+ */
+function _rayPolygonPoints(child, parent) {
+    const childPts  = child.getAperturePointsWorld();
+    const parentPts = parent.getAperturePointsWorld();
+    if (!childPts || childPts.length < 2 || !parentPts || parentPts.length < 2) return null;
+
+    const shape = child.rayShape || 'collimated';
+    const p = (pt) => `${pt.x},${pt.y}`;
+
+    if (shape === 'divergent') {
+        // Triangle: parentCenter → childUpper → childLower
+        const pc = parent.getApertureCenterWorld();
+        return `${p(pc)} ${p(childPts[0])} ${p(childPts[1])}`;
+    }
+    if (shape === 'convergent') {
+        // Triangle: parentUpper → childCenter → parentLower
+        const cc = child.getApertureCenterWorld();
+        return `${p(parentPts[0])} ${p(cc)} ${p(parentPts[1])}`;
+    }
+    // collimated / manual / array — 4-vertex rectangle
+    return `${p(parentPts[0])} ${p(childPts[0])} ${p(childPts[1])} ${p(parentPts[1])}`;
+}
+
 function _buildAndSaveComposite() {
     const ids = state.memberIds;
 
@@ -628,14 +650,20 @@ function _buildAndSaveComposite() {
             type:                comp.type,
             relX,
             relY,
-            rotation:            comp.rotation   ?? 0,
-            scale:               comp.scale       ?? 1,
-            apertureRadius:      comp.apertureRadius    ?? 15,
-            coneAngle:           comp.coneAngle         ?? 0,
-            rayShape:            comp.rayShape          || 'collimated',
-            rayPolygonColor:     comp.rayPolygonColor   || '#00ffff',
-            rayPolygonColor2:    comp.rayPolygonColor2  || comp.rayPolygonColor || '#00ffff',
-            gradientEnabled:     comp.gradientEnabled   ?? false,
+            rotation:            comp.rotation            ?? 0,
+            scale:               comp.scale               ?? 1,
+            // Full aperture/ray state — enough to reproduce identical ray drawing
+            rayShape:            comp.rayShape            || 'collimated',
+            apertureRadius:      comp.apertureRadius      ?? 15,
+            apertureCenterOffset: comp.apertureCenterOffset ?? 0,
+            coneAngle:           comp.coneAngle           ?? 0,
+            upVector:            { x: comp.upVector.x, y: comp.upVector.y },
+            arraySegments:       comp.arraySegments       ?? 5,
+            arrayGap:            comp.arrayGap            ?? 0,
+            rayPolygonColor:     comp.rayPolygonColor     || '#00ffff',
+            rayPolygonOpacity:   comp.rayPolygonOpacity   ?? 0.2,
+            rayPolygonColor2:    comp.rayPolygonColor2    || comp.rayPolygonColor || '#00ffff',
+            gradientEnabled:     comp.gradientEnabled     ?? false,
             internalParentIndex
         };
     });
@@ -723,14 +751,11 @@ function _buildSnapshotSvg(ids) {
         const parentComp = _cm.getComponent(comp.parent);
         if (!parentComp) return;
 
-        const childPts  = comp.getAperturePointsWorld();
-        const parentPts = parentComp.getAperturePointsWorld();
-        if (!childPts || childPts.length < 2 || !parentPts || parentPts.length < 2) return;
+        const pointsStr = _rayPolygonPoints(comp, parentComp);
+        if (!pointsStr) return;
 
         const polygon = document.createElementNS(SVG_NS, 'polygon');
-        polygon.setAttribute('points',
-            `${parentPts[0].x},${parentPts[0].y} ${childPts[0].x},${childPts[0].y} ` +
-            `${childPts[1].x},${childPts[1].y} ${parentPts[1].x},${parentPts[1].y}`);
+        polygon.setAttribute('points', pointsStr);
         polygon.setAttribute('fill', comp.rayPolygonColor || '#00ffff');
         polygon.setAttribute('fill-opacity', comp.rayPolygonOpacity ?? 0.2);
         polygon.setAttribute('stroke', 'none');

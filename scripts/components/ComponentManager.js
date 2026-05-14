@@ -8,8 +8,12 @@ import { showUnifiedBoundingBox, removeUnifiedBoundingBox } from '../events/Inte
 import { updateToolbarButtons } from '../events/ButtonHandlers.js';
 import { applyApertureScaling } from '../rays/ApertureScaling.js';
 import { updateRays } from '../rays/DrawRays.js';
+import { refreshDebugForComponent, removeDebugForComponent, refreshDebugLayer } from '../utils/DebugLayer.js';
 
 export class ComponentManager {
+  /** Optional callback: (component | null) => void. Registered by RayMenu. */
+  static onSelectionChanged = null;
+
   constructor() {
     this.components = new Map();
     this.idCounter = 0;
@@ -74,6 +78,9 @@ export class ComponentManager {
     schematics.appendChild(group);
 
     this.components.set(id, component);
+    
+    // Build debug overlay for the new component
+    refreshDebugForComponent(component);
     
     console.log(`ComponentManager: Added ${type} [ID: ${id}] at (${pos.x}, ${pos.y})`);
     
@@ -148,6 +155,10 @@ export class ComponentManager {
       console.log(`   Scale: ${component.scale.toFixed(2)}X`);
       console.log(`   Parent: ${component.parent !== null ? component.parent : 'none'}`);
       console.log(`   Children: ${component.children.length > 0 ? '[' + component.children.join(', ') + ']' : 'none'}`);
+      console.log(`   Aperture: radius=${component.apertureRadius}, offset=${component.apertureCenterOffset}, shape=${component.rayShape}, coneAngle=${component.coneAngle}°`);
+      if (component.rayShape === 'array') {
+        console.log(`   Array: segments=${component.arraySegments}, gap=${component.arrayGap?.toFixed(2)}`);
+      }
       if (component.isGrouped) {
         console.log(`   Group members: [${Array.from(component.groupMembers).join(', ')}]`);
       }
@@ -155,6 +166,12 @@ export class ComponentManager {
     
     // Update toolbar button visibility
     updateToolbarButtons();
+
+    // Notify ray panel — always pass the entry port when a composite member is selected
+    if (ComponentManager.onSelectionChanged) {
+      const rayTarget = this.getCompositeEntryPort(component ?? null);
+      ComponentManager.onSelectionChanged(rayTarget ?? null);
+    }
   }
 
   deselectComponent() {
@@ -179,6 +196,11 @@ export class ComponentManager {
     
     // Update toolbar button visibility
     updateToolbarButtons();
+
+    // Notify ray panel
+    if (ComponentManager.onSelectionChanged) {
+      ComponentManager.onSelectionChanged(null);
+    }
   }
 
   getComponent(id) {
@@ -267,8 +289,8 @@ export class ComponentManager {
       }
     });
 
-    // Remove debug overlay elements (lives outside the component element)
-    component.removeDebugElements();
+    // Remove debug overlay elements
+    removeDebugForComponent(id);
 
     // Remove from DOM
     const element = document.querySelector(`[data-id="${id}"]`);
@@ -705,15 +727,31 @@ export class ComponentManager {
       component.setRotation(member.rotation ?? 0);
       component.setScale(member.scale ?? 1);
 
-      // Apply composite instance flags and frozen ray properties
+      // Apply composite instance flags
       component.isCompositeInstance = true;
       component.compositeKey = def.key;
       component.compositeInstanceId = compositeInstId;
       component.rayLocked = true;
-      component.apertureRadius = member.apertureRadius;
-      component.coneAngle = member.coneAngle;
-      component.rayShape = member.rayShape;
-      component.rayPolygonColor = member.rayPolygonColor;
+
+      // Restore display properties
+      component.rayPolygonColor   = member.rayPolygonColor   ?? '#00ffff';
+      component.rayPolygonOpacity = member.rayPolygonOpacity ?? 0.2;
+      component.coneAngle         = member.coneAngle         ?? 0;
+
+      // Restore upVector so aperturePoints orientation matches the saved layout.
+      // Must be set before calling any aperture setter.
+      if (member.upVector) {
+        component.upVector = { x: member.upVector.x, y: member.upVector.y };
+      }
+
+      // Set rayShape first (plain assignment, just a string flag),
+      // then use setters so _getAperturePoints() is always recomputed
+      // with the correct shape, radius, offset, and array params.
+      component.rayShape = member.rayShape ?? 'collimated';
+      if (member.arraySegments != null) component.setArraySegments(member.arraySegments);
+      if (member.arrayGap      != null) component.setArrayGap(member.arrayGap);
+      component.setApertureRadius(member.apertureRadius ?? 15);
+      if (member.apertureCenterOffset != null) component.setApertureCenterOffset(member.apertureCenterOffset);
 
       // Render to SVG
       const group = component.render();
@@ -778,6 +816,7 @@ export class ComponentManager {
     autoCenter();
     removeUnifiedBoundingBox();
     updateRays();
+    refreshDebugLayer();
 
     console.log(`ComponentManager: Composite "${def.key}" expanded — ${spawnedIds.length} members, exit port ID: ${exitPortId}`);
   }
@@ -918,6 +957,50 @@ export class ComponentManager {
     // Update toolbar button visibility
     updateToolbarButtons();
     return true;
+  }
+
+  /**
+   * Given a composite exit-port ID, find the entry-port ID of the same instance.
+   * Returns null when the given id is not a composite exit port.
+   */
+  getCompositeEntryPortId(exitPortId) {
+    const exitComp = this.components.get(exitPortId);
+    if (!exitComp || !exitComp.isExitPort || !exitComp.isCompositeInstance) return null;
+    const instId = exitComp.compositeInstanceId;
+    for (const [id, comp] of this.components) {
+      if (comp.isEntryPort && comp.compositeInstanceId === instId) return id;
+    }
+    return null;
+  }
+
+  /**
+   * Given any composite member component, return its exit-port component.
+   * Returns the component itself if it is already the exit port, or not a composite member.
+   */
+  getCompositeExitPort(component) {
+    if (!component || !component.isCompositeInstance) return component;
+    if (component.isExitPort) return component;
+    const instId = component.compositeInstanceId;
+    for (const memberId of (component.groupMembers || [])) {
+      const member = this.components.get(memberId);
+      if (member && member.isExitPort && member.compositeInstanceId === instId) return member;
+    }
+    return component; // fallback
+  }
+
+  /**
+   * Given any composite member component, return its entry-port component.
+   * Returns the component itself if it is already the entry port, or not a composite member.
+   */
+  getCompositeEntryPort(component) {
+    if (!component || !component.isCompositeInstance) return component;
+    if (component.isEntryPort) return component;
+    const instId = component.compositeInstanceId;
+    for (const memberId of (component.groupMembers || [])) {
+      const member = this.components.get(memberId);
+      if (member && member.isEntryPort && member.compositeInstanceId === instId) return member;
+    }
+    return component; // fallback
   }
 
   /**

@@ -509,7 +509,7 @@ function drawRelinkIndicator(childComponent, parentComponent) {
   ];
   let minY = Infinity;
   lbCorners.forEach(corner => {
-    const world = parentComponent._localToWorld(corner.x, corner.y);
+    const world = parentComponent.localToWorld(corner.x, corner.y);
     minY = Math.min(minY, world.y);
   });
   

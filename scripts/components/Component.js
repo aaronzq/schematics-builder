@@ -1,16 +1,20 @@
 import { components as componentLibrary } from './ComponentLibrary.js';
 import { 
   ARROW_LENGTH,
-  SHOW_DEBUG_DRAWING,
-  UP_VECTOR_LENGTH,
-  FORWARD_VECTOR_LENGTH,
-  CENTER_MARKER_RADIUS,
-  APERTURE_POINT_RADIUS,
-  LOWER_APERTURE_POINT_RADIUS
+  DEFAULT_APERTURE_CENTER_OFFSET,
+  DEFAULT_ARRAY_SEGMENTS,
+  DEFAULT_ARRAY_GAP,
+  MAX_ARRAY_SEGMENTS
 } from '../config.js';
-import { ensureDebugMarkers } from '../utils/svgUtils.js';
 
 export class Component {
+  /**
+   * Optional callback invoked whenever a component's transform changes.
+   * Set by DebugLayer (or any observer) — avoids circular imports.
+   * Signature: (component) => void
+   */
+  static onTransformChanged = null;
+
   constructor(typeOrConfig) {
     if (typeof typeOrConfig === 'string') {
       const type = typeOrConfig;
@@ -57,11 +61,20 @@ export class Component {
     this.apertureCenter = config.apertureCenter || { x: 0, y: 0 };
     this.upVector = config.upVector || { x: 0, y: -1 };
     this.apertureRadius = config.apertureRadius ?? 15;
-    this.aperturePoints = this._getAperturePoints();
     this.coneAngle = config.coneAngle ?? 0;
     this.rayShape = config.rayShape || 'collimated';
     this.rayPolygonColor = config.rayPolygonColor || '#00ffff';
     this.rayPolygonOpacity = config.rayPolygonOpacity ?? 0.2;
+
+    // Manual / Array aperture properties
+    // apertureCenterOffset: signed displacement along upVector from the definition's
+    // apertureCenter. The original apertureCenter is preserved for easy reset/undo.
+    this.apertureCenterOffset = config.apertureCenterOffset ?? DEFAULT_APERTURE_CENTER_OFFSET;
+    this.arraySegments = config.arraySegments ?? DEFAULT_ARRAY_SEGMENTS;
+    this.arrayGap = config.arrayGap ?? DEFAULT_ARRAY_GAP;
+
+    // Compute aperture points (depends on rayShape, radius, offset, array params)
+    this.aperturePoints = this._getAperturePoints();
 
     // Arrow vector for positioning handle - defaults to forwardVector * ARROW_LENGTH
     this.arrowVector = config.arrowVector || {
@@ -80,7 +93,6 @@ export class Component {
 
     this.element = null;
     this.shapeGroup = null;
-    this.debugGroup = null;
     this.drawFunction = config.drawFunction;
     
     // Parent-child relationships
@@ -100,22 +112,67 @@ export class Component {
     this.rayLocked = false;            // true = ray/aperture config UI is frozen
   }
 
-  _getAperturePoints() {
-    const points = [];
-    const numPoints = 2;
-    
-    for (let i = 0; i < numPoints; i++) {
-      // Reverse t so index 0 is visually upper (positive upVector direction)
-      // and higher indices are visually lower (negative upVector direction)
-      const t = 1 - (i / (numPoints - 1)) * 2;
-      
-      points.push({
-        x: this.apertureCenter.x + this.upVector.x * t * this.apertureRadius,
-        y: this.apertureCenter.y + this.upVector.y * t * this.apertureRadius
-      });
+  /**
+   * Effective aperture center in local coordinates.
+   * Applies apertureCenterOffset along upVector, preserving the original
+   * definition-based apertureCenter for reset/undo.
+   */
+  _getEffectiveApertureCenter() {
+    return {
+      x: this.apertureCenter.x + this.upVector.x * this.apertureCenterOffset,
+      y: this.apertureCenter.y + this.upVector.y * this.apertureCenterOffset
+    };
+  }
+
+  /**
+   * Clamp arrayGap so segment length never goes negative.
+   * maxGap = 2 * apertureRadius / (segments - 1) when segments > 1, else 0.
+   */
+  _clampArrayGap() {
+    if (this.arraySegments <= 1) {
+      this.arrayGap = 0;
+      return;
     }
-    
-    return points;
+    const maxGap = (2 * this.apertureRadius) / (this.arraySegments - 1);
+    if (this.arrayGap > maxGap) this.arrayGap = maxGap;
+    if (this.arrayGap < 0) this.arrayGap = 0;
+  }
+
+  _getAperturePoints() {
+    const ec = this._getEffectiveApertureCenter();
+    const ux = this.upVector.x;
+    const uy = this.upVector.y;
+    const r = this.apertureRadius;
+
+    if (this.rayShape === 'array') {
+      // Array mode: equally spaced segments along the aperture span.
+      // Each segment has a top and bottom point. Gaps sit between segments.
+      this._clampArrayGap();
+      const n = this.arraySegments;
+      const totalSpan = 2 * r;                                      // full aperture span
+      const segLen = (totalSpan - (n - 1) * this.arrayGap) / n;     // length per segment
+      const points = [];
+
+      // Walk from upper (+r) to lower (-r)
+      // upperEdge is the top of the first segment
+      let cursor = r; // distance from effective center along upVector
+      for (let i = 0; i < n; i++) {
+        const segTop = cursor;
+        const segBot = cursor - segLen;
+        points.push(
+          { x: ec.x + ux * segTop, y: ec.y + uy * segTop },
+          { x: ec.x + ux * segBot, y: ec.y + uy * segBot }
+        );
+        cursor = segBot - this.arrayGap; // skip gap
+      }
+      return points;
+    }
+
+    // collimated / divergent / convergent / manual: 2 points (upper, lower)
+    return [
+      { x: ec.x + ux * r, y: ec.y + uy * r },
+      { x: ec.x - ux * r, y: ec.y - uy * r }
+    ];
   }
 
   setPosition(x, y) {
@@ -183,6 +240,7 @@ export class Component {
 
   setApertureRadius(radius) {
     this.apertureRadius = radius;
+    this._clampArrayGap();
     this.aperturePoints = this._getAperturePoints();
   }
 
@@ -192,6 +250,24 @@ export class Component {
 
   setRayShape(shape) {
     this.rayShape = shape;
+    this.aperturePoints = this._getAperturePoints();
+  }
+
+  setApertureCenterOffset(offset) {
+    this.apertureCenterOffset = offset;
+    this.aperturePoints = this._getAperturePoints();
+  }
+
+  setArraySegments(n) {
+    this.arraySegments = Math.max(1, Math.min(MAX_ARRAY_SEGMENTS, Math.round(n)));
+    this._clampArrayGap();
+    this.aperturePoints = this._getAperturePoints();
+  }
+
+  setArrayGap(gap) {
+    this.arrayGap = Math.max(0, gap);
+    this._clampArrayGap();
+    this.aperturePoints = this._getAperturePoints();
   }
 
   setArrowVector(x, y) {
@@ -267,7 +343,7 @@ export class Component {
    *
    * Chain: translate(-cx,-cy) → rotate → translate(x,y)
    */
-  _localToWorld(localX, localY) {
+  localToWorld(localX, localY) {
     const cx = this.centerPoint.x;
     const cy = this.centerPoint.y;
     const rad = this.rotation * Math.PI / 180;
@@ -283,17 +359,18 @@ export class Component {
 
   /** Returns centerPoint in world coordinates. */
   getCenterPointWorld() {
-    return this._localToWorld(this.centerPoint.x, this.centerPoint.y);
+    return this.localToWorld(this.centerPoint.x, this.centerPoint.y);
   }
 
-  /** Returns apertureCenter in world coordinates. */
+  /** Returns effective apertureCenter (with offset) in world coordinates. */
   getApertureCenterWorld() {
-    return this._localToWorld(this.apertureCenter.x, this.apertureCenter.y);
+    const ec = this._getEffectiveApertureCenter();
+    return this.localToWorld(ec.x, ec.y);
   }
 
   /** Returns all aperturePoints in world coordinates. */
   getAperturePointsWorld() {
-    return this.aperturePoints.map(p => this._localToWorld(p.x, p.y));
+    return this.aperturePoints.map(p => this.localToWorld(p.x, p.y));
   }
 
   getArrowEndpoint() {
@@ -314,9 +391,12 @@ export class Component {
       forwardVector: this.forwardVector,
       apertureCenter: this.apertureCenter,
       apertureRadius: this.apertureRadius,
+      apertureCenterOffset: this.apertureCenterOffset,
       aperturePoints: this._getAperturePoints(),
       coneAngle: this.coneAngle,
-      rayShape: this.rayShape
+      rayShape: this.rayShape,
+      arraySegments: this.arraySegments,
+      arrayGap: this.arrayGap
     };
   }
 
@@ -366,11 +446,6 @@ export class Component {
     group.appendChild(shapeGroup);
     this.shapeGroup = shapeGroup;
 
-    // Add debug elements if enabled
-    if (SHOW_DEBUG_DRAWING) {
-      this._addDebugElements(group, ns);
-    }
-
     // Apply position and rotation transform
     this._updateTransform(group);
 
@@ -381,157 +456,6 @@ export class Component {
     this.element = group;
 
     return group;
-  }
-
-  _addDebugElements(group, ns) {
-    // Ensure debug markers exist in SVG
-    const svg = document.getElementById('canvas');
-    if (svg) {
-      ensureDebugMarkers(svg);
-    }
-
-    // The debugGroup lives in the top-level #debug-overlay layer, NOT inside the
-    // component's <g>. This means it inherits NO component transform (no scale, no
-    // rotate, no flip). All positions are written directly in world coordinates and
-    // are refreshed by _updateDebugElements() whenever the component moves/rotates/scales.
-    const debugGroup = document.createElementNS(ns, 'g');
-    debugGroup.setAttribute('data-debug-for', this.id);
-    debugGroup.setAttribute('pointer-events', 'none');
-    this.debugGroup = debugGroup;
-
-    // Center marker (red dot)
-    const centerMarker = document.createElementNS(ns, 'circle');
-    centerMarker.setAttribute('r', CENTER_MARKER_RADIUS);
-    centerMarker.setAttribute('fill', 'red');
-    centerMarker.setAttribute('pointer-events', 'none');
-    centerMarker.setAttribute('data-debug-role', 'center');
-    debugGroup.appendChild(centerMarker);
-
-    // Up vector (green arrow)
-    const upLine = document.createElementNS(ns, 'line');
-    upLine.setAttribute('stroke', 'green');
-    upLine.setAttribute('stroke-width', '1');
-    upLine.setAttribute('marker-end', 'url(#upVectorArrow)');
-    upLine.setAttribute('pointer-events', 'none');
-    upLine.setAttribute('data-debug-role', 'up-vector');
-    debugGroup.appendChild(upLine);
-
-    // Forward vector (blue arrow)
-    const forwardLine = document.createElementNS(ns, 'line');
-    forwardLine.setAttribute('stroke', 'blue');
-    forwardLine.setAttribute('stroke-width', '1');
-    forwardLine.setAttribute('marker-end', 'url(#forwardVectorArrow)');
-    forwardLine.setAttribute('pointer-events', 'none');
-    forwardLine.setAttribute('data-debug-role', 'forward-vector');
-    debugGroup.appendChild(forwardLine);
-
-    // Aperture points (blue dots) — only when radius > 0
-    if (this.apertureRadius > 0) {
-      const upperPoint = document.createElementNS(ns, 'circle');
-      upperPoint.setAttribute('r', APERTURE_POINT_RADIUS);
-      upperPoint.setAttribute('fill', 'blue');
-      upperPoint.setAttribute('pointer-events', 'none');
-      upperPoint.setAttribute('data-debug-role', 'aperture-upper');
-      debugGroup.appendChild(upperPoint);
-
-      const lowerPoint = document.createElementNS(ns, 'circle');
-      lowerPoint.setAttribute('r', LOWER_APERTURE_POINT_RADIUS);
-      lowerPoint.setAttribute('fill', 'blue');
-      lowerPoint.setAttribute('pointer-events', 'none');
-      lowerPoint.setAttribute('data-debug-role', 'aperture-lower');
-      debugGroup.appendChild(lowerPoint);
-    }
-
-    // Attach to the overlay layer (world-space, no inherited transform)
-    const overlay = document.getElementById('debug-overlay');
-    if (overlay) {
-      overlay.appendChild(debugGroup);
-    }
-
-    // Set initial world-space positions
-    this._updateDebugElements();
-  }
-
-  /** Reposition all debug elements using current world-space coordinates.
-   *  Called every time the component transform changes. Because the debugGroup
-   *  lives in #debug-overlay (no inherited transform), cx/cy attributes are
-   *  written directly as world coordinates.
-   */
-  _updateDebugElements() {
-    if (!this.debugGroup) return;
-
-    // Debug elements reflect only rotation and position — not scale, not flip.
-    const rad = this.rotation * Math.PI / 180;
-    const cos = Math.cos(rad);
-    const sin = Math.sin(rad);
-
-    // Rotate a local direction vector by rotation only (no flip, no scale).
-    const rotateDir = (lx, ly) => ({
-      x: lx * cos - ly * sin,
-      y: lx * sin + ly * cos
-    });
-
-    // Translate a local point to world space using rotation + position only
-    // (no flip, no scale): world = (x,y) + rotate(local - centerPoint)
-    const localToWorldNoScale = (lx, ly) => {
-      const d = rotateDir(lx - this.centerPoint.x, ly - this.centerPoint.y);
-      return { x: this.x + d.x, y: this.y + d.y };
-    };
-
-    // Optical center in world space (rotation + position only)
-    const oc = localToWorldNoScale(this.centerPoint.x, this.centerPoint.y);
-
-    // --- Center marker ---
-    const centerMarker = this.debugGroup.querySelector('[data-debug-role="center"]');
-    if (centerMarker) {
-      centerMarker.setAttribute('cx', oc.x);
-      centerMarker.setAttribute('cy', oc.y);
-    }
-
-    // --- Up vector: fixed display length, rotation+flip only ---
-    const upDir = rotateDir(this.upVector.x, this.upVector.y);
-    const upLine = this.debugGroup.querySelector('[data-debug-role="up-vector"]');
-    if (upLine) {
-      upLine.setAttribute('x1', oc.x);
-      upLine.setAttribute('y1', oc.y);
-      upLine.setAttribute('x2', oc.x + upDir.x * UP_VECTOR_LENGTH);
-      upLine.setAttribute('y2', oc.y + upDir.y * UP_VECTOR_LENGTH);
-    }
-
-    // --- Forward vector: fixed display length, rotation+flip only ---
-    const fwdDir = rotateDir(this.forwardVector.x, this.forwardVector.y);
-    const fwdLine = this.debugGroup.querySelector('[data-debug-role="forward-vector"]');
-    if (fwdLine) {
-      fwdLine.setAttribute('x1', oc.x);
-      fwdLine.setAttribute('y1', oc.y);
-      fwdLine.setAttribute('x2', oc.x + fwdDir.x * FORWARD_VECTOR_LENGTH);
-      fwdLine.setAttribute('y2', oc.y + fwdDir.y * FORWARD_VECTOR_LENGTH);
-    }
-
-    // --- Aperture points: reflect true optical aperture position (rotation only, no scale) ---
-    if (this.apertureRadius > 0) {
-      const ac = localToWorldNoScale(this.apertureCenter.x, this.apertureCenter.y);
-      const upD = rotateDir(this.upVector.x, this.upVector.y);
-
-      const upperDot = this.debugGroup.querySelector('[data-debug-role="aperture-upper"]');
-      if (upperDot) {
-        upperDot.setAttribute('cx', ac.x + upD.x * this.apertureRadius);
-        upperDot.setAttribute('cy', ac.y + upD.y * this.apertureRadius);
-      }
-      const lowerDot = this.debugGroup.querySelector('[data-debug-role="aperture-lower"]');
-      if (lowerDot) {
-        lowerDot.setAttribute('cx', ac.x - upD.x * this.apertureRadius);
-        lowerDot.setAttribute('cy', ac.y - upD.y * this.apertureRadius);
-      }
-    }
-  }
-
-  /** Remove the debug overlay group from the DOM. Call on component deletion. */
-  removeDebugElements() {
-    if (this.debugGroup) {
-      this.debugGroup.remove();
-      this.debugGroup = null;
-    }
   }
 
   getBoundingBox() {
@@ -584,9 +508,9 @@ export class Component {
 
     element.setAttribute('transform', transform);
 
-    // Refresh debug overlay elements (world-space, lives outside this element)
-    if (this.debugGroup) {
-      this._updateDebugElements();
+    // Notify observers (e.g. DebugLayer) for live debug updates
+    if (Component.onTransformChanged) {
+      Component.onTransformChanged(this);
     }
   }
 

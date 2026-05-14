@@ -33,7 +33,11 @@ function updateApertureScaling(sourceId = null) {
         // Targeted update: scale the changed component itself, then propagate downward
         const source = getComponent(sourceId);
         if (source && source.parent !== null) {
-            const parent = getComponent(source.parent);
+            const rawParent = getComponent(source.parent);
+            const sameInst = source.isCompositeInstance &&
+                rawParent?.isCompositeInstance &&
+                source.compositeInstanceId === rawParent.compositeInstanceId;
+            const parent = sameInst ? rawParent : componentManager.getCompositeExitPort(rawParent);
             applyApertureScaling(source, parent);
         }
         if (source) recursivelyUpdateChildrenApertures(source, getComponent);
