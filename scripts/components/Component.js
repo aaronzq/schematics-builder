@@ -65,6 +65,7 @@ export class Component {
     this.rayShape = config.rayShape || 'collimated';
     this.rayPolygonColor = config.rayPolygonColor || '#00ffff';
     this.rayPolygonOpacity = config.rayPolygonOpacity ?? 0.2;
+    this.rayColorInheritFromParent = config.rayColorInheritFromParent ?? true;
 
     // Manual / Array aperture properties
     // apertureCenterOffset: signed displacement along upVector from the definition's

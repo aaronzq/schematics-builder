@@ -64,6 +64,12 @@ export class ComponentManager {
       component.parent = previousId;
       previousComponent.children.push(id);
 
+      // Inherit color from parent if the flag is set (default true)
+      if (component.rayColorInheritFromParent ?? true) {
+        component.rayPolygonColor   = previousComponent.rayPolygonColor;
+        component.rayPolygonOpacity = previousComponent.rayPolygonOpacity;
+      }
+
       // Scale aperture to match parent projection at spawn time
       applyApertureScaling(component, previousComponent);
     }
@@ -768,6 +774,7 @@ export class ComponentManager {
       // Restore display properties
       component.rayPolygonColor   = member.rayPolygonColor   ?? '#00ffff';
       component.rayPolygonOpacity = member.rayPolygonOpacity ?? 0.2;
+      component.rayColorInheritFromParent = member.rayColorInheritFromParent ?? true;
       component.coneAngle         = member.coneAngle         ?? 0;
 
       // Restore upVector so aperturePoints orientation matches the saved layout.

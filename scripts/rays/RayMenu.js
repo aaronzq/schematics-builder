@@ -31,6 +31,7 @@ function buildPanelHTML(comp) {
   const offset   = comp.apertureCenterOffset  ?? 0;
   const segments = comp.arraySegments         ?? 3;
   const gap      = comp.arrayGap              ?? 0.5;
+  const inheritColor = comp.rayColorInheritFromParent ?? true;
 
   const arrayDisplay = shape === 'array' ? '' : 'none';
 
@@ -55,6 +56,17 @@ function buildPanelHTML(comp) {
           <option value="array"      ${shape==='array'     ?'selected':''}>Array</option>
         </select>
       </div>
+    </div>
+
+    <div class="rp-section rp-color-section">
+      <div class="rp-section-title">Color</div>
+
+      <div class="rp-field rp-field-checkbox">
+        <label class="rp-checkbox-label" for="rp-inherit-color">
+          <input type="checkbox" id="rp-inherit-color" ${inheritColor ? 'checked' : ''}>
+          Inherit from parent
+        </label>
+      </div>
 
       <div class="rp-field">
         <label class="rp-label">Color Hue <span class="rp-value" id="rp-hue-val">${hue}&#176;</span></label>
@@ -67,7 +79,9 @@ function buildPanelHTML(comp) {
         <input type="range" id="rp-opacity" class="rp-slider"
                min="0" max="1" step="0.05" value="${opacity}">
       </div>
+    </div>
 
+    <div class="rp-section">
       <div class="rp-field">
         <label class="rp-label${radiusDisabled ? ' rp-label-disabled' : ''}">Aperture Radius <span class="rp-value" id="rp-radius-val">${radius}</span></label>
         <input type="range" id="rp-radius" class="rp-slider"
@@ -129,19 +143,75 @@ function wireEvents(body) {
     apply();
   });
 
+  get('rp-inherit-color').addEventListener('change', e => {
+    if (!currentComponent) return;
+    currentComponent.rayColorInheritFromParent = e.target.checked;
+    if (e.target.checked && currentComponent.parent != null) {
+      const parentComp = componentManager.getComponent(currentComponent.parent);
+      if (parentComp) {
+        currentComponent.rayPolygonColor   = parentComp.rayPolygonColor;
+        currentComponent.rayPolygonOpacity = parentComp.rayPolygonOpacity;
+        // Sync hue slider UI
+        const hueSlider = get('rp-hue');
+        const hueVal    = body.querySelector('#rp-hue-val');
+        const m = parentComp.rayPolygonColor?.match(/hsl\((\d+)/);
+        if (m && hueSlider) {
+          hueSlider.value = m[1];
+          if (hueVal) hueVal.textContent = m[1] + '°';
+        }
+        // Sync opacity slider UI
+        const opSlider = get('rp-opacity');
+        const opVal    = body.querySelector('#rp-opacity-val');
+        if (opSlider) {
+          opSlider.value = parentComp.rayPolygonOpacity;
+          if (opVal) opVal.textContent = parentComp.rayPolygonOpacity.toFixed(2);
+        }
+        // Extract hue for propagation
+        const m2 = parentComp.rayPolygonColor?.match(/hsl\((\d+)/);
+        const inheritedHue = m2 ? parseInt(m2[1]) : null;
+        propagateColor(currentComponent, inheritedHue, parentComp.rayPolygonOpacity);
+        apply();
+      }
+    }
+  });
+
+  // Propagate hue/opacity down the tree to all descendants that opt-in
+  function propagateColor(comp, hue, opacity) {
+    for (const childId of comp.children) {
+      const child = componentManager.getComponent(childId);
+      if (!child) continue;
+      if (child.rayColorInheritFromParent ?? true) {
+        if (hue !== null) child.rayPolygonColor = `hsl(${hue}, 70%, 50%)`;
+        if (opacity !== null) child.rayPolygonOpacity = opacity;
+        propagateColor(child, hue, opacity);
+      }
+    }
+  }
+
+  function untickInherit() {
+    if (!currentComponent || !currentComponent.rayColorInheritFromParent) return;
+    currentComponent.rayColorInheritFromParent = false;
+    const cb = get('rp-inherit-color');
+    if (cb) cb.checked = false;
+  }
+
   get('rp-hue').addEventListener('input', e => {
     if (!currentComponent) return;
+    untickInherit();
     const hue = parseInt(e.target.value);
-    body.querySelector('#rp-hue-val').textContent = hue + 'Â°';
+    body.querySelector('#rp-hue-val').textContent = hue + '°';
     currentComponent.rayPolygonColor = `hsl(${hue}, 70%, 50%)`;
+    propagateColor(currentComponent, hue, null);
     apply();
   });
 
   get('rp-opacity').addEventListener('input', e => {
     if (!currentComponent) return;
+    untickInherit();
     const v = parseFloat(e.target.value);
     body.querySelector('#rp-opacity-val').textContent = v.toFixed(2);
     currentComponent.rayPolygonOpacity = v;
+    propagateColor(currentComponent, null, v);
     apply();
   });
 
