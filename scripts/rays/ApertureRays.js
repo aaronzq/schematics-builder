@@ -52,10 +52,12 @@ export function drawApertureRays() {
         });
     });
     
-    // Insert aperture rays before schematics group so they appear behind components
+    // Insert aperture rays before trace-lines-group (or schematics) so traces appear on top of rays
+    const traceLinesGroup = document.getElementById("trace-lines-group");
     const schematicsGroup = document.getElementById("schematics");
-    if (schematicsGroup) {
-        canvas.insertBefore(rayGroup, schematicsGroup);
+    const insertBefore = traceLinesGroup || schematicsGroup;
+    if (insertBefore) {
+        canvas.insertBefore(rayGroup, insertBefore);
     } else {
         canvas.appendChild(rayGroup);
     }
