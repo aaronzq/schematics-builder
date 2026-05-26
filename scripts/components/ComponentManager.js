@@ -238,6 +238,11 @@ export class ComponentManager {
 
     component.setRotation(angle);
 
+    // Keep nextPosition in sync so the next spawned component lands at the arrow tip
+    if (this.currentId === id) {
+      this.updateNextPositionFromComponent(id);
+    }
+
     console.log(`Updated rotation of component [ID: ${id}] to ${angle} degrees`);
 
     return true;
@@ -659,6 +664,11 @@ export class ComponentManager {
         }
       }
     });
+
+    // Keep nextPosition in sync with the current exit port after group rotation
+    if (this.currentId != null) {
+      this.updateNextPositionFromComponent(this.currentId);
+    }
   }
 
   /**
@@ -712,19 +722,41 @@ export class ComponentManager {
     const entryOffsetX = entryMember.relX ?? 0;
     const entryOffsetY = entryMember.relY ?? 0;
 
+    // Compute delta rotation to align entry port's forward vector with the spawning arrow
+    let deltaAngle = 0;
+    if (externalParentId !== null && externalParentId !== undefined) {
+      const externalParent = this.components.get(externalParentId);
+      if (externalParent) {
+        const arrowVec = externalParent.getArrowVector();
+        const spawnAngle = Math.atan2(arrowVec.y, arrowVec.x) * 180 / Math.PI;
+        const entryAngle = entryMember.rotation ?? 0;
+        deltaAngle = spawnAngle - entryAngle;
+      }
+    }
+    const deltaRad = deltaAngle * Math.PI / 180;
+    const cosDelta = Math.cos(deltaRad);
+    const sinDelta = Math.sin(deltaRad);
+
     // --- Pass 1: create and render all member components ---
     def.members.forEach((member, index) => {
       const id = this.idCounter++;
       const component = new Component(member.type);
 
+      // Rotate relative offset by deltaAngle so the whole composite rotates around the entry port
+      const dx = (member.relX ?? 0) - entryOffsetX;
+      const dy = (member.relY ?? 0) - entryOffsetY;
+      const rotatedDx = dx * cosDelta - dy * sinDelta;
+      const rotatedDy = dx * sinDelta + dy * cosDelta;
+
       // Position: entry port at spawn origin, others relative to it
       component.setPosition(
-        spawnPos.x + (member.relX - entryOffsetX),
-        spawnPos.y + (member.relY - entryOffsetY)
+        spawnPos.x + rotatedDx,
+        spawnPos.y + rotatedDy
       );
 
-      // Apply rotation and scale from the definition
-      component.setRotation(member.rotation ?? 0);
+      // Apply rotation (definition rotation + delta to align with spawning arrow)
+      const finalRotation = (member.rotation ?? 0) + deltaAngle;
+      component.setRotation(finalRotation);
       component.setScale(member.scale ?? 1);
 
       // Apply composite instance flags
@@ -739,9 +771,21 @@ export class ComponentManager {
       component.coneAngle         = member.coneAngle         ?? 0;
 
       // Restore upVector so aperturePoints orientation matches the saved layout.
+      // upVector is in local space — the component's rotation handles world-space orientation,
+      // so it must NOT be rotated by deltaAngle.
       // Must be set before calling any aperture setter.
       if (member.upVector) {
         component.upVector = { x: member.upVector.x, y: member.upVector.y };
+      }
+
+      // Update arrowVector to point in the final forward direction.
+      // Must always be set — not just when deltaAngle != 0 — because the default
+      // arrowVector is (ARROW_LENGTH, 0) and would be wrong for any member whose
+      // finalRotation differs from 0.
+      {
+        const finalRad = finalRotation * Math.PI / 180;
+        const arrowLen = Math.sqrt(component.arrowVector.x ** 2 + component.arrowVector.y ** 2);
+        component.setArrowVector(Math.cos(finalRad) * arrowLen, Math.sin(finalRad) * arrowLen);
       }
 
       // Set rayShape first (plain assignment, just a string flag),
