@@ -132,19 +132,19 @@ if (mousedownInsideBboxButNotOnComponent) {
 **Dragging Behavior**:
 - **Mode 1**: Drag single ungrouped component
   - Triggered by: Mousedown on component element
-  - Snaps to DRAGGING_SNAP_INCREMENT (2.5) per component
+  - Snaps to DRAGGING_SNAP_INCREMENT (1) per component
   - Updates rotation/scale/arrow handles during drag
   
 - **Mode 2**: Drag entire multi-selection without focus
   - Triggered by: Mousedown inside unified bounding box (not on any component)
   - If transitioning from Mode 3: Removes currentId (clears focus)
-  - Snaps to DRAGGING_SNAP_INCREMENT (2.5) as a group (maintains exact relative positions)
+  - Snaps to DRAGGING_SNAP_INCREMENT (1) as a group (maintains exact relative positions)
   - Updates group rotation/scale handles during drag
   - No arrow handle (currentId becomes null)
   
 - **Mode 3**: Drag entire multi-selection with focused component
   - Triggered by: Mousedown on any grouped component
-  - Snaps to DRAGGING_SNAP_INCREMENT (2.5) as a group (maintains exact relative positions)
+  - Snaps to DRAGGING_SNAP_INCREMENT (1) as a group (maintains exact relative positions)
   - Updates group rotation/scale handles during drag
   - Shows and updates arrow handle for the focused component (currentId)
 
@@ -324,7 +324,7 @@ The ray system visualizes optical paths between connected components using color
 
 **Core Principle**: Rays connect parent → child through aperture points, with shape determined by optical configuration.
 
-#### 5.2 Ray Shapes (4 Types)
+#### 5.2 Ray Shapes (5 Types)
 
 **1. Collimated (Parallel Rays)**
 - **Geometry**: Parent aperture → Child aperture (4-vertex polygon)
@@ -336,130 +336,122 @@ The ray system visualizes optical paths between connected components using color
 
 **2. Divergent (Expanding Rays)**
 - **Geometry**: Parent center → Child aperture (triangular polygon)
-- **Vertices**: `[parentCenter, childUpper, childLower, parentCenter]`
+- **Vertices**: `[parentCenter, childUpper, childLower]`
 - **Use Case**: Light sources, point emitters
 - **Aperture Scaling**: `radius = distance × tan(coneAngle)`
-  - Cone angle inherited from parent or calculated
+  - Cone angle inherited from parent or calculated from geometry
   - Aperture grows linearly with distance
 
 **3. Convergent (Focusing Rays)**
 - **Geometry**: Parent aperture → Child center (triangular polygon)
-- **Vertices**: `[parentUpper, childCenter, childCenter, parentLower]`
+- **Vertices**: `[parentUpper, childCenter, parentLower]`
 - **Use Case**: Focal points, detectors
-- **Aperture Scaling**: Dynamic `coneAngle = atan(parentProjection / distance)`
-  - Cone angle calculated from parent geometry
-  - Aperture shrinks toward focal point
+- **Aperture Scaling**: Child aperture is fully decoupled (user-controlled)
+  - `coneAngle` computed from geometry: `acos(dot(axis, edge) / (|axis|×|edge|))`
+  - User controls `apertureRadius` directly via slider
 
 **4. Manual**
-- **Geometry**: Same as collimated
-- **Aperture Scaling**: None - user controls radius directly
+- **Geometry**: Same as collimated (4-vertex polygon)
+- **Aperture Scaling**: None — user controls radius directly
 - **Use Case**: Custom aperture control, override auto-scaling
-- **User Control**: Slider adjusts aperture radius (0-50)
+- **User Control**: Slider adjusts aperture radius (0-200)
 
-#### 5.3 Multi-Ray System
+**5. Array (Multi-Element)**
+- **Geometry**: Multiple 4-vertex polygons, one per matching segment pair
+- **Vertices per segment**: `[parentSegTop[i], childSegTop[i], childSegBot[i], parentSegBot[i]]`
+- **Use Case**: Fiber bundles, multi-element apertures, segmented beam splitters
+- **Parameters**: `arraySegments` (1–10) and `arrayGap` (gap between segments in local units)
+- **Aperture Scaling**: Same projection-based scaling as collimated; gaps scale proportionally
+- **Array-to-Array**: Both parent and child must be 'array'; segments connect pairwise (min count used)
 
-Each parent-child connection supports **multiple ray layers** with independent configurations:
+#### 5.3 Single-Ray-Per-Component Model
+
+Each component has **one** ray configuration. The current implementation uses a flat
+per-component model rather than per-connection ray arrays.
 
 **Data Structure** (per component):
 ```javascript
 {
-    rayShape: ['collimated', 'divergent', 'convergent'],    // Array of shapes
-    rayPolygonColor: ['#00ffff', '#ff00ff', '#ffff00'],     // Primary colors
-    rayPolygonColor2: ['#0000ff', '#ff0000', '#00ff00'],    // Gradient end colors
-    gradientEnabled: [true, false, true],                    // Gradient toggle per ray
-    // Future: rayOpacity: [0.2, 0.2, 0.2]                   // Per-ray opacity
+    rayShape: 'collimated',          // One of: 'collimated' | 'divergent' | 'convergent' | 'manual' | 'array'
+    rayPolygonColor: '#00ffff',      // HSL or hex color string
+    rayPolygonOpacity: 0.2,          // 0–1 fill opacity
+    rayColorInheritFromParent: true, // If true, inherits parent's color & opacity on spawn
+    apertureRadius: 15,              // Half-width of aperture in local units
+    apertureCenterOffset: 0,         // Signed offset along upVector (manual & array only)
+    arraySegments: 5,                // Number of segments (array only)
+    arrayGap: 0,                     // Gap between segments in local units (array only)
+    coneAngle: 0,                    // Half-angle in degrees (divergent/convergent)
 }
 ```
 
 **Rendering Order**:
-- Rays drawn behind components (inserted before `#components` group)
-- Multiple rays per connection rendered in array order
-- Each ray independently configurable
+- Aperture rays polygon group (`#aperture-rays`) inserted before trace-lines and schematics
+- One polygon element per parent-child connection (or N polygons for array-to-array)
+- Color propagation: when a component is spawned, if `rayColorInheritFromParent` is true,
+  the child inherits `rayPolygonColor` and `rayPolygonOpacity` from its parent.
 
 #### 5.4 Gradient Rendering System
 
-**Perpendicular Gradient**: Gradient runs across ray width (perpendicular to center line), not along ray length.
+**Status**: Not yet implemented in `scripts/`. Rays currently render as solid-color SVG polygons only.
 
-**Algorithm**:
-1. Calculate ray direction: parent center → child center
-2. Calculate perpendicular vector: 90° rotation of ray direction
-3. Calculate ray width using aperture projections: `max(parentProj, childProj)`
-4. Position gradient endpoints: `gradientCenter ± perpendicular × rayWidth`
-5. Create 5-stop HSL gradient interpolating between color1 and color2
-6. Apply as SVG `linearGradient` with `fill="url(#gradient-id)"`
-
-**Color Interpolation**:
-- Direct hue progression from color1.hue to color2.hue (allows negative steps)
-- Average saturation and lightness between colors
-- 5 evenly distributed color stops at 0%, 25%, 50%, 75%, 100%
-- Opacity embedded in gradient stops for PowerPoint compatibility
-
-**Edge Cases**:
-- If ray width < 2 (edge-on orientation): fallback to solid color
-- If invalid gradient coordinates: fallback to solid color
-- Gradient disabled during extreme rotations to prevent artifacts
+The legacy `scripts_backup/` contained a gradient system (perpendicular HSL gradient across ray width) which has not been ported. The current `_createPolygonElement` helper sets `fill` to a flat `child.rayPolygonColor` and `fill-opacity` to `child.rayPolygonOpacity`.
 
 #### 5.5 Ray Display Modes
 
-Three display modes controlled by `rayDisplayMode`:
+**Current (scripts/)**: Two independent toggles via toolbar buttons:
+- **Toggle Rays** (`rays-toggle-btn`) — shows/hides solid aperture ray polygons (`showApertureRays` flag in `ApertureRays.js`)
+- **Toggle Trace** (`trace-btn`) — shows/hides center dotted trace lines (`showTraceLines` flag in `TraceLines.js`)
 
-**1. Both** (default)
-- Shows solid colored/gradient polygons
-- Overlays black dotted lines on aperture boundaries
-- Visual: Full optical path with boundaries marked
+Each toggle is fully independent and re-renders on change.
 
-**2. Dotted Only**
-- Shows only black dotted lines (stroke-dasharray: "3,3")
-- No solid polygons
-- Visual: Minimal outline view
-
-**3. Solid Only**
-- Shows only colored/gradient polygons
-- No dotted outlines
-- Visual: Clean presentation mode
-
-**Toggle Sequence**: Hide → Show Outline → Show Solid → Show Both → Hide
+**Not yet implemented**: Combined display mode cycling (Both / Dotted Only / Solid Only / Hide), dotted boundary lines on aperture edges.
 
 #### 5.6 Aperture Scaling Algorithm
 
 **Purpose**: Automatically calculate optimal aperture radius so rays appear visually coherent when components are positioned/rotated arbitrarily.
 
-**Projection-Based Scaling** (Collimated):
+**Projection-Based Scaling** (Collimated / Array):
 ```javascript
 // 1. Transform upVectors to global coordinates
-childGlobalUp = rotate(childUpVector, childRotation)
-parentGlobalUp = rotate(parentUpVector, parentRotation)
+childGlobalUp  = rotate(child.upVector,  child.rotation)
+parentGlobalUp = rotate(parent.upVector, parent.rotation)
 
 // 2. Calculate perpendicular to center line
-centerLine = childCenter - parentCenter
-perpendicular = rotate(centerLine, 90°)
+centerLine   = childCenter - parentCenter
+perpendicular = rotate90(centerLine)   // 90° CCW unit vector
 
 // 3. Project upVectors onto perpendicular
-childProjection = |childGlobalUp · perpendicular| × childRadius
+childProjection  = |childGlobalUp  · perpendicular| × childRadius
 parentProjection = |parentGlobalUp · perpendicular| × parentRadius
 
-// 4. Calculate scaling ratio
+// 4. Scale child radius to match parent projection
 scalingRatio = parentProjection / childProjection
-newRadius = childRadius × scalingRatio
+newRadius    = childRadius × scalingRatio
 ```
 
-**Cone-Based Scaling** (Divergent/Convergent):
+**Manual — No Auto-Scaling**: Manual mode skips radius scaling entirely. Only `coneAngle` is computed and stored from geometry for display in the ray panel.
+
+**Array Aperture Scaling**:
+- When **parent is array or collimated**: child 'array' uses the same projection-based radius scaling. Segments rescale proportionally (derived from `apertureRadius`); `arrayGap` is re-clamped after radius changes.
+- When **child is array but parent is not array**: child is treated as **manual** — `apertureRadius`, `apertureCenterOffset`, `arraySegments`, and `arrayGap` are all user-controlled with no auto-scaling.
+
+**Divergent Scaling**:
 ```javascript
-// Divergent
-distance = |childCenter - parentCenter|
-coneAngle = inherited or calculated
-newRadius = distance × tan(coneAngle)
-
-// Convergent
-parentProjection = calculated as above
-coneAngle = atan(parentProjection / distance)
-// Child aperture shrinks toward focal point
+distance = |childApertureCenter - parentApertureCenter|
+if (parent.coneAngle !== 0) {
+    child.coneAngle = parent.coneAngle          // inherit
+    newRadius = distance × tan(parent.coneAngle)
+} else {
+    // keep child radius, derive cone angle from geometry
+    child.coneAngle = atan2(child.apertureRadius, distance)
+}
 ```
 
-**Recursive Updates**:
-- When component moves/rotates → recalculate its aperture
-- Propagate changes to ALL children recursively
-- Update triggered by: drag, rotation, scale, parent change, ray config change
+**Convergent Scaling**: Child aperture is fully decoupled from parent — user sets `apertureRadius` directly. `coneAngle` is computed from `acos(dot(axis, edge) / (|axis| × |edge|))` and stored purely for display.
+
+**Crossing Correction**: After projection-based scaling, if the upper ray (parentUpper→childUpper) and lower ray (parentLower→childLower) intersect, the child's `upVector` is negated and scaling is re-applied. This correction is **skipped** when either aperture radius is 0.
+
+**Recursive Updates**: `recursivelyUpdateChildrenApertures(component, getComponent)` — walks tree depth-first; parents scaled before children. Triggered by drag, rotation, scale, parent change, or ray config change.
 
 #### 5.7 Trace Lines (Center Lines)
 
@@ -468,75 +460,75 @@ coneAngle = atan(parentProjection / distance)
 **Rendering**:
 - Black dotted lines (stroke-dasharray: "5,5")
 - Connects parent center → child center
-- Drawn behind components (in separate `#center-trace-lines` group)
+- Drawn behind components (in separate `#trace-lines-group` SVG group)
 - Independent of ray display (can show/hide separately)
 
 **Toggle**: Separate from ray visibility toggle
 
-#### 5.8 Ray Configuration UI (Legacy scripts_backup)
+#### 5.8 Ray Configuration UI (Right Panel)
 
-**Menu Layout**: Banner at top of canvas, dynamically sized to canvas width
+**Implementation**: `scripts/rays/RayMenu.js`, rendered into `#ray-panel-body`.
+Updates whenever selection changes via `ComponentManager.onSelectionChanged` callback.
 
-**Per-Ray Controls**:
-1. **Ray Label**: "Ray 1", "Ray 2", etc.
-2. **Shape Dropdown**: Select collimated/divergent/convergent/manual
-3. **Aperture Slider**: (Manual mode only) 0-50 range, step 0.1
-4. **Hue Controls**:
-   - **Solid Mode**: Single hue slider (0-359°)
-   - **Gradient Mode**: Dual-knob slider with custom knobs
-     - Knob 1 (color1): 20px diameter when selected
-     - Knob 2 (color2): 16px diameter when selected
-     - Drag knobs to adjust hue positions
-     - Real-time ray updates during drag
-5. **Gradient Toggle**: Switch between solid/gradient
-6. **Numeric Input**: Direct hue entry (0-359)
-7. **Color Swatch Picker**: Copy colors from other rays
-8. **Add/Remove Buttons**: Manage ray layers
+**Panel Layout**: Fixed right-side panel; shows empty state when nothing selected.
+
+**Per-Component Controls**:
+1. **Ray Shape Dropdown**: Select collimated / divergent / convergent / manual / array
+2. **Color Section**:
+   - **Inherit from Parent** checkbox (disabled for non-entry composite members)
+   - **Color Hue** slider (0–359°, synced across children when inherit is on)
+   - **Opacity** slider (0–1, step 0.05)
+3. **Aperture Radius** slider (0–200; disabled when parent controls aperture, e.g. collimated/array with parent)
+4. **Center Offset** slider (-100 to 100; shifts aperture along `upVector`)
+5. **Array Settings section** (visible only when shape = 'array'):
+   - **Segments** number input (1–10)
+   - **Gap** slider (0–2, step 0.1)
+
+**Composite-aware behavior**:
+- Non-entry composite members show "Inherit from parent (entry port only)" lock note
+- `rayLocked` members still respond to intra-composite propagation
 
 **Interaction Behavior**:
-- Menu appears when component selected (if rays visible)
-- Menu hides when rays toggled off
-- Menu updates when selection changes
-- Slider interactions prevent menu re-rendering (isSliderActive flag)
+- Panel renders immediately when `currentId` changes
+- Color propagation: changing hue/opacity cascades to all descendants with `rayColorInheritFromParent = true`
+- All slider changes call `updateRays()` and `rebuildDebugForComponent()` in real time
 
 #### 5.9 Implementation Status
 
-**Legacy (scripts_backup/) - Fully Implemented**:
-- ✅ All 4 ray shapes with correct geometry
-- ✅ Multi-ray support (arrays in component state)
-- ✅ Gradient rendering with HSL interpolation
-- ✅ Projection-based aperture scaling (collimated)
-- ✅ Cone-based scaling (divergent/convergent)
-- ✅ Ray configuration menu (745 lines)
-- ✅ Display mode toggling (both/dotted/solid)
-- ✅ Trace lines (center dotted lines)
-- ✅ Color swatch system
-- ✅ Recursive aperture updates
+**Current (scripts/) - Fully Implemented**:
+- ✅ All 5 ray shapes: collimated, divergent, convergent, manual, array (`ApertureRays.js`)
+- ✅ Array-to-array segment-pair rendering
+- ✅ Projection-based aperture scaling with crossing-correction and upVector flip (`ApertureScaling.js`)
+- ✅ Cone-based scaling for divergent (inherit or derive cone angle)
+- ✅ Convergent aperture decoupling (user-controlled radius + computed coneAngle)
+- ✅ Recursive aperture updates via `recursivelyUpdateChildrenApertures`
+- ✅ Composite-aware aperture cascades (intra-instance vs. external parent)
+- ✅ Ray configuration right-panel UI (`RayMenu.js`)
+- ✅ Color inheritance propagation down the component tree
+- ✅ Trace lines (`TraceLines.js`)
+- ✅ Toggle controls (aperture rays + trace lines separately)
 
-**Current (scripts/) - Partially Implemented**:
-- ✅ Basic trace lines (DrawRays.js, TraceLines.js)
-- ✅ Component class with aperture properties
-- ❌ Ray polygon rendering (solid/gradient)
-- ❌ Aperture scaling algorithm
-- ❌ Multi-ray support
-- ❌ Ray configuration UI
-- ❌ Display mode controls
-- ❌ Gradient system
+**Not Yet Implemented in scripts/**:
+- ❌ Gradient rendering (solid color only; no HSL perpendicular gradient)
+- ❌ Multi-ray layers per connection (one polygon per parent-child pair only)
+- ❌ Display mode toggling (both/dotted/solid) — currently solid only
+- ❌ Color swatch picker
 
-**Migration Path**:
-1. Port aperture scaling algorithm (calculateProjections_internal)
-2. Port ray polygon rendering (collimated first)
-3. Port gradient system
-4. Port multi-ray data structure
-5. Port ray configuration UI
-6. Port divergent/convergent geometries
+**Legacy scripts_backup/** contains the old gradient + multi-ray implementation for reference.
 
 #### 5.10 Key Constants (from legacy config)
 
 ```javascript
 DEFAULT_SOLID_RAY_COLOR = '#00ffff'      // Cyan default
 DEFAULT_RAY_POLYGON_OPACITY = 0.2        // 20% opacity for polygons
-RAY_SHAPES = ['collimated', 'divergent', 'convergent', 'manual']
+RAY_SHAPES = ['collimated', 'divergent', 'convergent', 'manual', 'array']
+DRAGGING_SNAP_INCREMENT = 1              // SVG units
+ROTATION_SNAP_INCREMENT = 2.5            // degrees
+SCALE_SNAP_INCREMENT = 0.1
+MIN_SCALE = 0.8
+MAX_SCALE = 2.0
+DEFAULT_ARRAY_SEGMENTS = 5
+MAX_ARRAY_SEGMENTS = 10
 ```
 
 ### 6. Canvas panning and zooming
@@ -900,26 +892,29 @@ document.getElementById('center-all-btn').addEventListener('click', () => {
 ### ✅ Fully Implemented (Current scripts/)
 - **Canvas Management**: Pan, zoom, viewport, grid system
 - **Component Library**: Complete component definitions with optical elements. Each entry carries `category`, `label`, `localBounds`, `centerPoint`, `apertureCenter`, `upVector`, `forwardVector`, `apertureRadius`, `coneAngle`, `rayShape`, and a `draw(ns)` function. The sidebar menu is **generated dynamically** from these definitions by `buildComponentMenu()` — no `index.html` changes needed to add a component.
-- **Component Manager**: State management, add/remove, positioning, rotation
-- **Interaction System**: Drag, rotation handle, scale handle, arrow handle
+- **Component Manager**: State management, add/remove, positioning, rotation, composite expansion
+- **Interaction System**: Drag, rotation handle, scale handle, arrow handle, selection box, re-link mode
 - **Event System**: Mouse/keyboard handlers, selection logic
-- **UI Elements**: Value display, hover handlers, button handlers
-
-### 🔄 In Progress / Refinement Needed
-- **Aperture Scaling Algorithm**: Basic implementation exists, needs full recursive updates
-- **Ray Configuration Menu**: UI not yet ported from scripts_backup
-- **Trace Lines**: Center dotted lines not yet implemented
-- **Component Flipping**: Horizontal/vertical flip logic
-- **Multi-Ray Support**: Single ray works, multiple rays per connection pending
-- **Ray Rendering**: Collimated, divergent, convergent rays with gradients
-- **File I/O**: JSON import/export, filename editor
+- **UI Elements**: Value display, hover handlers, button handlers, sidebar resize
+- **Ray Rendering**: All 5 ray shapes (collimated, divergent, convergent, manual, array) with solid-color polygons
+- **Aperture Scaling**: Full projection-based and cone-based scaling with recursive updates and crossing correction
+- **Trace Lines**: Center dotted lines with independent toggle
+- **Ray Configuration Panel**: Right-side panel with shape, color, opacity, radius, offset, array settings
+- **Composite Components**: Built-in composites (CompositeLibrary.js), user-defined composites (SaveCompositeDialog.js + UserComponentStore.js + localStorage), composite-aware ray/parent logic
+- **Component Snapshots/Thumbnails**: SVG previews in sidebar (ComponentSnapshot.js)
+- **Component Flipping**: Horizontal/vertical flip with reflection matrix transform
+- **Debug Visualization**: DebugLayer.js — center markers, up/forward vectors, aperture points, array segment points (toggle via `SHOW_DEBUG_DRAWING` in config.js)
+- **File I/O**: Filename editor (Google Docs-style)
 
 ### ❌ Not Yet Implemented
-- **Gallery System**: Example schematics loader
-- **Component Preview**: Hover tooltips
-- **Debug Visualization**: Vector/aperture indicators
-- **Undo/Redo**: Action log exists but not connected
-- **SVG Export**: JSON export works, SVG export pending 
+- **JSON Import/Export**: `import-schematic-btn` and `export-schematic-btn` exist in HTML but have no JS handlers
+- **SVG Export**: `export-svg-btn` exists in HTML but has no JS handler
+- **Reset Canvas**: `reset-canvas-btn` exists in HTML but has no JS handler
+- **Gallery Integration**: `gallery/index.html` exists; `saveCanvasAndNavigate()` called from HTML but not defined in scripts
+- **Undo/Redo**: UI buttons exist (`undo-btn`, `redo-btn`) but no action history is implemented
+- **Gradient Rendering**: Solid color only; no HSL perpendicular gradient
+- **Multi-Ray Layers**: One polygon per parent-child pair; no stacked rays per connection
+- **Ray Display Mode Toggling**: No "dotted only" / "solid only" / "both" modes yet
 
 
 ## Core Architecture Concepts
@@ -949,10 +944,14 @@ document.getElementById('center-all-btn').addEventListener('click', () => {
 
     // Optical properties
     apertureRadius: number
+    apertureCenterOffset: number  // signed offset along upVector (manual & array)
     coneAngle: number
-    rayShape: string          // 'collimated' | 'divergent' | 'convergent' | 'custom'
+    rayShape: string          // 'collimated' | 'divergent' | 'convergent' | 'manual' | 'array'
     rayPolygonColor: string
     rayPolygonOpacity: number
+    rayColorInheritFromParent: boolean
+    arraySegments: number     // array mode only (1-10)
+    arrayGap: number          // array mode only (gap between segments in local units)
 
     // Arrow handle
     arrowVector: { x, y }     // offset from centerPoint world pos to arrow tip
@@ -962,6 +961,14 @@ document.getElementById('center-all-btn').addEventListener('click', () => {
     children: number[]        // child component ids
     isGrouped: boolean
     groupMembers: Set<number> // ids of all members in same group
+
+    // Composite instance flags
+    isCompositeInstance: boolean  // true if part of a spawned composite
+    compositeKey: string | null   // back-reference to composite definition key
+    compositeInstanceId: number | null  // unique ID per composite expansion
+    isExitPort: boolean           // designated exit port of the composite
+    isEntryPort: boolean          // designated entry port of the composite
+    rayLocked: boolean            // true = ray/aperture config frozen from external cascades
 }
 ```
 
@@ -994,21 +1001,23 @@ Reading right-to-left (SVG matrix order): first shift local space so `centerPoin
 
 For symmetric components (`centerPoint = {0,0}`), `localBounds` is symmetric around zero. For asymmetric ones (e.g. `mirror` with `centerPoint.x = -30`), `localBounds` correctly spans from the mount point to the aperture face.
 
-#### _localToWorld — the canonical transform helper
+#### localToWorld — the canonical transform helper
 
 ```javascript
-// In Component.js — mirrors the SVG transform chain exactly
-_localToWorld(localX, localY) {
-  // 1. translate(-cx,-cy):  shift into post-translate space
-  const lx = (localX - cx) * flipX;
-  const ly = (localY - cy) * flipY;
-  // 2. scale + rotate + translate(x,y)
+// In Component.js — mirrors the SVG transform chain exactly (rotation + position only,
+// no scale/flip — optical geometry is always scale/flip-independent)
+localToWorld(localX, localY) {
+  // translate(-cx,-cy) then rotate then translate(x,y)
+  const lx = localX - cx;
+  const ly = localY - cy;
   return {
-    x: this.x + (lx * cos - ly * sin) * this.scale,
-    y: this.y + (lx * sin + ly * cos) * this.scale
+    x: this.x + (lx * cos - ly * sin),
+    y: this.y + (lx * sin + ly * cos)
   };
 }
 ```
+
+> **Note**: This is a **public** method on Component. Scale and flip are **excluded** by design — both are visual-only and must not affect ray geometry (apertures, arrow handle).
 
 **World-space getters** (use these everywhere instead of manual math):
 | Method | Returns |
@@ -1024,28 +1033,69 @@ _localToWorld(localX, localY) {
 
 ### 3. Aperture System
 
-#### Aperture geometry (per component type, in local space)
+#### Aperture properties (per Component instance)
 
-- **`apertureCenter: {x, y}`** — the center of the aperture face (where the optical axis crosses the element). Defined in local space. Converted to world space via `getApertureCenterWorld()`.
-- **`upVector: {x, y}`** — local unit direction pointing "up" along the aperture face (perpendicular to the optical axis).
-- **`apertureRadius`** — half-width of the aperture along `upVector`.
-- **`aperturePoints`** — the two aperture endpoints (top and bottom), computed as:
-  ```
-  aperturePoints[0] = apertureCenter + upVector × apertureRadius   // top
-  aperturePoints[1] = apertureCenter - upVector × apertureRadius   // bottom
-  ```
-  In world space: `getAperturePointsWorld()` — used as ray polygon vertices.
+| Property | Type | Default | Description |
+|---|---|---|---|
+| `apertureCenter` | `{x,y}` | from definition | Local-space origin of the aperture face (immutable — from ComponentLibrary) |
+| `apertureCenterOffset` | `number` | `0` | Signed displacement along `upVector` from `apertureCenter`. The effective center shifts but `apertureCenter` is preserved for reset/undo |
+| `upVector` | `{x,y}` | from definition | Unit vector defining aperture orientation; may be flipped by crossing correction |
+| `apertureRadius` | `number` | `15` | Half-height of the total aperture span along `upVector` |
+| `aperturePoints` | `Array<{x,y}>` | computed | Local-space boundary points (2 for standard shapes; `segments×2` for array) |
+| `coneAngle` | `number` | `0` | Half-angle of illumination cone in degrees |
+| `rayShape` | `string` | `'collimated'` | One of: `collimated`, `divergent`, `convergent`, `manual`, `array` |
+| `arraySegments` | `number` | `5` | Sub-aperture segment count (array mode only; max 10) |
+| `arrayGap` | `number` | `0` | Gap between segments in local units (array mode only; clamped) |
+
+#### Effective aperture center
+
+```
+effectiveCenter = apertureCenter + upVector × apertureCenterOffset
+```
+
+`apertureCenter` is **never mutated** — it comes from the component library definition. `apertureCenterOffset` is the user-adjustable parameter. Reset = set offset to `0`. Used by `_getEffectiveApertureCenter()`.
+
+#### Aperture points by shape
+
+| Ray Shape | Point Count | Layout |
+|---|---|---|
+| `collimated` | 2 | `[upper, lower]` — effectiveCenter ± upVector × radius |
+| `divergent` | 2 | Same as collimated |
+| `convergent` | 2 | Same as collimated |
+| `manual` | 2 | Same — user adjusts radius and offset |
+| `array` | `segments × 2` | Pairs of `[segTop, segBot]` ordered upper → lower |
+
+#### Array segment geometry
+
+For `n` segments, gap `g`, and aperture radius `r`:
+```
+totalSpan     = 2 × r
+segmentLength = (totalSpan − (n−1) × g) / n
+```
+Walking from upper (+r) to lower (−r) along `upVector`:
+```
+seg[0].top = effectiveCenter + upVector × r
+seg[0].bot = seg[0].top − upVector × segmentLength
+  (gap g)
+seg[1].top = seg[0].bot − upVector × g
+  ...
+```
+**Gap clamping**: `arrayGap` ∈ `[0, 2r / (n−1)]` when `n > 1`; forced to `0` when `n = 1`.
+
+**Segment count limit**: `arraySegments` ∈ `[1, MAX_ARRAY_SEGMENTS]` (= 10).
 
 #### Trace lines (in `TraceLines.js`)
 Dotted lines connect parent `apertureCenter` → child `apertureCenter` in world space (`getApertureCenterWorld()`).
 
 #### Aperture scaling strategies
-- **Collimated** (parallel): `radius = parentAperture / cos(deviation)`
-- **Divergent** (expanding): `radius = distance × tan(coneAngle)`
-- **Convergent** (focusing): dynamic cone angle from geometry
-- **Custom**: user-controlled radius slider (no auto-scaling)
 
-**Recursion**: when component moves/rotates → recalculate its aperture → recursively update all children.
+- **Collimated / Array**: Projection-based — `scalingRatio = parentProjection / childProjection` where each projection is `|globalUp · perpendicular| × radius`.
+- **Divergent**: `radius = distance × tan(coneAngle)`; cone angle inherited from parent or derived from geometry.
+- **Convergent**: Child aperture is user-controlled. `coneAngle` is computed from geometry for display only.
+- **Manual**: Radius scaling skipped entirely. `coneAngle` stored for display only.
+- **Array (non-array parent)**: Treated as manual — no auto-scaling.
+
+**Recursion**: `recursivelyUpdateChildrenApertures(root, getComponent)` walks the tree depth-first, calling `applyApertureScaling(child, parent)` for each node. Triggered whenever a component moves, rotates, scales, changes parent, or changes its ray config.
 
 ### 4. Ray Visualization
 
@@ -1054,9 +1104,104 @@ Dotted lines connect parent `apertureCenter` → child `apertureCenter` in world
 - **Divergent**: Parent center → Child aperture (expanding)
 - **Convergent**: Parent aperture → Child center (focusing)
 
-**Multi-Ray**: Each parent-child connection supports multiple rays with independent colors/gradients.
+**Single-Ray per connection**: Each parent-child pair renders exactly one polygon (or N polygons for array-to-array). Color/opacity are per-component properties; change to a parent propagates down the tree when `rayColorInheritFromParent` is true.
 
-**Rendering**: Rays drawn behind components. Update triggered by any geometry change.
+**Rendering**: Rays drawn behind components (`#aperture-rays` group). Update triggered by any geometry change.
+
+#### Rays module file map
+
+| File | Purpose |
+|---|---|
+| `scripts/rays/DrawRays.js` | Orchestrator: triggers aperture scaling → trace lines → aperture ray polygons |
+| `scripts/rays/ApertureScaling.js` | Projection-based scaling, crossing correction, recursive tree walk |
+| `scripts/rays/ApertureRays.js` | SVG polygon rendering for all 5 ray shapes |
+| `scripts/rays/TraceLines.js` | Center-to-center dotted lines |
+| `scripts/rays/RayMenu.js` | Right-panel ray configuration UI |
+
+### 5. Debug Visualization (`DebugLayer.js`)
+
+All debug elements live inside `#debug-overlay` (world-space SVG group; no inherited transforms). Enabled/disabled globally by `SHOW_DEBUG_DRAWING` in `config.js`.
+
+**Per-component debug elements** (built by `_buildDebugGroup(comp)`):
+
+| Element | Attribute | Description |
+|---|---|---|
+| Center marker | Red dot | Component's `centerPoint` in world space |
+| Up vector | Green arrow | Direction and length of `upVector` (`UP_VECTOR_LENGTH` = 60) |
+| Forward vector | Blue arrow | Direction and length of `forwardVector` (`FORWARD_VECTOR_LENGTH` = 60) |
+| Upper aperture dot | Blue (3px) | Top of aperture (`effectiveCenter + upVector × radius`) |
+| Lower aperture dot | Blue (2px) | Bottom of aperture |
+| Array segment dots | Grey (2px) | Top and bottom of each array segment (array mode only) |
+| Manual offset marker | Orange dot | Effective aperture center when offset ≠ 0 (manual/array) |
+
+**Key exports**:
+```javascript
+initDebugLayer()                    // called once at app start
+refreshDebugLayer()                 // full rebuild (add/delete/load)
+refreshDebugForComponent(comp)      // lightweight reposition (drag/rotate/scale)
+rebuildDebugForComponent(comp)      // full rebuild for one component (config change)
+removeDebugForComponent(compId)     // remove one component's debug group
+```
+`Component.onTransformChanged` static callback is set by `DebugLayer` to receive live transform updates during drag/rotate/scale without circular imports.
+
+### 5. Composite Component System
+
+#### Overview
+
+Composite components are named groups of basic components with fixed relative positions and optical parameters. They appear and behave as single units from the outside but contain multiple `Component` instances internally.
+
+#### Key Files
+| File | Role |
+|---|---|
+| `CompositeLibrary.js` | Built-in composite definitions; merged into `components` registry at import time |
+| `SaveCompositeDialog.js` | 3-phase `<dialog>` for saving selected components as a user composite |
+| `UserComponentStore.js` | localStorage persistence for user composites; merges into registry on load |
+| `ComponentSnapshot.js` | Generates SVG thumbnail for sidebar button (basic + composite) |
+
+#### Composite Definition Schema
+```javascript
+{
+    key: 'my-composite',
+    label: 'My Composite',
+    category: 'User Components',  // or 'Composite' for built-ins
+    isComposite: true,
+    isBuiltIn: false,   // true for CompositeLibrary entries
+    members: [
+        {
+            type: 'lens',           // must match a ComponentLibrary key
+            relX: 0, relY: 0,      // position relative to group centroid
+            rotation: 0, scale: 1,
+            apertureRadius: 20, coneAngle: 0,
+            rayShape: 'collimated',
+            rayPolygonColor: '#00ccff',
+            internalParentIndex: null  // null = root member; number = index in members[]
+        },
+        // ...
+    ],
+    entryMemberIndex: 0,  // index of the entry port member
+    exitMemberIndex: 2,   // index of the exit port member
+}
+```
+
+#### Composite Instance Flags (per Component)
+- `isCompositeInstance: true` — component is part of a spawned composite
+- `compositeKey` — back-reference to the composite definition key
+- `compositeInstanceId` — unique integer per expansion (distinguishes multiple instances of the same composite)
+- `isEntryPort: true` — this member is the composite's entry; receives external parent links
+- `isExitPort: true` — this member is the composite's exit; used for external child spawning and arrow handle
+- `rayLocked: true` — non-entry members; aperture config frozen from external cascades (intra-composite cascades still propagate)
+
+#### Composite-Aware Logic
+- **Ray rendering**: `rawParent` is remapped to the composite's exit port for external connections
+- **Re-link / cut-link**: operate on the entry port's external parent, not the exit port
+- **Arrow handle**: shown on exit port only (forwardVector of the exit member drives spawn direction)
+- **Save as Composite button** (`save-as-composite-btn`): visible when 2+ non-composite components selected (Mode 2)
+- **Composite bbox**: drawn in grey (`COMPOSITE_BBOX_STROKE = '#555'`) to distinguish from the blue group bbox
+
+#### Save-as-Composite Flow (3 phases)
+1. **Phase A** — Name the composite; see a spatial SVG preview of selected components
+2. **Phase B** — Click to pick the Entry Port in the preview
+3. **Phase C** — Click to pick the Exit Port → saves to localStorage, merges into registry, rebuilds sidebar menu
 
 ## Critical Pipelines
 
@@ -1094,38 +1239,40 @@ Trigger (move/rotate/config change)
 
 ### Pipeline 4: Import/Export
 ```
-Export: State → JSON (includes action log)
-Import: JSON → Replay actions → Restore state → Rebuild DOM
+(Not yet implemented — buttons exist in HTML but have no JS handlers)
+Future: Export: Serialize component Map → JSON → download file
+        Import: Load JSON → reconstruct Component instances → rebuild DOM → updateRays()
 ```
 
 ## Implementation Priorities
 
-### Must-Have (Core Functionality)
-1. ✅ Component state management
-2. ✅ Hierarchy system (parent/child)
-3. ✅ Coordinate transformations
-4. ✅ Drag/rotate/scale interactions
-5. ✅ Arrow handle for spawning
-6. ✅ Basic ray rendering (collimated)
-7. 🔄 Aperture scaling (collimated mode working)
-8. ✅ JSON import/export
+### Fully Implemented ✅
+1. Component state management
+2. Hierarchy system (parent/child)
+3. Coordinate transformations
+4. Drag/rotate/scale interactions
+5. Arrow handle for spawning
+6. All 5 ray shapes with polygon rendering
+7. Aperture scaling — all modes (collimated, divergent, convergent, manual, array)
+8. Grid snapping & canvas pan/zoom
+9. Trace lines (dotted center lines)
+10. Ray configuration right-panel UI
+11. Composite components (built-in + user-defined + localStorage)
+12. Component flip operations (reflection matrix)
+13. Debug visualization layer (DebugLayer.js)
+14. Filename editor
 
-### Should-Have (Enhanced UX)
-9. 🔄 Full aperture scaling (divergent/convergent)
-10. ❌ Ray configuration UI (color, shape, gradient)
-11. ❌ Multi-ray support per connection
-12. ✅ Grid snapping
-13. ✅ Canvas pan/zoom
-14. ❌ Trace lines (dotted center lines)
-15. ❌ Component preview tooltips
-
-### Nice-to-Have (Polish)
-16. ❌ SVG export (clean, presentation-ready)
-17. ❌ Gallery with examples
-18. ❌ Debug visualization mode
-19. ❌ Undo/redo
-20. ❌ Component flip operations
-21. ❌ Keyboard shortcuts
+### Not Yet Implemented ❌
+1. JSON import / export (HTML buttons exist, no JS handlers)
+2. SVG export (HTML button exists, no handler)
+3. Reset canvas (HTML button exists, no handler)
+4. Gallery integration (`saveCanvasAndNavigate()` not defined in scripts)
+5. Undo / redo (UI buttons exist, no history stack)
+6. Gradient rendering (perpendicular HSL gradient across ray width)
+7. Multi-ray layers per parent-child connection
+8. Ray display mode cycling (both / dotted only / solid only)
+9. Component preview tooltips
+10. Keyboard shortcuts
 
 ## Key Implementation Rules
 

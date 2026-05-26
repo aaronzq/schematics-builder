@@ -1264,6 +1264,19 @@ input[type="range"].single-knob {
 .rp-label-disabled {
   opacity: 0.45;
 }
+.rp-lock-note {
+  font-size: 0.75em;
+  opacity: 0.7;
+  font-style: italic;
+}
+.rp-locked-notice {
+  font-size: 0.75em;
+  color: #888;
+  font-style: italic;
+  padding: 4px 8px;
+  margin-bottom: 2px;
+  border-left: 2px solid #555;
+}
 .rp-slider:disabled {
   opacity: 0.35;
   cursor: not-allowed;

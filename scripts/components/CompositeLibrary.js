@@ -22,134 +22,147 @@ import { components } from './ComponentLibrary.js';
 const compositeDefinitions = {
 
     /**
-     * Fiber-Coupled Source
-     * ────────────────────
-     * A collimated laser beam enters a beamsplitter cube (for optional
-     * pick-off / monitoring), then is focused by a convex lens into a
-     * detector (acting as a fiber-input coupler).
+     * 4F Relay — Inherit Color
+     * ────────────────────────
+     * Two symmetric lenses with a point (focal plane) in the middle.
+     * All members have rayColorInheritFromParent = true, so changing
+     * the entry lens color propagates through the whole relay.
      *
-     * Layout (all offsets relative to group centroid, SVG units, x+ = right):
+     * Layout (offsets relative to group centroid, SVG units, x+ = right):
      *
-     *   [cube @ -80]  ──→  [lens @ 0]  ──→  [detector @ 100]
+     *   [lens @ -100]  ──→  [point @ 0]  ──→  [lens @ +100]
      *
-     * Entry face : cube (index 0)  — where collimated light enters
-     * Exit face  : detector (index 2) — fiber-input / focal point
+     * Entry : lens (index 0)
+     * Exit  : lens (index 2)
      */
-    'fiber-coupled-source': {
-        key: 'fiber-coupled-source',
-        label: 'Fiber Coupled Source',
+    '4f-relay-inherit': {
+        key: '4f-relay-inherit',
+        label: '4F Relay (Inherit Color)',
         category: 'Composite',
         isComposite: true,
         isBuiltIn: true,
 
         members: [
             {
-                // Member 0 — Beamsplitter Cube (entry optic)
-                type: 'cube',
-                relX: -80,
+                // Member 0 — Input lens (entry)
+                type: 'lens',
+                relX: -100,
                 relY: 0,
                 rotation: 0,
                 scale: 1,
                 apertureRadius: 20,
                 coneAngle: 0,
                 rayShape: 'collimated',
-                rayPolygonColor: '#00ccff',
-                rayPolygonColor2: '#00ccff',
-                gradientEnabled: false,
-                internalParentIndex: null     // root member
+                rayPolygonColor: 'hsl(200, 70%, 50%)',
+                rayPolygonOpacity: 0.2,
+                rayColorInheritFromParent: true,
+                internalParentIndex: null
             },
             {
-                // Member 1 — Convex Lens (focusing element)
-                type: 'lens',
+                // Member 1 — Point (back focal / Fourier plane)
+                type: 'point',
                 relX: 0,
                 relY: 0,
                 rotation: 0,
                 scale: 1,
-                apertureRadius: 20,
-                coneAngle: 0,
+                apertureRadius: 0,
+                coneAngle: 10,
                 rayShape: 'convergent',
-                rayPolygonColor: '#00ccff',
-                rayPolygonColor2: '#00ccff',
-                gradientEnabled: false,
-                internalParentIndex: 0        // downstream of cube
+                rayPolygonColor: 'hsl(200, 70%, 50%)',
+                rayPolygonOpacity: 0.2,
+                rayColorInheritFromParent: true,
+                internalParentIndex: 0
             },
             {
-                // Member 2 — Detector (fiber input / focal point)
-                type: 'detector',
+                // Member 2 — Output lens (exit)
+                type: 'lens',
                 relX: 100,
                 relY: 0,
                 rotation: 0,
                 scale: 1,
                 apertureRadius: 20,
-                coneAngle: 10,
-                rayShape: 'convergent',
-                rayPolygonColor: '#00ccff',
-                rayPolygonColor2: '#00ccff',
-                gradientEnabled: false,
-                internalParentIndex: 1        // downstream of lens
+                coneAngle: 0,
+                rayShape: 'divergent',
+                rayPolygonColor: 'hsl(200, 70%, 50%)',
+                rayPolygonOpacity: 0.2,
+                rayColorInheritFromParent: true,
+                internalParentIndex: 1
             }
         ],
 
-        entryMemberIndex: 0,   // light enters at the cube
-        exitMemberIndex: 2     // light exits / terminates at the detector
+        entryMemberIndex: 0,
+        exitMemberIndex: 2
     },
 
     /**
-     * Epi-Illumination Module
-     * ───────────────────────
-     * A collimated beam enters a beamsplitter cube; the transmitted arm
-     * goes into an objective (epi path).  The reflected arm is not modelled
-     * here — only the forward (epi) optical train is captured.
+     * 4F Relay — Custom Colors
+     * ────────────────────────
+     * Same optical layout, but each ray segment uses a distinct color
+     * and rayColorInheritFromParent = false on all members.
+     * Useful for testing per-segment color independence.
      *
      * Layout:
      *
-     *   [cube @ -60]  ──→  [objective @ 80]
-     *
-     * Entry face : cube (index 0)
-     * Exit face  : objective (index 1) — focused at sample
+     *   [lens @ -100]  ──→  [point @ 0]  ──→  [lens @ +100]
+     *   (blue-cyan)          (amber)           (magenta)
      */
-    'epi-illumination-module': {
-        key: 'epi-illumination-module',
-        label: 'Epi-Illumination Module',
+    '4f-relay-colors': {
+        key: '4f-relay-colors',
+        label: '4F Relay (Custom Colors)',
         category: 'Composite',
         isComposite: true,
         isBuiltIn: true,
 
         members: [
             {
-                // Member 0 — Beamsplitter Cube
-                type: 'cube',
-                relX: -60,
+                // Member 0 — Input lens (entry) — blue-cyan
+                type: 'lens',
+                relX: -100,
                 relY: 0,
                 rotation: 0,
                 scale: 1,
                 apertureRadius: 20,
                 coneAngle: 0,
-                rayShape: 'collimated',
-                rayPolygonColor: '#aaff00',
-                rayPolygonColor2: '#aaff00',
-                gradientEnabled: false,
+                rayShape: 'manual',
+                rayPolygonColor: 'hsl(200, 70%, 50%)',
+                rayPolygonOpacity: 0.2,
+                rayColorInheritFromParent: false,
                 internalParentIndex: null
             },
             {
-                // Member 1 — Objective
-                type: 'objective',
-                relX: 80,
+                // Member 1 — Point (Fourier plane) — amber
+                type: 'point',
+                relX: 0,
+                relY: 0,
+                rotation: 0,
+                scale: 1,
+                apertureRadius: 0,
+                coneAngle: 10,
+                rayShape: 'convergent',
+                rayPolygonColor: 'hsl(40, 70%, 50%)',
+                rayPolygonOpacity: 0.2,
+                rayColorInheritFromParent: false,
+                internalParentIndex: 0
+            },
+            {
+                // Member 2 — Output lens (exit) — magenta
+                type: 'lens',
+                relX: 100,
                 relY: 0,
                 rotation: 0,
                 scale: 1,
                 apertureRadius: 20,
-                coneAngle: 15,
-                rayShape: 'convergent',
-                rayPolygonColor: '#aaff00',
-                rayPolygonColor2: '#aaff00',
-                gradientEnabled: false,
-                internalParentIndex: 0
+                coneAngle: 0,
+                rayShape: 'divergent',
+                rayPolygonColor: 'hsl(320, 70%, 50%)',
+                rayPolygonOpacity: 0.2,
+                rayColorInheritFromParent: false,
+                internalParentIndex: 1
             }
         ],
 
         entryMemberIndex: 0,
-        exitMemberIndex: 1
+        exitMemberIndex: 2
     }
 };
 

@@ -32,23 +32,25 @@ function buildPanelHTML(comp) {
   const segments = comp.arraySegments         ?? 3;
   const gap      = comp.arrayGap              ?? 0.5;
   const inheritColor = comp.rayColorInheritFromParent ?? true;
+  // Non-entry composite members have all ray controls locked in the UI;
+  // only the entry port may be edited. Ray propagation still flows normally.
+  const compLocked = comp.isCompositeInstance && !comp.isEntryPort;
 
   const arrayDisplay = shape === 'array' ? '' : 'none';
 
   // Radius slider is disabled when the parent fully controls the child aperture:
   //   - collimated / array: always parent-controlled
   //   - divergent with a parent that already has a non-zero cone angle
-  // NOTE: For composite entry ports (rayLocked siblings exist) the parent is outside
-  // the composite, so standard rules apply.
   const parentComp = (comp.parent != null) ? componentManager.getComponent(comp.parent) : null;
   const divergentParentControlled = shape === 'divergent' && parentComp && parentComp.coneAngle;
-  const radiusDisabled = !!parentComp && (shape === 'collimated' || shape === 'array' || divergentParentControlled);
+  const radiusDisabled = compLocked || (!!parentComp && (shape === 'collimated' || shape === 'array' || divergentParentControlled));
 
   return `
+    ${compLocked ? '<div class="rp-locked-notice">Locked — edit via entry port</div>' : ''}
     <div class="rp-section">
       <div class="rp-field">
-        <label class="rp-label" for="rp-shape">Ray Shape</label>
-        <select id="rp-shape" class="rp-select">
+        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}" for="rp-shape">Ray Shape</label>
+        <select id="rp-shape" class="rp-select"${compLocked ? ' disabled' : ''}>
           <option value="collimated" ${shape==='collimated'?'selected':''}>Collimated</option>
           <option value="divergent"  ${shape==='divergent' ?'selected':''}>Divergent</option>
           <option value="convergent" ${shape==='convergent'?'selected':''}>Convergent</option>
@@ -62,22 +64,22 @@ function buildPanelHTML(comp) {
       <div class="rp-section-title">Color</div>
 
       <div class="rp-field rp-field-checkbox">
-        <label class="rp-checkbox-label" for="rp-inherit-color">
-          <input type="checkbox" id="rp-inherit-color" ${inheritColor ? 'checked' : ''}>
-          Inherit from parent
+        <label class="rp-checkbox-label${compLocked ? ' rp-label-disabled' : ''}" for="rp-inherit-color">
+          <input type="checkbox" id="rp-inherit-color" ${inheritColor ? 'checked' : ''}${compLocked ? ' disabled' : ''}>
+          Inherit from parent${compLocked ? ' <span class="rp-lock-note">(entry port only)</span>' : ''}
         </label>
       </div>
 
       <div class="rp-field">
-        <label class="rp-label">Color Hue <span class="rp-value" id="rp-hue-val">${hue}&#176;</span></label>
+        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Color Hue <span class="rp-value" id="rp-hue-val">${hue}&#176;</span></label>
         <input type="range" id="rp-hue" class="rp-slider rp-hue-slider"
-               min="0" max="359" step="1" value="${hue}">
+               min="0" max="359" step="1" value="${hue}"${compLocked ? ' disabled' : ''}>
       </div>
 
       <div class="rp-field">
-        <label class="rp-label">Opacity <span class="rp-value" id="rp-opacity-val">${opacity.toFixed(2)}</span></label>
+        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Opacity <span class="rp-value" id="rp-opacity-val">${opacity.toFixed(2)}</span></label>
         <input type="range" id="rp-opacity" class="rp-slider"
-               min="0" max="1" step="0.05" value="${opacity}">
+               min="0" max="1" step="0.05" value="${opacity}"${compLocked ? ' disabled' : ''}>
       </div>
     </div>
 
@@ -89,23 +91,23 @@ function buildPanelHTML(comp) {
       </div>
 
       <div class="rp-field">
-        <label class="rp-label">Center Offset <span class="rp-value" id="rp-offset-val">${offset}</span></label>
+        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Center Offset <span class="rp-value" id="rp-offset-val">${offset}</span></label>
         <input type="range" id="rp-offset" class="rp-slider"
-               min="-100" max="100" step="5" value="${offset}">
+               min="-100" max="100" step="5" value="${offset}"${compLocked ? ' disabled' : ''}>
       </div>
     </div>
 
     <div class="rp-section rp-array-section" id="rp-array-section" style="display:${arrayDisplay}">
       <div class="rp-section-title">Array Settings</div>
       <div class="rp-field">
-        <label class="rp-label">Segments</label>
+        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Segments</label>
         <input type="number" id="rp-segments" class="rp-number"
-               min="1" max="10" step="1" value="${segments}">
+               min="1" max="10" step="1" value="${segments}"${compLocked ? ' disabled' : ''}>
       </div>
       <div class="rp-field">
-        <label class="rp-label">Gap <span class="rp-value" id="rp-gap-val">${gap.toFixed(1)}</span></label>
+        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Gap <span class="rp-value" id="rp-gap-val">${gap.toFixed(1)}</span></label>
         <input type="range" id="rp-gap" class="rp-slider"
-               min="0" max="2" step="0.1" value="${gap}">
+               min="0" max="2" step="0.1" value="${gap}"${compLocked ? ' disabled' : ''}>
       </div>
     </div>
   `;

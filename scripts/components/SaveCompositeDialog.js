@@ -660,10 +660,11 @@ function _buildAndSaveComposite() {
             upVector:            { x: comp.upVector.x, y: comp.upVector.y },
             arraySegments:       comp.arraySegments       ?? 5,
             arrayGap:            comp.arrayGap            ?? 0,
-            rayPolygonColor:     comp.rayPolygonColor     || '#00ffff',
-            rayPolygonOpacity:   comp.rayPolygonOpacity   ?? 0.2,
-            rayPolygonColor2:    comp.rayPolygonColor2    || comp.rayPolygonColor || '#00ffff',
-            gradientEnabled:     comp.gradientEnabled     ?? false,
+            rayPolygonColor:             comp.rayPolygonColor             || '#00ffff',
+            rayPolygonOpacity:           comp.rayPolygonOpacity           ?? 0.2,
+            rayColorInheritFromParent:   comp.rayColorInheritFromParent   ?? true,
+            rayPolygonColor2:            comp.rayPolygonColor2            || comp.rayPolygonColor || '#00ffff',
+            gradientEnabled:             comp.gradientEnabled             ?? false,
             internalParentIndex
         };
     });

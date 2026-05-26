@@ -157,12 +157,6 @@ export function applyApertureScaling(child, parent) {
     // However, intra-composite cascades — where the parent is a sibling in the same
     // composite instance — must still propagate so that adjusting the entry port
     // correctly updates all downstream members.
-    const sameCompositeInstance =
-        child.isCompositeInstance &&
-        parent.isCompositeInstance &&
-        child.compositeInstanceId === parent.compositeInstanceId;
-    if (child.rayLocked && !sameCompositeInstance) return;
-
     // Manual: user controls radius directly — skip auto-scaling
     if (child.rayShape === 'manual') return;
 

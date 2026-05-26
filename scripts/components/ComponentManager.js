@@ -300,8 +300,8 @@ export class ComponentManager {
       }
     });
 
-    // Remove debug overlay elements
-    removeDebugForComponent(id);
+    // Remove debug overlay elements (use component.id, not the map key)
+    removeDebugForComponent(component.id);
 
     // Remove from DOM
     const element = document.querySelector(`[data-id="${id}"]`);
@@ -769,7 +769,6 @@ export class ComponentManager {
       component.isCompositeInstance = true;
       component.compositeKey = def.key;
       component.compositeInstanceId = compositeInstId;
-      component.rayLocked = true;
 
       // Restore display properties
       component.rayPolygonColor   = member.rayPolygonColor   ?? '#00ffff';
@@ -843,6 +842,32 @@ export class ComponentManager {
     // --- Mark entry / exit ports ---
     spawnedComponents[def.entryMemberIndex].isEntryPort = true;
     spawnedComponents[def.exitMemberIndex].isExitPort = true;
+
+    // --- Propagate external parent color into the composite at spawn time ---
+    // If the entry port opts in to color inheritance and there is an external parent,
+    // copy the parent's color/opacity into the entry port and cascade down the chain.
+    const entryComp = spawnedComponents[def.entryMemberIndex];
+    if (entryComp.rayColorInheritFromParent && externalParentId != null) {
+      const extParent = this.components.get(externalParentId);
+      if (extParent) {
+        entryComp.rayPolygonColor   = extParent.rayPolygonColor;
+        entryComp.rayPolygonOpacity = extParent.rayPolygonOpacity;
+        // Cascade to downstream composite members that also opt in
+        const propagate = (comp) => {
+          for (const childId of comp.children) {
+            const child = this.components.get(childId);
+            if (!child || !child.isCompositeInstance ||
+                child.compositeInstanceId !== comp.compositeInstanceId) continue;
+            if (child.rayColorInheritFromParent ?? true) {
+              child.rayPolygonColor   = comp.rayPolygonColor;
+              child.rayPolygonOpacity = comp.rayPolygonOpacity;
+              propagate(child);
+            }
+          }
+        };
+        propagate(entryComp);
+      }
+    }
 
     // --- Group all spawned members together ---
     spawnedIds.forEach(id => {

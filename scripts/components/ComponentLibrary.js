@@ -76,7 +76,7 @@ export const components = {
         label: 'Objective',
         isComposite: false,
         isBuiltIn: true,
-        localBounds: { minX: -64.5, maxX: 64.5, minY: -30, maxY: 30 },
+        localBounds: { minX: -69, maxX: 69, minY: -33, maxY: 33 },
         centerPoint: { x: 0, y: 0 },
         forwardVector: { x: 1, y: 0 },
         apertureCenter: {x: 0, y: 0},
@@ -88,54 +88,69 @@ export const components = {
         draw: (ns) => {
             const g = document.createElementNS(ns, "g");
 
-            // Conical front (tapered head)
+            // Tip
+            const tip = document.createElementNS(ns, "path");
+            tip.setAttribute("d", "M -69 -10 L -69 10 L -65 14 L -65 -14 Z ");
+            tip.setAttribute("fill", "#e6e6e6");
+            tip.setAttribute("stroke", "black");
+            tip.setAttribute("stroke-width", "1.5");
+            g.appendChild(tip);
+            
+
             const cone = document.createElementNS(ns, "path");
-            cone.setAttribute("d", "M -46.5 -30 L -48.5 -30 L -64.5 -15 L -64.5 15 L -48.5 30 L -46.5 30 Z");
-            cone.setAttribute("fill", "#d9d9d9");
+            cone.setAttribute("d", "M -65 -14 L -65 14 L -53 26 L -53 -26 Z");
+            cone.setAttribute("fill", "#e6e6e6");
             cone.setAttribute("stroke", "black");
             cone.setAttribute("stroke-width", "1.5");
             g.appendChild(cone);
 
-            // Front barrel (dark gray)
-            const frontBarrel = document.createElementNS(ns, "rect");
-            frontBarrel.setAttribute("x", "-48.5");
-            frontBarrel.setAttribute("y", -30);
-            frontBarrel.setAttribute("width", 10);
-            frontBarrel.setAttribute("height", 60);
-            frontBarrel.setAttribute("fill", "#5a5a5a");
-            frontBarrel.setAttribute("stroke", "black");
-            frontBarrel.setAttribute("stroke-width", "1.5");
-            g.appendChild(frontBarrel);
+            
+            const barrel1 = document.createElementNS(ns, "rect");
+            barrel1.setAttribute("x", "-53");
+            barrel1.setAttribute("y", "-27");
+            barrel1.setAttribute("width", 10);
+            barrel1.setAttribute("height", 54);
+            barrel1.setAttribute("fill", "#e6e6e6");
+            barrel1.setAttribute("stroke", "black");
+            barrel1.setAttribute("stroke-width", "1.5");
+            g.appendChild(barrel1);
 
-            // Green ring
-            const greenRing = document.createElementNS(ns, "rect");
-            greenRing.setAttribute("x", "-38.5");
-            greenRing.setAttribute("y", -30);
-            greenRing.setAttribute("width", 5);
-            greenRing.setAttribute("height", 60);
-            greenRing.setAttribute("fill", "#d9d9d9");
-            greenRing.setAttribute("stroke", "black");
-            greenRing.setAttribute("stroke-width", "1");
-            g.appendChild(greenRing);
+            const barrel2 = document.createElementNS(ns, "rect");
+            barrel2.setAttribute("x", "-43");
+            barrel2.setAttribute("y", "-30");
+            barrel2.setAttribute("width", 10);
+            barrel2.setAttribute("height", 60);
+            barrel2.setAttribute("fill", "#e6e6e6");
+            barrel2.setAttribute("stroke", "black");
+            barrel2.setAttribute("stroke-width", "1.5");
+            g.appendChild(barrel2);
+
+            // Ring
+            const Ring = document.createElementNS(ns, "rect");
+            Ring.setAttribute("x", "-33");
+            Ring.setAttribute("y", -30);
+            Ring.setAttribute("width", 3);
+            Ring.setAttribute("height", 60);
+            Ring.setAttribute("fill", "#ffffff");
+            Ring.setAttribute("stroke", "black");
+            Ring.setAttribute("stroke-width", "1.5");
+            g.appendChild(Ring);
 
             // Rear barrel
             const rearBarrel = document.createElementNS(ns, "rect");
-            rearBarrel.setAttribute("x", "-33.5");
+            rearBarrel.setAttribute("x", "-30");
             rearBarrel.setAttribute("y", -30);
             rearBarrel.setAttribute("width", 90);
             rearBarrel.setAttribute("height", 60);
-            rearBarrel.setAttribute("fill", "#888888");
+            rearBarrel.setAttribute("fill", "#e6e6e6");
             rearBarrel.setAttribute("stroke", "black");
             rearBarrel.setAttribute("stroke-width", "1.5");
             g.appendChild(rearBarrel);
 
             // End cap
-            const endCap = document.createElementNS(ns, "rect");
-            endCap.setAttribute("x", "56.5");
-            endCap.setAttribute("y", -21);
-            endCap.setAttribute("width", 8);
-            endCap.setAttribute("height", 42);
-            endCap.setAttribute("fill", "#686868");
+            const endCap = document.createElementNS(ns, "path");
+            endCap.setAttribute("d", "M 60 -30 L 63 -33 L 69 -33 L 69 33 L 63 33 L 60 30 Z");
+            endCap.setAttribute("fill", "#e6e6e6");
             endCap.setAttribute("fill-opacity", "1");
             endCap.setAttribute("stroke", "black");
             endCap.setAttribute("stroke-width", "1.5");
