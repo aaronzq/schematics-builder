@@ -406,6 +406,11 @@ export class ComponentManager {
   showAllComponents() {
     let count = 0;
     this.components.forEach((component, id) => {
+      // Skip composite sub-components that were defined as hidden — their
+      // hidden state is intentional and should survive "show all".
+      if (component.isCompositeInstance && component.compositeDefinedVisible === false) {
+        return;
+      }
       component.setVisible(true);
       count++;
     });
@@ -817,8 +822,12 @@ export class ComponentManager {
       component.setApertureRadius(member.apertureRadius ?? 15);
       if (member.apertureCenterOffset != null) component.setApertureCenterOffset(member.apertureCenterOffset);
 
-      // Restore visibility state before render so the initial draw is correct
-      component.visible = member.visible ?? true;
+      // Restore visibility state before render so the initial draw is correct.
+      // compositeDefinedVisible records the original definition visibility so
+      // "show all" can respect sub-components that were intentionally hidden.
+      const definedVisible = member.visible ?? true;
+      component.visible = definedVisible;
+      component.compositeDefinedVisible = definedVisible;
 
       // Render to SVG
       const group = component.render();

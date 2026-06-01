@@ -108,16 +108,15 @@ function scaleApertureToParent(child, parent) {
  * @returns {boolean}
  */
 function checkLinesCross(child, parent) {
-    const childPts  = child.getAperturePointsWorld();   // [upper, lower]
-    const parentPts = parent.getAperturePointsWorld();  // [upper, lower]
+    // For array: use full aperture extent (±apertureRadius), not sub-segment points
+    const childPts  = child.rayShape  === 'array' ? child.getApertureFullExtentWorld()  : child.getAperturePointsWorld();
+    const parentPts = parent.rayShape === 'array' ? parent.getApertureFullExtentWorld() : parent.getAperturePointsWorld();
 
     if (!childPts || childPts.length < 2) return false;
     if (!parentPts || parentPts.length < 2) return false;
 
     // Use first and last points as upper/lower extremes.
-    // For array apertures childPts has 2n points; pts[0] is the top of the first
-    // segment and pts[length-1] is the bottom of the last — the true full extent.
-    // For standard 2-point shapes this is identical to [0] and [1].
+    // All resolved point sets are 2-point [upper, lower] arrays at this stage.
     const x1 = parentPts[0].x,                     y1 = parentPts[0].y;                     // parentUpper
     const x2 = childPts[0].x,                      y2 = childPts[0].y;                      // childUpper
     const x3 = parentPts[parentPts.length - 1].x,  y3 = parentPts[parentPts.length - 1].y;  // parentLower
@@ -161,8 +160,14 @@ export function applyApertureScaling(child, parent) {
     // However, intra-composite cascades — where the parent is a sibling in the same
     // composite instance — must still propagate so that adjusting the entry port
     // correctly updates all downstream members.
-    // Manual / Array: user controls radius directly — skip auto-scaling
-    if (child.rayShape === 'manual' || child.rayShape === 'array') return;
+    // Manual / Array: user controls radius directly — skip auto-scaling.
+    // However, still apply crossing correction so rotating doesn't flip the rays.
+    if (child.rayShape === 'manual' || child.rayShape === 'array') {
+        if (child.apertureRadius > 0 && parent.apertureRadius > 0 && checkLinesCross(child, parent)) {
+            flipUpVector(child);
+        }
+        return;
+    }
 
     // Convergent: child aperture is independent of parent — skip auto-scaling.
     // The polygon converges to the child's own aperture centre; the user controls
@@ -220,8 +225,15 @@ export function recursivelyUpdateChildrenApertures(root, getComponent) {
         if (!child) continue;
 
         const rawParent = getComponent(child.parent);
-        // If the parent is a non-exit composite member, resolve to exit port
-        const parent = (rawParent && rawParent.isCompositeInstance && !rawParent.isExitPort)
+        // Remap to the composite exit port only when the parent is a non-exit composite
+        // member from a DIFFERENT instance than the child.
+        // Within the same composite, intra-composite parent pointers must be used as-is
+        // (same logic as drawApertureRays) — remapping them to the exit port would make
+        // applyApertureScaling/checkLinesCross use wrong geometry and flip upVectors.
+        const sameCompositeInstance = child.isCompositeInstance &&
+            rawParent?.isCompositeInstance &&
+            child.compositeInstanceId === rawParent.compositeInstanceId;
+        const parent = (!sameCompositeInstance && rawParent && rawParent.isCompositeInstance && !rawParent.isExitPort)
             ? (() => {
                 for (const mId of (rawParent.groupMembers || [])) {
                     const m = getComponent(mId);

@@ -564,9 +564,22 @@ function _buildSpatialPreview(opts = {}) {
             wrapper.style.pointerEvents = 'none';
         }
 
-        // Hide hidden components (matches real canvas behaviour)
+        // Hidden components: show at reduced opacity so the user can see and
+        // select them as entry/exit ports. A dashed ring marks them as hidden.
+        // Opacity is applied to the artwork only so entry/exit labels stay at 100%.
         if (!comp.visible) {
-            wrapper.style.opacity = '0';
+            artwork.style.opacity = '0.35';
+            const hiddenR = Math.max(halfW, halfH) / scale + 3 * viewScale;
+            const hiddenRing = document.createElementNS(SVG_NS, 'circle');
+            hiddenRing.setAttribute('cx', 0);
+            hiddenRing.setAttribute('cy', 0);
+            hiddenRing.setAttribute('r', hiddenR);
+            hiddenRing.setAttribute('fill', 'none');
+            hiddenRing.setAttribute('stroke', '#aaa');
+            hiddenRing.setAttribute('stroke-width', 1 * viewScale / scale);
+            hiddenRing.setAttribute('stroke-dasharray', `${3 * viewScale / scale} ${3 * viewScale / scale}`);
+            hiddenRing.setAttribute('pointer-events', 'none');
+            wrapper.appendChild(hiddenRing);
         }
 
         // Component type name label below
