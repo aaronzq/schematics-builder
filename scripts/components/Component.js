@@ -138,20 +138,18 @@ export class Component {
       // Slot centers are evenly spaced over the full aperture span regardless of
       // arraySizeRatio, so segments shrink/expand around their own centers.
       //
-      //   slotLen        = totalSpan / n              (fixed slot width per segment)
-      //   segLen         = arraySizeRatio * slotLen     (sub-aperture size; >1 → overlap)
-      //   initialSpacing = segLen                       (spacing when positionRatio = 1)
-      //   targetSpacing  = segLen * arrayPositionRatio  (actual center-to-center spacing)
-      //   center_i       = targetSpacing * ((n-1)/2 - i)  (symmetric around aperture center)
-      //   segTop_i       = center_i + segLen / 2
-      //   segBot_i       = center_i - segLen / 2
+      //   slotLen       = totalSpan / n               (natural slot width; depends only on r and n)
+      //   segLen        = arraySizeRatio * slotLen      (sub-aperture size; independent of spacing)
+      //   targetSpacing = slotLen * arrayPositionRatio  (center-to-center spacing; independent of size)
+      //   center_i      = targetSpacing * ((n-1)/2 - i) (symmetric around aperture center)
+      //   segTop_i      = center_i + segLen / 2
+      //   segBot_i      = center_i - segLen / 2
       const n = this.arraySegments;
       const totalSpan = 2 * r;
-      const ratio = Math.max(0, this.arraySizeRatio);
       const slotLen = totalSpan / n;
-      const segLen = ratio * slotLen;
+      const segLen = Math.max(0, this.arraySizeRatio) * slotLen;
       const half = segLen / 2;
-      const targetSpacing = segLen * Math.max(0, this.arrayPositionRatio);
+      const targetSpacing = slotLen * Math.max(0, this.arrayPositionRatio);
       const points = [];
 
       for (let i = 0; i < n; i++) {
