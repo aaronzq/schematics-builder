@@ -801,7 +801,11 @@ export class ComponentManager {
       if (member.arraySegments != null) component.setArraySegments(member.arraySegments);
       if (member.arraySizeRatio != null) {
         component.setArraySizeRatio(member.arraySizeRatio);
-      } else if (member.arrayGap != null) {
+      }
+      if (member.arrayPositionRatio != null) {
+        component.setArrayPositionRatio(member.arrayPositionRatio);
+      }
+      if (member.arrayGap != null && member.arraySizeRatio == null) {
         // Legacy: convert old arrayGap → arraySizeRatio
         const r = member.apertureRadius ?? 15;
         const n = member.arraySegments ?? 5;

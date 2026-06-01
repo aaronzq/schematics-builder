@@ -7,7 +7,7 @@
 import { ComponentManager, componentManager } from '../components/ComponentManager.js';
 import { updateRays } from './DrawRays.js';
 import { rebuildDebugForComponent } from '../utils/DebugLayer.js';
-import { APERTURE_RADIUS_STEP, APERTURE_OFFSET_STEP, ARRAY_SIZE_RATIO_STEP } from '../config.js';
+import { APERTURE_RADIUS_STEP, APERTURE_OFFSET_STEP, ARRAY_SIZE_RATIO_STEP, ARRAY_POSITION_RATIO_STEP } from '../config.js';
 
 let currentComponent = null;
 
@@ -32,6 +32,7 @@ function buildPanelHTML(comp) {
   const offset   = comp.apertureCenterOffset  ?? 0;
   const segments = comp.arraySegments         ?? 3;
   const sizeRatio = comp.arraySizeRatio        ?? 0.8;
+  const positionRatio = comp.arrayPositionRatio ?? 1.0;
   const inheritColor = comp.rayColorInheritFromParent ?? true;
   // Non-entry composite members have all ray controls locked in the UI;
   // only the entry port may be edited. Ray propagation still flows normally.
@@ -102,14 +103,19 @@ function buildPanelHTML(comp) {
     <div class="rp-section rp-array-section" id="rp-array-section" style="display:${arrayDisplay}">
       <div class="rp-section-title">Array Settings</div>
       <div class="rp-field">
-        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Segments</label>
+        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Num of sub-aperture</label>
         <input type="number" id="rp-segments" class="rp-number"
                min="1" max="10" step="1" value="${segments}"${compLocked ? ' disabled' : ''}>
       </div>
       <div class="rp-field">
-        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Size Ratio <span class="rp-value" id="rp-size-ratio-val">${sizeRatio.toFixed(2)}</span></label>
+        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Size of sub-aperture <span class="rp-value" id="rp-size-ratio-val">${sizeRatio.toFixed(2)}</span></label>
         <input type="range" id="rp-size-ratio" class="rp-slider"
-               min="0" max="1" step="${ARRAY_SIZE_RATIO_STEP}" value="${sizeRatio}"${compLocked ? ' disabled' : ''}>
+               min="0" max="2" step="${ARRAY_SIZE_RATIO_STEP}" value="${sizeRatio}"${compLocked ? ' disabled' : ''}>
+      </div>
+      <div class="rp-field">
+        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Position of sub-aperture <span class="rp-value" id="rp-position-ratio-val">${positionRatio.toFixed(2)}</span></label>
+        <input type="range" id="rp-position-ratio" class="rp-slider"
+               min="0" max="2" step="${ARRAY_POSITION_RATIO_STEP}" value="${positionRatio}"${compLocked ? ' disabled' : ''}>
       </div>
     </div>
   `;
@@ -246,6 +252,14 @@ function wireEvents(body) {
     const v = parseFloat(e.target.value);
     body.querySelector('#rp-size-ratio-val').textContent = v.toFixed(2);
     currentComponent.setArraySizeRatio(v);
+    apply();
+  });
+
+  get('rp-position-ratio').addEventListener('input', e => {
+    if (!currentComponent) return;
+    const v = parseFloat(e.target.value);
+    body.querySelector('#rp-position-ratio-val').textContent = v.toFixed(2);
+    currentComponent.setArrayPositionRatio(v);
     apply();
   });
 }

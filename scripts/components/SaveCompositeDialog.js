@@ -660,6 +660,7 @@ function _buildAndSaveComposite() {
             upVector:            { x: comp.upVector.x, y: comp.upVector.y },
             arraySegments:       comp.arraySegments       ?? 5,
             arraySizeRatio:      comp.arraySizeRatio      ?? 0.8,
+            arrayPositionRatio:  comp.arrayPositionRatio  ?? 1.0,
             rayPolygonColor:             comp.rayPolygonColor             || '#00ffff',
             rayPolygonOpacity:           comp.rayPolygonOpacity           ?? 0.2,
             rayColorInheritFromParent:   comp.rayColorInheritFromParent   ?? true,

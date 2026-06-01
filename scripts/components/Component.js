@@ -4,6 +4,7 @@ import {
   DEFAULT_APERTURE_CENTER_OFFSET,
   DEFAULT_ARRAY_SEGMENTS,
   DEFAULT_ARRAY_SIZE_RATIO,
+  DEFAULT_ARRAY_POSITION_RATIO,
   MAX_ARRAY_SEGMENTS
 } from '../config.js';
 
@@ -73,6 +74,7 @@ export class Component {
     this.apertureCenterOffset = config.apertureCenterOffset ?? DEFAULT_APERTURE_CENTER_OFFSET;
     this.arraySegments = config.arraySegments ?? DEFAULT_ARRAY_SEGMENTS;
     this.arraySizeRatio = config.arraySizeRatio ?? DEFAULT_ARRAY_SIZE_RATIO;
+    this.arrayPositionRatio = config.arrayPositionRatio ?? DEFAULT_ARRAY_POSITION_RATIO;
 
     // Compute aperture points (depends on rayShape, radius, offset, array params)
     this.aperturePoints = this._getAperturePoints();
@@ -136,23 +138,26 @@ export class Component {
       // Slot centers are evenly spaced over the full aperture span regardless of
       // arraySizeRatio, so segments shrink/expand around their own centers.
       //
-      //   slotLen  = totalSpan / n          (fixed slot width per segment)
-      //   segLen   = arraySizeRatio * slotLen  (actual drawn length, ≤ slotLen)
-      //   center_i = r - slotLen * (i + 0.5)  (fixed, from +r downward)
-      //   segTop_i = center_i + segLen / 2
-      //   segBot_i = center_i - segLen / 2
+      //   slotLen        = totalSpan / n              (fixed slot width per segment)
+      //   segLen         = arraySizeRatio * slotLen     (sub-aperture size; >1 → overlap)
+      //   initialSpacing = segLen                       (spacing when positionRatio = 1)
+      //   targetSpacing  = segLen * arrayPositionRatio  (actual center-to-center spacing)
+      //   center_i       = targetSpacing * ((n-1)/2 - i)  (symmetric around aperture center)
+      //   segTop_i       = center_i + segLen / 2
+      //   segBot_i       = center_i - segLen / 2
       const n = this.arraySegments;
       const totalSpan = 2 * r;
-      const ratio = Math.max(0, Math.min(1, this.arraySizeRatio));
+      const ratio = Math.max(0, this.arraySizeRatio);
       const slotLen = totalSpan / n;
       const segLen = ratio * slotLen;
       const half = segLen / 2;
+      const targetSpacing = segLen * Math.max(0, this.arrayPositionRatio);
       const points = [];
 
       for (let i = 0; i < n; i++) {
-        const slotCenter = r - slotLen * (i + 0.5);
-        const segTop = slotCenter + half;
-        const segBot = slotCenter - half;
+        const center = targetSpacing * ((n - 1) / 2 - i);
+        const segTop = center + half;
+        const segBot = center - half;
         points.push(
           { x: ec.x + ux * segTop, y: ec.y + uy * segTop },
           { x: ec.x + ux * segBot, y: ec.y + uy * segBot }
@@ -256,7 +261,12 @@ export class Component {
   }
 
   setArraySizeRatio(ratio) {
-    this.arraySizeRatio = Math.max(0, Math.min(1, ratio));
+    this.arraySizeRatio = Math.max(0, ratio);
+    this.aperturePoints = this._getAperturePoints();
+  }
+
+  setArrayPositionRatio(ratio) {
+    this.arrayPositionRatio = Math.max(0, ratio);
     this.aperturePoints = this._getAperturePoints();
   }
 
@@ -401,7 +411,8 @@ export class Component {
       coneAngle: this.coneAngle,
       rayShape: this.rayShape,
       arraySegments: this.arraySegments,
-      arraySizeRatio: this.arraySizeRatio
+      arraySizeRatio: this.arraySizeRatio,
+      arrayPositionRatio: this.arrayPositionRatio
     };
   }
 
