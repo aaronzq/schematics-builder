@@ -5,6 +5,7 @@ import {
 import { removeRotationHandle } from './RotationHandle.js';
 import { removeScaleHandle } from './ScaleHandle.js';
 import { removeArrowHandle } from './ArrowHandle.js';
+import { removeUnifiedBoundingBox } from './InteractionHandlers.js';
 import { canvas } from '../Canvas.js';
 import { updateRays } from '../rays/DrawRays.js';
 import { toggleApertureRays } from '../rays/ApertureRays.js';
@@ -213,22 +214,35 @@ export function setupComponentButtons() {
   console.log('Component buttons initialized');
 }
 
+function performDelete() {
+  if (componentManager.selectedIds.size > 0) {
+    const idsToDelete = Array.from(componentManager.selectedIds);
+    idsToDelete.forEach(id => componentManager.deleteComponent(id));
+    removeRotationHandle();
+    removeScaleHandle();
+    removeArrowHandle();
+    removeUnifiedBoundingBox();
+    updateRays();
+    updateToolbarButtons();
+  }
+}
+
 export function setupActionButtons() {
   // Delete button
   const deleteBtn = document.getElementById('delete-btn');
   if (deleteBtn) {
-    deleteBtn.addEventListener('click', () => {
-      if (componentManager.selectedIds.size > 0) {
-        const idsToDelete = Array.from(componentManager.selectedIds);
-        idsToDelete.forEach(id => componentManager.deleteComponent(id));
-        removeRotationHandle();
-        removeScaleHandle();
-        removeArrowHandle();
-        updateRays();
-        updateToolbarButtons();
-      }
-    });
+    deleteBtn.addEventListener('click', performDelete);
   }
+
+  // Keyboard Delete / Backspace
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Delete' || e.key === 'Backspace') {
+      // Skip if focus is inside a text input to avoid interfering with typing
+      const tag = document.activeElement && document.activeElement.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      performDelete();
+    }
+  });
 
   // Flip horizontal button
   const flipHorizontalBtn = document.getElementById('flip-horizontal-btn');
