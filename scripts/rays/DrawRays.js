@@ -135,7 +135,16 @@ function applyRayHighlight() {
     if (overlay.childElementCount === 0) return;
 
     if (canvas) {
-        canvas.appendChild(overlay);
+        // Prefer inserting before the components group so highlights sit beneath component drawings
+        const schematicsGroup = document.getElementById('schematics');
+        if (schematicsGroup) {
+            canvas.insertBefore(overlay, schematicsGroup);
+        } else if (rayGroup && rayGroup.parentNode) {
+            // Fallback: insert right after the ray group
+            rayGroup.parentNode.insertBefore(overlay, rayGroup.nextSibling);
+        } else {
+            canvas.appendChild(overlay);
+        }
     } else {
         rayGroup.insertAdjacentElement('afterend', overlay);
     }
