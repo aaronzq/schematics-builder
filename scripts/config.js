@@ -56,8 +56,13 @@ export const DEFAULT_APERTURE_RADIUS = 15;  // Default aperture radius for compo
 export const DEFAULT_CONE_ANGLE = 0;        // Default cone angle in degrees (0 = collimated)
 export const DEFAULT_APERTURE_CENTER_OFFSET = 0;  // Signed offset along upVector (manual/array)
 export const DEFAULT_ARRAY_SEGMENTS = 5;    // Default number of segments for array ray shape
-export const DEFAULT_ARRAY_GAP = 0;         // Default gap between array segments (local units)
+export const DEFAULT_ARRAY_SIZE_RATIO = 1.0; // Default size ratio for array segments (0–1, ratio of each segment to full aperture span)
 export const MAX_ARRAY_SEGMENTS = 10;       // Maximum number of array segments
+
+// ===== Ray panel slider steps =====
+export const APERTURE_RADIUS_STEP = 1;      // Step size for aperture radius slider
+export const APERTURE_OFFSET_STEP = 1;      // Step size for center offset slider
+export const ARRAY_SIZE_RATIO_STEP = 0.05;  // Step size for array size ratio slider
 
 // ===== Ray rendering =====
 export const DEFAULT_SOLID_RAY_COLOR = '#00ffff';

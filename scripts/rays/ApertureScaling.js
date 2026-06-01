@@ -114,10 +114,14 @@ function checkLinesCross(child, parent) {
     if (!childPts || childPts.length < 2) return false;
     if (!parentPts || parentPts.length < 2) return false;
 
-    const x1 = parentPts[0].x, y1 = parentPts[0].y;  // parentUpper
-    const x2 = childPts[0].x,  y2 = childPts[0].y;   // childUpper
-    const x3 = parentPts[1].x, y3 = parentPts[1].y;  // parentLower
-    const x4 = childPts[1].x,  y4 = childPts[1].y;   // childLower
+    // Use first and last points as upper/lower extremes.
+    // For array apertures childPts has 2n points; pts[0] is the top of the first
+    // segment and pts[length-1] is the bottom of the last — the true full extent.
+    // For standard 2-point shapes this is identical to [0] and [1].
+    const x1 = parentPts[0].x,                     y1 = parentPts[0].y;                     // parentUpper
+    const x2 = childPts[0].x,                      y2 = childPts[0].y;                      // childUpper
+    const x3 = parentPts[parentPts.length - 1].x,  y3 = parentPts[parentPts.length - 1].y;  // parentLower
+    const x4 = childPts[childPts.length - 1].x,    y4 = childPts[childPts.length - 1].y;    // childLower
 
     const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
     if (Math.abs(denom) < 1e-10) return false;
@@ -157,8 +161,8 @@ export function applyApertureScaling(child, parent) {
     // However, intra-composite cascades — where the parent is a sibling in the same
     // composite instance — must still propagate so that adjusting the entry port
     // correctly updates all downstream members.
-    // Manual: user controls radius directly — skip auto-scaling
-    if (child.rayShape === 'manual') return;
+    // Manual / Array: user controls radius directly — skip auto-scaling
+    if (child.rayShape === 'manual' || child.rayShape === 'array') return;
 
     // Convergent: child aperture is independent of parent — skip auto-scaling.
     // The polygon converges to the child's own aperture centre; the user controls

@@ -360,9 +360,9 @@ The ray system visualizes optical paths between connected components using color
 - **Geometry**: Multiple 4-vertex polygons, one per matching segment pair
 - **Vertices per segment**: `[parentSegTop[i], childSegTop[i], childSegBot[i], parentSegBot[i]]`
 - **Use Case**: Fiber bundles, multi-element apertures, segmented beam splitters
-- **Parameters**: `arraySegments` (1–10) and `arrayGap` (gap between segments in local units)
-- **Aperture Scaling**: Same projection-based scaling as collimated; gaps scale proportionally
-- **Array-to-Array**: Both parent and child must be 'array'; segments connect pairwise (min count used)
+- **Parameters**: `arraySegments` (1–10) and `arraySizeRatio` (0–1, ratio of each segment's length to full aperture span / n; UI shows 0–1, mapped in background)
+- **Aperture Scaling**: Same projection-based scaling as collimated; segment sizes scale proportionally with `apertureRadius`
+- **Array-to-Array**: Both parent and child must be 'array'; segments connect with center-aligned pairing (center `min(n_p, n_c)` segments matched; outer extras ignored)
 
 #### 5.3 Single-Ray-Per-Component Model
 
@@ -379,7 +379,7 @@ per-component model rather than per-connection ray arrays.
     apertureRadius: 15,              // Half-width of aperture in local units
     apertureCenterOffset: 0,         // Signed offset along upVector (manual & array only)
     arraySegments: 5,                // Number of segments (array only)
-    arrayGap: 0,                     // Gap between segments in local units (array only)
+    arraySizeRatio: 0.8,             // Segment size ratio 0–1 (array only; UI: 0–1, real ratio = arraySizeRatio/n)
     coneAngle: 0,                    // Half-angle in degrees (divergent/convergent)
 }
 ```
@@ -432,8 +432,8 @@ newRadius    = childRadius × scalingRatio
 **Manual — No Auto-Scaling**: Manual mode skips radius scaling entirely. Only `coneAngle` is computed and stored from geometry for display in the ray panel.
 
 **Array Aperture Scaling**:
-- When **parent is array or collimated**: child 'array' uses the same projection-based radius scaling. Segments rescale proportionally (derived from `apertureRadius`); `arrayGap` is re-clamped after radius changes.
-- When **child is array but parent is not array**: child is treated as **manual** — `apertureRadius`, `apertureCenterOffset`, `arraySegments`, and `arrayGap` are all user-controlled with no auto-scaling.
+- When **parent is array or collimated**: child 'array' uses the same projection-based radius scaling. Segments rescale proportionally (derived from `apertureRadius`); `arraySizeRatio` stays unchanged.
+- When **child is array but parent is not array**: child draws a single polygon spanning its full aperture extent (manual-style). `apertureRadius`, `apertureCenterOffset`, `arraySegments`, and `arraySizeRatio` are all user-controlled with no auto-scaling.
 
 **Divergent Scaling**:
 ```javascript
@@ -951,7 +951,7 @@ document.getElementById('center-all-btn').addEventListener('click', () => {
     rayPolygonOpacity: number
     rayColorInheritFromParent: boolean
     arraySegments: number     // array mode only (1-10)
-    arrayGap: number          // array mode only (gap between segments in local units)
+    arraySizeRatio: number     // array mode only (0–1; real seg ratio per segment = arraySizeRatio/n)
 
     // Arrow handle
     arrowVector: { x, y }     // offset from centerPoint world pos to arrow tip
@@ -1045,7 +1045,7 @@ localToWorld(localX, localY) {
 | `coneAngle` | `number` | `0` | Half-angle of illumination cone in degrees |
 | `rayShape` | `string` | `'collimated'` | One of: `collimated`, `divergent`, `convergent`, `manual`, `array` |
 | `arraySegments` | `number` | `5` | Sub-aperture segment count (array mode only; max 10) |
-| `arrayGap` | `number` | `0` | Gap between segments in local units (array mode only; clamped) |
+| `arraySizeRatio` | `number` | `0.8` | Ratio of each segment's length to full-aperture-span/n (array mode only; 0–1) |
 
 #### Effective aperture center
 
@@ -1067,22 +1067,29 @@ effectiveCenter = apertureCenter + upVector × apertureCenterOffset
 
 #### Array segment geometry
 
-For `n` segments, gap `g`, and aperture radius `r`:
+For `n` segments, size ratio `s` (`arraySizeRatio` ∈ [0,1]), and aperture radius `r`:
 ```
 totalSpan     = 2 × r
-segmentLength = (totalSpan − (n−1) × g) / n
+segmentLength = (s / n) × totalSpan
+gap           = (totalSpan − n × segmentLength) / (n − 1)   [n > 1; else 0]
 ```
 Walking from upper (+r) to lower (−r) along `upVector`:
 ```
 seg[0].top = effectiveCenter + upVector × r
 seg[0].bot = seg[0].top − upVector × segmentLength
-  (gap g)
-seg[1].top = seg[0].bot − upVector × g
+  (gap)
+seg[1].top = seg[0].bot − upVector × gap
   ...
 ```
-**Gap clamping**: `arrayGap` ∈ `[0, 2r / (n−1)]` when `n > 1`; forced to `0` when `n = 1`.
-
+`arraySizeRatio = 1` → segments fill entire aperture with no gaps.  
+`arraySizeRatio = 0` → zero-width segments (gap only).  
 **Segment count limit**: `arraySegments` ∈ `[1, MAX_ARRAY_SEGMENTS]` (= 10).
+
+#### Array ray polygon drawing rules
+
+- **Non-array parent → array child**: Single 4-vertex polygon `[parentUpper, childTop, childBottom, parentLower]` spanning the full child aperture extent.
+- **Array parent → array child (same segment count)**: N polygons, one per segment pair `[parentSegTop[i], childSegTop[i], childSegBot[i], parentSegBot[i]]`.
+- **Array parent → array child (different segment counts)**: Center-aligned pairing with `n = min(n_p, n_c)`. Offsets: `parentOffset = ⌊(n_p − n) / 2⌋`, `childOffset = ⌊(n_c − n) / 2⌋`. Outer segments on the larger side are not connected.
 
 #### Trace lines (in `TraceLines.js`)
 Dotted lines connect parent `apertureCenter` → child `apertureCenter` in world space (`getApertureCenterWorld()`).

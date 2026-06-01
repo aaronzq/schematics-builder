@@ -3,7 +3,7 @@ import {
   ARROW_LENGTH,
   DEFAULT_APERTURE_CENTER_OFFSET,
   DEFAULT_ARRAY_SEGMENTS,
-  DEFAULT_ARRAY_GAP,
+  DEFAULT_ARRAY_SIZE_RATIO,
   MAX_ARRAY_SEGMENTS
 } from '../config.js';
 
@@ -72,7 +72,7 @@ export class Component {
     // apertureCenter. The original apertureCenter is preserved for easy reset/undo.
     this.apertureCenterOffset = config.apertureCenterOffset ?? DEFAULT_APERTURE_CENTER_OFFSET;
     this.arraySegments = config.arraySegments ?? DEFAULT_ARRAY_SEGMENTS;
-    this.arrayGap = config.arrayGap ?? DEFAULT_ARRAY_GAP;
+    this.arraySizeRatio = config.arraySizeRatio ?? DEFAULT_ARRAY_SIZE_RATIO;
 
     // Compute aperture points (depends on rayShape, radius, offset, array params)
     this.aperturePoints = this._getAperturePoints();
@@ -125,20 +125,6 @@ export class Component {
     };
   }
 
-  /**
-   * Clamp arrayGap so segment length never goes negative.
-   * maxGap = 2 * apertureRadius / (segments - 1) when segments > 1, else 0.
-   */
-  _clampArrayGap() {
-    if (this.arraySegments <= 1) {
-      this.arrayGap = 0;
-      return;
-    }
-    const maxGap = (2 * this.apertureRadius) / (this.arraySegments - 1);
-    if (this.arrayGap > maxGap) this.arrayGap = maxGap;
-    if (this.arrayGap < 0) this.arrayGap = 0;
-  }
-
   _getAperturePoints() {
     const ec = this._getEffectiveApertureCenter();
     const ux = this.upVector.x;
@@ -146,25 +132,31 @@ export class Component {
     const r = this.apertureRadius;
 
     if (this.rayShape === 'array') {
-      // Array mode: equally spaced segments along the aperture span.
-      // Each segment has a top and bottom point. Gaps sit between segments.
-      this._clampArrayGap();
+      // Array mode: n segments, each centered on a fixed slot center.
+      // Slot centers are evenly spaced over the full aperture span regardless of
+      // arraySizeRatio, so segments shrink/expand around their own centers.
+      //
+      //   slotLen  = totalSpan / n          (fixed slot width per segment)
+      //   segLen   = arraySizeRatio * slotLen  (actual drawn length, ≤ slotLen)
+      //   center_i = r - slotLen * (i + 0.5)  (fixed, from +r downward)
+      //   segTop_i = center_i + segLen / 2
+      //   segBot_i = center_i - segLen / 2
       const n = this.arraySegments;
-      const totalSpan = 2 * r;                                      // full aperture span
-      const segLen = (totalSpan - (n - 1) * this.arrayGap) / n;     // length per segment
+      const totalSpan = 2 * r;
+      const ratio = Math.max(0, Math.min(1, this.arraySizeRatio));
+      const slotLen = totalSpan / n;
+      const segLen = ratio * slotLen;
+      const half = segLen / 2;
       const points = [];
 
-      // Walk from upper (+r) to lower (-r)
-      // upperEdge is the top of the first segment
-      let cursor = r; // distance from effective center along upVector
       for (let i = 0; i < n; i++) {
-        const segTop = cursor;
-        const segBot = cursor - segLen;
+        const slotCenter = r - slotLen * (i + 0.5);
+        const segTop = slotCenter + half;
+        const segBot = slotCenter - half;
         points.push(
           { x: ec.x + ux * segTop, y: ec.y + uy * segTop },
           { x: ec.x + ux * segBot, y: ec.y + uy * segBot }
         );
-        cursor = segBot - this.arrayGap; // skip gap
       }
       return points;
     }
@@ -241,7 +233,6 @@ export class Component {
 
   setApertureRadius(radius) {
     this.apertureRadius = radius;
-    this._clampArrayGap();
     this.aperturePoints = this._getAperturePoints();
   }
 
@@ -261,13 +252,11 @@ export class Component {
 
   setArraySegments(n) {
     this.arraySegments = Math.max(1, Math.min(MAX_ARRAY_SEGMENTS, Math.round(n)));
-    this._clampArrayGap();
     this.aperturePoints = this._getAperturePoints();
   }
 
-  setArrayGap(gap) {
-    this.arrayGap = Math.max(0, gap);
-    this._clampArrayGap();
+  setArraySizeRatio(ratio) {
+    this.arraySizeRatio = Math.max(0, Math.min(1, ratio));
     this.aperturePoints = this._getAperturePoints();
   }
 
@@ -397,7 +386,7 @@ export class Component {
       coneAngle: this.coneAngle,
       rayShape: this.rayShape,
       arraySegments: this.arraySegments,
-      arrayGap: this.arrayGap
+      arraySizeRatio: this.arraySizeRatio
     };
   }
 

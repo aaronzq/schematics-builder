@@ -92,11 +92,12 @@ function getPolygonsForConnection(parent, child) {
             break;
         case 'array':
             if (parent.rayShape === 'array') {
-                // Parent is array, child is array: segment-to-segment connections
+                // Parent is array, child is array: center-aligned segment-to-segment connections
                 _createArrayToArrayPolygons(parent, child, polygons);
             } else {
-                // Parent is non-array, child is array: treat child as manual
-                const arrayAsManual = _createManualPolygon(parent, child);
+                // Parent is non-array (collimated/divergent/convergent/manual), child is array:
+                // treat child as manual — connect parent upper/lower to child full extent
+                const arrayAsManual = _createArrayAsManualPolygon(parent, child);
                 if (arrayAsManual) polygons.push(arrayAsManual);
             }
             break;
@@ -221,9 +222,34 @@ function _createManualPolygon(parent, child) {
 }
 
 /**
+ * Array as manual: single 4-vertex polygon spanning the full child aperture extent.
+ * Uses child's first point (top of first segment) and last point (bottom of last segment).
+ * [parentUpper, childTop, childBottom, parentLower]
+ */
+function _createArrayAsManualPolygon(parent, child) {
+    const parentPts = parent.getAperturePointsWorld();
+    const childPts  = child.getAperturePointsWorld();
+
+    if (!parentPts || parentPts.length < 2 || !childPts || childPts.length < 2) {
+        return null;
+    }
+
+    const parentUpper = parentPts[0];
+    const parentLower = parentPts[1];
+    const childTop    = childPts[0];                        // top of first segment
+    const childBottom = childPts[child.arraySegments * 2 - 1]; // bottom of last segment
+
+    return _createPolygonElement(
+        [parentUpper, childTop, childBottom, parentLower],
+        child
+    );
+}
+
+/**
  * Array-to-Array: Multiple 4-vertex polygons, one per matching segment pair.
  * [parentSegTop[i], childSegTop[i], childSegBot[i], parentSegBot[i]]
- * Only connects the first min(parentSegments, childSegments) pairs.
+ * Uses center-aligned pairing: if counts differ, the center segments are connected
+ * and the outer ones on the side with more segments are ignored.
  */
 function _createArrayToArrayPolygons(parent, child, polygons) {
     const parentPts = parent.getAperturePointsWorld();
@@ -231,15 +257,17 @@ function _createArrayToArrayPolygons(parent, child, polygons) {
     
     if (!parentPts || !childPts) return;
     
-    // Determine number of matching segment pairs
+    // Determine number of matching segment pairs (center-aligned)
     const n = Math.min(parent.arraySegments, child.arraySegments);
+    const parentOffset = Math.floor((parent.arraySegments - n) / 2);
+    const childOffset  = Math.floor((child.arraySegments  - n) / 2);
     
     // Each segment has 2 points (top, bot), so segment i uses indices [2i, 2i+1]
     for (let i = 0; i < n; i++) {
-        const parentSegTopIdx = i * 2;
-        const parentSegBotIdx = i * 2 + 1;
-        const childSegTopIdx = i * 2;
-        const childSegBotIdx = i * 2 + 1;
+        const parentSegTopIdx = (parentOffset + i) * 2;
+        const parentSegBotIdx = (parentOffset + i) * 2 + 1;
+        const childSegTopIdx  = (childOffset  + i) * 2;
+        const childSegBotIdx  = (childOffset  + i) * 2 + 1;
         
         if (parentSegTopIdx >= parentPts.length || parentSegBotIdx >= parentPts.length ||
             childSegTopIdx >= childPts.length || childSegBotIdx >= childPts.length) {

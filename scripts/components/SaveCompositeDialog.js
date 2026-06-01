@@ -659,7 +659,7 @@ function _buildAndSaveComposite() {
             coneAngle:           comp.coneAngle           ?? 0,
             upVector:            { x: comp.upVector.x, y: comp.upVector.y },
             arraySegments:       comp.arraySegments       ?? 5,
-            arrayGap:            comp.arrayGap            ?? 0,
+            arraySizeRatio:      comp.arraySizeRatio      ?? 0.8,
             rayPolygonColor:             comp.rayPolygonColor             || '#00ffff',
             rayPolygonOpacity:           comp.rayPolygonOpacity           ?? 0.2,
             rayColorInheritFromParent:   comp.rayColorInheritFromParent   ?? true,

@@ -7,6 +7,7 @@
 import { ComponentManager, componentManager } from '../components/ComponentManager.js';
 import { updateRays } from './DrawRays.js';
 import { rebuildDebugForComponent } from '../utils/DebugLayer.js';
+import { APERTURE_RADIUS_STEP, APERTURE_OFFSET_STEP, ARRAY_SIZE_RATIO_STEP } from '../config.js';
 
 let currentComponent = null;
 
@@ -30,7 +31,7 @@ function buildPanelHTML(comp) {
   const radius   = comp.apertureRadius        ?? 15;
   const offset   = comp.apertureCenterOffset  ?? 0;
   const segments = comp.arraySegments         ?? 3;
-  const gap      = comp.arrayGap              ?? 0.5;
+  const sizeRatio = comp.arraySizeRatio        ?? 0.8;
   const inheritColor = comp.rayColorInheritFromParent ?? true;
   // Non-entry composite members have all ray controls locked in the UI;
   // only the entry port may be edited. Ray propagation still flows normally.
@@ -39,11 +40,12 @@ function buildPanelHTML(comp) {
   const arrayDisplay = shape === 'array' ? '' : 'none';
 
   // Radius slider is disabled when the parent fully controls the child aperture:
-  //   - collimated / array: always parent-controlled
+  //   - collimated: always parent-controlled
   //   - divergent with a parent that already has a non-zero cone angle
+  //   - array: user-adjustable (not auto-scaled)
   const parentComp = (comp.parent != null) ? componentManager.getComponent(comp.parent) : null;
   const divergentParentControlled = shape === 'divergent' && parentComp && parentComp.coneAngle;
-  const radiusDisabled = compLocked || (!!parentComp && (shape === 'collimated' || shape === 'array' || divergentParentControlled));
+  const radiusDisabled = compLocked || (!!parentComp && (shape === 'collimated' || divergentParentControlled));
 
   return `
     ${compLocked ? '<div class="rp-locked-notice">Locked — edit via entry port</div>' : ''}
@@ -87,13 +89,13 @@ function buildPanelHTML(comp) {
       <div class="rp-field">
         <label class="rp-label${radiusDisabled ? ' rp-label-disabled' : ''}">Aperture Radius <span class="rp-value" id="rp-radius-val">${radius}</span></label>
         <input type="range" id="rp-radius" class="rp-slider"
-               min="0" max="200" step="5" value="${radius}"${radiusDisabled ? ' disabled' : ''}>
+               min="0" max="200" step="${APERTURE_RADIUS_STEP}" value="${radius}"${radiusDisabled ? ' disabled' : ''}>
       </div>
 
       <div class="rp-field">
         <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Center Offset <span class="rp-value" id="rp-offset-val">${offset}</span></label>
         <input type="range" id="rp-offset" class="rp-slider"
-               min="-100" max="100" step="5" value="${offset}"${compLocked ? ' disabled' : ''}>
+               min="-100" max="100" step="${APERTURE_OFFSET_STEP}" value="${offset}"${compLocked ? ' disabled' : ''}>
       </div>
     </div>
 
@@ -105,9 +107,9 @@ function buildPanelHTML(comp) {
                min="1" max="10" step="1" value="${segments}"${compLocked ? ' disabled' : ''}>
       </div>
       <div class="rp-field">
-        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Gap <span class="rp-value" id="rp-gap-val">${gap.toFixed(1)}</span></label>
-        <input type="range" id="rp-gap" class="rp-slider"
-               min="0" max="2" step="0.1" value="${gap}"${compLocked ? ' disabled' : ''}>
+        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Size Ratio <span class="rp-value" id="rp-size-ratio-val">${sizeRatio.toFixed(2)}</span></label>
+        <input type="range" id="rp-size-ratio" class="rp-slider"
+               min="0" max="1" step="${ARRAY_SIZE_RATIO_STEP}" value="${sizeRatio}"${compLocked ? ' disabled' : ''}>
       </div>
     </div>
   `;
@@ -127,7 +129,7 @@ function wireEvents(body) {
   get('rp-shape').addEventListener('change', e => {
     if (!currentComponent) return;
     const newShape = e.target.value;
-    currentComponent.rayShape = newShape;
+    currentComponent.setRayShape(newShape);
     if (newShape === 'collimated') currentComponent.coneAngle = 0;
     body.querySelector('#rp-array-section').style.display =
       newShape === 'array' ? '' : 'none';
@@ -136,7 +138,7 @@ function wireEvents(body) {
     const parentComp = (currentComponent.parent != null)
       ? componentManager.getComponent(currentComponent.parent) : null;
     const divergentParentControlled = newShape === 'divergent' && parentComp && parentComp.coneAngle;
-    const radiusDisabled = !!parentComp && (newShape === 'collimated' || newShape === 'array' || divergentParentControlled);
+    const radiusDisabled = !!parentComp && (newShape === 'collimated' || divergentParentControlled);
     const radiusSlider = get('rp-radius');
     const radiusLabel  = radiusSlider?.closest('.rp-field')?.querySelector('.rp-label');
     radiusSlider.disabled = radiusDisabled;
@@ -239,11 +241,11 @@ function wireEvents(body) {
     apply();
   });
 
-  get('rp-gap').addEventListener('input', e => {
+  get('rp-size-ratio').addEventListener('input', e => {
     if (!currentComponent) return;
     const v = parseFloat(e.target.value);
-    body.querySelector('#rp-gap-val').textContent = v.toFixed(1);
-    currentComponent.setArrayGap(v);
+    body.querySelector('#rp-size-ratio-val').textContent = v.toFixed(2);
+    currentComponent.setArraySizeRatio(v);
     apply();
   });
 }

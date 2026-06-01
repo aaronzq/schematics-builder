@@ -163,7 +163,7 @@ export class ComponentManager {
       console.log(`   Children: ${component.children.length > 0 ? '[' + component.children.join(', ') + ']' : 'none'}`);
       console.log(`   Aperture: radius=${component.apertureRadius}, offset=${component.apertureCenterOffset}, shape=${component.rayShape}, coneAngle=${component.coneAngle}°`);
       if (component.rayShape === 'array') {
-        console.log(`   Array: segments=${component.arraySegments}, gap=${component.arrayGap?.toFixed(2)}`);
+        console.log(`   Array: segments=${component.arraySegments}, sizeRatio=${component.arraySizeRatio?.toFixed(2)}`);
       }
       if (component.isGrouped) {
         console.log(`   Group members: [${Array.from(component.groupMembers).join(', ')}]`);
@@ -799,7 +799,17 @@ export class ComponentManager {
       // with the correct shape, radius, offset, and array params.
       component.rayShape = member.rayShape ?? 'collimated';
       if (member.arraySegments != null) component.setArraySegments(member.arraySegments);
-      if (member.arrayGap      != null) component.setArrayGap(member.arrayGap);
+      if (member.arraySizeRatio != null) {
+        component.setArraySizeRatio(member.arraySizeRatio);
+      } else if (member.arrayGap != null) {
+        // Legacy: convert old arrayGap → arraySizeRatio
+        const r = member.apertureRadius ?? 15;
+        const n = member.arraySegments ?? 5;
+        const totalSpan = 2 * r;
+        const segLen = n > 1 ? (totalSpan - (n - 1) * member.arrayGap) / n : totalSpan;
+        const ratio = totalSpan > 0 ? Math.max(0, Math.min(1, (segLen * n) / totalSpan)) : 0.8;
+        component.setArraySizeRatio(ratio);
+      }
       component.setApertureRadius(member.apertureRadius ?? 15);
       if (member.apertureCenterOffset != null) component.setApertureCenterOffset(member.apertureCenterOffset);
 
