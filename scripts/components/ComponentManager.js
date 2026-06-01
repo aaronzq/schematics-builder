@@ -178,6 +178,7 @@ export class ComponentManager {
       const rayTarget = this.getCompositeEntryPort(component ?? null);
       ComponentManager.onSelectionChanged(rayTarget ?? null);
     }
+    document.dispatchEvent(new CustomEvent('ray:selectionChanged'));
   }
 
   deselectComponent() {
@@ -207,6 +208,7 @@ export class ComponentManager {
     if (ComponentManager.onSelectionChanged) {
       ComponentManager.onSelectionChanged(null);
     }
+    document.dispatchEvent(new CustomEvent('ray:selectionChanged'));
   }
 
   getComponent(id) {

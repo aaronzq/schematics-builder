@@ -30,7 +30,7 @@ export function drawApertureRays() {
     if (rayDisplayMode === 'none') return;
 
     // Iterate through all components with parents
-    componentManager.components.forEach((child) => {
+    componentManager.components.forEach((child, childKey) => {
         if (child.parent === null) return;
         
         const rawParent = componentManager.getComponent(child.parent);
@@ -51,6 +51,7 @@ export function drawApertureRays() {
         const polygons = getPolygonsForConnection(parent, child);
         
         polygons.forEach(polygon => {
+            polygon.dataset.childId = childKey; // Map key (integer) matches selectedIds/children
             rayGroup.appendChild(polygon);
             if (rayDisplayMode === 'both') {
                 _createEdgeLinesFromPolygon(polygon).forEach(line => rayGroup.appendChild(line));

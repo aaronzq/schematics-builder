@@ -10,7 +10,7 @@ import { canvas } from '../Canvas.js';
 import { updateRays } from '../rays/DrawRays.js';
 import { toggleApertureRays } from '../rays/ApertureRays.js';
 import { toggleTraceLines } from '../rays/TraceLines.js';
-import { showRelinkHoverBoxes, removeRelinkHoverBoxes } from './HoverHandlers.js';
+import { showRelinkHoverBoxes, removeRelinkHoverBoxes, removeHoverBox } from './HoverHandlers.js';
 import { LINK_ARROW_COLOR } from '../config.js';
 
 /**
@@ -218,6 +218,7 @@ function performDelete() {
   if (componentManager.selectedIds.size > 0) {
     const idsToDelete = Array.from(componentManager.selectedIds);
     idsToDelete.forEach(id => componentManager.deleteComponent(id));
+    removeHoverBox();
     removeRotationHandle();
     removeScaleHandle();
     removeArrowHandle();

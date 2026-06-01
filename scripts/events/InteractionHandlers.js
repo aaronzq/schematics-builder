@@ -1,4 +1,5 @@
 import { componentManager } from '../components/index.js';
+import { ComponentManager } from '../components/ComponentManager.js';
 import { showRotationHandle, removeRotationHandle, showGroupRotationHandle } from './RotationHandle.js';
 import { showScaleHandle, removeScaleHandle, showGroupScaleHandle } from './ScaleHandle.js';
 import { showArrowHandle, removeArrowHandle } from './ArrowHandle.js';
@@ -894,11 +895,18 @@ export function setupSelectionBox() {
           }
           console.log(`Selection box: Mode 3 (same group) - currentId: ${componentManager.currentId}`);
           updateToolbarButtons(); // Update toolbar after setting currentId
+          if (ComponentManager.onSelectionChanged) {
+            const focusedComp = componentManager.getComponent(componentManager.currentId);
+            ComponentManager.onSelectionChanged(componentManager.getCompositeEntryPort(focusedComp ?? null));
+          }
+          document.dispatchEvent(new CustomEvent('ray:selectionChanged'));
         } else {
           // Mode 2: No focus (mixed selection: ungrouped, or from different groups)
           componentManager.currentId = null;
           console.log(`Selection box: Mode 2 (mixed or ungrouped multi-selection)`);
           updateToolbarButtons(); // Update toolbar after clearing currentId
+          if (ComponentManager.onSelectionChanged) ComponentManager.onSelectionChanged(null);
+          document.dispatchEvent(new CustomEvent('ray:selectionChanged'));
         }
         
         // For multiple selections, remove individual component handles
@@ -925,6 +933,11 @@ export function setupSelectionBox() {
         removeUnifiedBoundingBox();
         console.log(`Selection box: Mode 1 (single component)`);
         updateToolbarButtons(); // Update toolbar after setting currentId
+        if (ComponentManager.onSelectionChanged) {
+          const singleComp = componentManager.getComponent(id);
+          ComponentManager.onSelectionChanged(componentManager.getCompositeEntryPort(singleComp ?? null));
+        }
+        document.dispatchEvent(new CustomEvent('ray:selectionChanged'));
       }
     } else {
       // No components selected - deselect everything

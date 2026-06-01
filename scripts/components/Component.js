@@ -5,7 +5,9 @@ import {
   DEFAULT_ARRAY_SEGMENTS,
   DEFAULT_ARRAY_SIZE_RATIO,
   DEFAULT_ARRAY_POSITION_RATIO,
-  MAX_ARRAY_SEGMENTS
+  MAX_ARRAY_SEGMENTS,
+  DEFAULT_SOLID_RAY_COLOR,
+  DEFAULT_RAY_POLYGON_OPACITY
 } from '../config.js';
 
 export class Component {
@@ -64,8 +66,8 @@ export class Component {
     this.apertureRadius = config.apertureRadius ?? 15;
     this.coneAngle = config.coneAngle ?? 0;
     this.rayShape = config.rayShape || 'collimated';
-    this.rayPolygonColor = config.rayPolygonColor || '#00ffff';
-    this.rayPolygonOpacity = config.rayPolygonOpacity ?? 0.2;
+    this.rayPolygonColor = config.rayPolygonColor || DEFAULT_SOLID_RAY_COLOR;
+    this.rayPolygonOpacity = config.rayPolygonOpacity ?? DEFAULT_RAY_POLYGON_OPACITY;
     this.rayColorInheritFromParent = config.rayColorInheritFromParent ?? true;
 
     // Manual / Array aperture properties

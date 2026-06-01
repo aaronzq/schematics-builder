@@ -69,7 +69,7 @@ export const ARRAY_SIZE_RATIO_STEP = 0.05;       // Step size for array size rat
 export const ARRAY_POSITION_RATIO_STEP = 0.05;   // Step size for array position ratio slider
 
 // ===== Ray rendering =====
-export const DEFAULT_SOLID_RAY_COLOR = '#00ffff';
+export const DEFAULT_SOLID_RAY_COLOR = '#0095ff';
 export const DEFAULT_RAY_POLYGON_OPACITY = 0.2;
 
 // ===== Component visibility =====

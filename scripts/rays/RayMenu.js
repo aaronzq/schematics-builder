@@ -7,7 +7,27 @@
 import { ComponentManager, componentManager } from '../components/ComponentManager.js';
 import { updateRays } from './DrawRays.js';
 import { rebuildDebugForComponent } from '../utils/DebugLayer.js';
-import { APERTURE_RADIUS_STEP, APERTURE_OFFSET_STEP, ARRAY_SIZE_RATIO_STEP, ARRAY_POSITION_RATIO_STEP } from '../config.js';
+import { APERTURE_RADIUS_STEP, APERTURE_OFFSET_STEP, ARRAY_SIZE_RATIO_STEP, ARRAY_POSITION_RATIO_STEP,
+         DEFAULT_SOLID_RAY_COLOR, DEFAULT_RAY_POLYGON_OPACITY } from '../config.js';
+
+/** Extract the 0-359 hue from either an HSL or 6-digit hex color string. */
+function _colorToHue(color) {
+  if (!color) return 0;
+  const hslMatch = color.match(/hsl\((\d+)/);
+  if (hslMatch) return parseInt(hslMatch[1]);
+  const hex = color.replace('#', '');
+  if (hex.length !== 6) return 0;
+  const r = parseInt(hex.slice(0, 2), 16) / 255;
+  const g = parseInt(hex.slice(2, 4), 16) / 255;
+  const b = parseInt(hex.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  if (d === 0) return 0;
+  let h;
+  if (max === r)      h = ((g - b) / d) % 6;
+  else if (max === g) h = (b - r) / d + 2;
+  else                h = (r - g) / d + 4;
+  return Math.round(h * 60 + 360) % 360;
+}
 
 let currentComponent = null;
 
@@ -20,14 +40,10 @@ const EMPTY_HTML = `
 `;
 
 function buildPanelHTML(comp) {
-  let hue = 180;
-  if (comp.rayPolygonColor) {
-    const m = comp.rayPolygonColor.match(/hsl\((\d+)/);
-    if (m) hue = parseInt(m[1]);
-  }
+  const hue     = _colorToHue(comp.rayPolygonColor || DEFAULT_SOLID_RAY_COLOR);
 
   const shape    = comp.rayShape              ?? 'collimated';
-  const opacity  = comp.rayPolygonOpacity     ?? 0.2;
+  const opacity  = comp.rayPolygonOpacity     ?? DEFAULT_RAY_POLYGON_OPACITY;
   const radius   = comp.apertureRadius        ?? 15;
   const offset   = comp.apertureCenterOffset  ?? 0;
   const segments = comp.arraySegments         ?? 3;

@@ -337,6 +337,10 @@ body, html {
   border-color: #b0b0b0;
 }
 
+.component-menu button:focus-visible {
+  outline: none;
+}
+
 /* Thumbnail wrapper — fills the button exactly */
 .component-thumbnail {
   width: 100%;
@@ -1301,6 +1305,17 @@ input[type="range"].single-knob {
   font-size: 11px;
   color: #f0c040;
   letter-spacing: 0.02em;
+}
+
+/* Marching-ants highlight for affected rays on component selection */
+@keyframes ray-highlight-march {
+  to { stroke-dashoffset: -22; }
+}
+
+.ray-highlight-outline {
+  animation: ray-highlight-march 0.55s linear infinite;
+  mix-blend-mode: normal;
+  stroke-opacity: 1;
 }
 
 
