@@ -229,7 +229,7 @@ export class CanvasManager {
     // Update button text if it exists
     const toggleBtn = document.getElementById('toggle-grid-btn');
     if (toggleBtn) {
-      toggleBtn.textContent = this.gridVisible ? 'Hide Grid' : 'Show Grid';
+      toggleBtn.textContent = this.gridVisible ? 'Grid On' : 'Grid Off';
     }
     
     return this.gridVisible;

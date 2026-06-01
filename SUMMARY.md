@@ -399,7 +399,7 @@ The legacy `scripts_backup/` contained a gradient system (perpendicular HSL grad
 #### 5.5 Ray Display Modes
 
 **Current (scripts/)**: Two independent toggles via toolbar buttons:
-- **Toggle Rays** (`rays-toggle-btn`) — shows/hides solid aperture ray polygons (`showApertureRays` flag in `ApertureRays.js`)
+- **Toggle Rays** (`rays-toggle-btn`) — cycles through three display modes (`rayDisplayMode` in `ApertureRays.js`): `'solid'` (solid polygon only, button: "Solid Ray") → `'both'` (solid polygon + dotted edge lines, button: "Ray + Edge") → `'none'` (hidden, button: "No Ray")
 - **Toggle Trace** (`trace-btn`) — shows/hides center dotted trace lines (`showTraceLines` flag in `TraceLines.js`)
 
 Each toggle is fully independent and re-renders on change.

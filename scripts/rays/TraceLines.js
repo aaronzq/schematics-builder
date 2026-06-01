@@ -73,10 +73,10 @@ export function toggleTraceLines() {
     
     if (showTraceLines) {
         drawTraceLines();
-        traceBtn.textContent = 'Hide Trace';
+        traceBtn.textContent = 'Trace On';
     } else {
         hideTraceLines();
-        traceBtn.textContent = 'Show Trace';
+        traceBtn.textContent = 'Trace Off';
     }
 }
 

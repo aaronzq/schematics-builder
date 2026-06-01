@@ -10,6 +10,7 @@ import { DEFAULT_SOLID_RAY_COLOR, DEFAULT_RAY_POLYGON_OPACITY } from '../config.
 
 // Ray visibility settings
 export let showApertureRays = true;
+export let rayDisplayMode = 'solid'; // 'solid' | 'both' | 'none'
 
 /**
  * Draw aperture rays connecting all parent-child component relationships.
@@ -26,6 +27,8 @@ export function drawApertureRays() {
     const rayGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
     rayGroup.setAttribute("id", "aperture-rays");
     
+    if (rayDisplayMode === 'none') return;
+
     // Iterate through all components with parents
     componentManager.components.forEach((child) => {
         if (child.parent === null) return;
@@ -49,6 +52,9 @@ export function drawApertureRays() {
         
         polygons.forEach(polygon => {
             rayGroup.appendChild(polygon);
+            if (rayDisplayMode === 'both') {
+                _createEdgeLinesFromPolygon(polygon).forEach(line => rayGroup.appendChild(line));
+            }
         });
     });
     
@@ -331,8 +337,37 @@ function _createPolygonElement(vertices, child) {
     polygon.setAttribute("fill-opacity", child.rayPolygonOpacity ?? DEFAULT_RAY_POLYGON_OPACITY);
     polygon.setAttribute("stroke", "none");
     polygon.setAttribute("pointer-events", "none");
-    
+
+    // Store edge endpoints for dotted edge line rendering ('both' mode)
+    const last = vertices.length - 1;
+    const e2start = (vertices.length === 3 && child.rayShape === 'divergent')
+        ? vertices[0] : vertices[last];
+    const e2end = (vertices.length === 3 && child.rayShape === 'divergent')
+        ? vertices[2] : vertices[last - 1];
+    polygon.dataset.edge1 = `${vertices[0].x},${vertices[0].y},${vertices[1].x},${vertices[1].y}`;
+    polygon.dataset.edge2 = `${e2start.x},${e2start.y},${e2end.x},${e2end.y}`;
+
     return polygon;
+}
+
+function _createEdgeLinesFromPolygon(polygon) {
+    const e1 = polygon.dataset.edge1;
+    const e2 = polygon.dataset.edge2;
+    if (!e1 || !e2) return [];
+
+    return [e1, e2].map(coordStr => {
+        const [x1, y1, x2, y2] = coordStr.split(',').map(Number);
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        line.setAttribute("stroke", "#333");
+        line.setAttribute("stroke-width", "1");
+        line.setAttribute("stroke-dasharray", "4,3");
+        line.setAttribute("pointer-events", "none");
+        return line;
+    });
 }
 
 // ─── Visibility controls ───────────────────────────────────────────────────
@@ -354,12 +389,27 @@ export function hideApertureRays() {
  * Toggle aperture rays visibility.
  */
 export function toggleApertureRays() {
-    showApertureRays = !showApertureRays;
-    
-    if (showApertureRays) {
-        drawApertureRays();
-    } else {
-        hideApertureRays();
+    const btn = document.getElementById('rays-toggle-btn');
+
+    switch (rayDisplayMode) {
+        case 'solid':
+            rayDisplayMode = 'both';
+            showApertureRays = true;
+            if (btn) btn.textContent = 'Ray and Contour';
+            drawApertureRays();
+            break;
+        case 'both':
+            rayDisplayMode = 'none';
+            showApertureRays = false;
+            if (btn) btn.textContent = 'No Ray';
+            hideApertureRays();
+            break;
+        case 'none':
+            rayDisplayMode = 'solid';
+            showApertureRays = true;
+            if (btn) btn.textContent = 'Only Ray';
+            drawApertureRays();
+            break;
     }
 }
 
