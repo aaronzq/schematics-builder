@@ -52,10 +52,10 @@ export const LINK_ARROW_COLOR = '#ffba0c';
 export const LINK_HOVER_BOX_COLOR = '#ffba0c';
 
 // ===== Component defaults =====
-export const DEFAULT_APERTURE_RADIUS = 15;  // Default aperture radius for components
+export const DEFAULT_APERTURE_RADIUS = 18;  // Default aperture radius for components
 export const DEFAULT_CONE_ANGLE = 0;        // Default cone angle in degrees (0 = collimated)
 export const DEFAULT_APERTURE_CENTER_OFFSET = 0;  // Signed offset along upVector (manual/array)
-export const DEFAULT_ARRAY_SEGMENTS = 5;    // Default number of segments for array ray shape
+export const DEFAULT_ARRAY_SEGMENTS = 3;    // Default number of segments for array ray shape
 export const DEFAULT_ARRAY_SIZE_RATIO = 1.0; // Default size ratio for array segments (0–1, ratio of each segment to full aperture span)
 export const MAX_ARRAY_SEGMENTS = 10;       // Maximum number of array segments
 

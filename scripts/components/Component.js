@@ -363,6 +363,21 @@ export class Component {
     return this.aperturePoints.map(p => this.localToWorld(p.x, p.y));
   }
 
+  /**
+   * Returns [upper, lower] world-space points at exactly ±apertureRadius along upVector,
+   * regardless of rayShape or arraySizeRatio. Used to get the true aperture boundary.
+   */
+  getApertureFullExtentWorld() {
+    const ec = this._getEffectiveApertureCenter();
+    const ux = this.upVector.x;
+    const uy = this.upVector.y;
+    const r = this.apertureRadius;
+    return [
+      this.localToWorld(ec.x + ux * r, ec.y + uy * r),
+      this.localToWorld(ec.x - ux * r, ec.y - uy * r)
+    ];
+  }
+
   getArrowEndpoint() {
     // Returns the absolute position of the arrow tip in world coordinates.
     // The arrow originates from the optical center (centerPoint in world space).

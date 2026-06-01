@@ -109,18 +109,34 @@ function getPolygonsForConnection(parent, child) {
 // ─── Polygon creation functions ─────────────────────────────────────────────
 
 /**
+ * Return the upper and lower world-space extent of a parent's aperture.
+ * For array parents, uses the full ±radius boundary (ignoring sub-segment size),
+ * so the extent is always at ±apertureRadius regardless of arraySizeRatio.
+ * For all other shapes the two values equal pts[0]/pts[1].
+ */
+function _getParentExtentWorld(parent) {
+    if (parent.rayShape === 'array') {
+        const [upper, lower] = parent.getApertureFullExtentWorld();
+        return { upper, lower };
+    }
+    const pts = parent.getAperturePointsWorld();
+    if (!pts || pts.length < 2) return null;
+    return { upper: pts[0], lower: pts[pts.length - 1] };
+}
+
+/**
  * Collimated: 4-vertex polygon [parentUpper, childUpper, childLower, parentLower]
  */
 function _createCollimatedPolygon(parent, child) {
-    const parentPts = parent.getAperturePointsWorld();
+    const parentExtent = _getParentExtentWorld(parent);
     const childPts = child.getAperturePointsWorld();
     
-    if (!parentPts || parentPts.length < 2 || !childPts || childPts.length < 2) {
+    if (!parentExtent || !childPts || childPts.length < 2) {
         return null;
     }
     
-    const parentUpper = parentPts[0];
-    const parentLower = parentPts[1];
+    const parentUpper = parentExtent.upper;
+    const parentLower = parentExtent.lower;
     const childUpper = childPts[0];
     const childLower = childPts[1];
     
@@ -179,15 +195,15 @@ function _createDivergentPolygon(parent, child) {
  * Also calculates and assigns child.coneAngle from the geometry.
  */
 function _createConvergentPolygon(parent, child) {
-    const parentPts = parent.getAperturePointsWorld();
+    const parentExtent = _getParentExtentWorld(parent);
     const childCenter = child.getApertureCenterWorld();
     
-    if (!parentPts || parentPts.length < 2) {
+    if (!parentExtent) {
         return null;
     }
     
-    const parentUpper = parentPts[0];
-    const parentLower = parentPts[1];
+    const parentUpper = parentExtent.upper;
+    const parentLower = parentExtent.lower;
 
     // Compute cone half-angle: angle at childCenter between axis and edge ray.
     // Axis = childCenter → parentCenter (midpoint of parentUpper/parentLower).
@@ -228,16 +244,16 @@ function _createManualPolygon(parent, child) {
  */
 function _createArrayAsManualPolygon(parent, child) {
     const parentPts = parent.getAperturePointsWorld();
-    const childPts  = child.getAperturePointsWorld();
+    // Use full ±radius extent for the child (not sub-segment endpoints)
+    const childExtent = child.getApertureFullExtentWorld();
 
-    if (!parentPts || parentPts.length < 2 || !childPts || childPts.length < 2) {
+    if (!parentPts || parentPts.length < 2 || !childExtent) {
         return null;
     }
 
     const parentUpper = parentPts[0];
-    const parentLower = parentPts[1];
-    const childTop    = childPts[0];                        // top of first segment
-    const childBottom = childPts[child.arraySegments * 2 - 1]; // bottom of last segment
+    const parentLower = parentPts[parentPts.length - 1];
+    const [childTop, childBottom] = childExtent;
 
     return _createPolygonElement(
         [parentUpper, childTop, childBottom, parentLower],
