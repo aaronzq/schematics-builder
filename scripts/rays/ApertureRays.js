@@ -69,8 +69,10 @@ export function drawApertureRays() {
  * 
  * Dispatches based on child.rayShape with special handling for array mode
  * depending on whether parent is also array mode.
+ *
+ * Exported so the composite preview dialog can reuse identical ray geometry.
  */
-function getPolygonsForConnection(parent, child) {
+export function getPolygonsForConnection(parent, child) {
     const polygons = [];
     
     switch (child.rayShape) {

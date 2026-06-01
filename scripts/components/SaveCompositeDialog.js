@@ -18,6 +18,7 @@
 import { components as componentRegistry } from './ComponentLibrary.js';
 import { saveUserComponent } from './UserComponentStore.js';
 import { COMPOSITE_DIALOG } from '../config.js';
+import { getPolygonsForConnection } from '../rays/ApertureRays.js';
 
 // ---------------------------------------------------------------------------
 // Module-level dialog state
@@ -437,16 +438,11 @@ function _buildSpatialPreview(opts = {}) {
         const parentComp = _cm.getComponent(comp.parent);
         if (!parentComp) return;
 
-        const pointsStr = _rayPolygonPoints(comp, parentComp);
-        if (!pointsStr) return;
-
-        const polygon = document.createElementNS(SVG_NS, 'polygon');
-        polygon.setAttribute('points', pointsStr);
-        polygon.setAttribute('fill', comp.rayPolygonColor || '#00ffff');
-        polygon.setAttribute('fill-opacity', comp.rayPolygonOpacity ?? 0.2);
-        polygon.setAttribute('stroke', 'none');
-        polygon.setAttribute('pointer-events', 'none');
-        rayGroup.appendChild(polygon);
+        const polygons = getPolygonsForConnection(parentComp, comp);
+        polygons.forEach(p => {
+            p.setAttribute('pointer-events', 'none');
+            rayGroup.appendChild(p);
+        });
     });
 
     svg.appendChild(rayGroup);
@@ -568,6 +564,11 @@ function _buildSpatialPreview(opts = {}) {
             wrapper.style.pointerEvents = 'none';
         }
 
+        // Hide hidden components (matches real canvas behaviour)
+        if (!comp.visible) {
+            wrapper.style.opacity = '0';
+        }
+
         // Component type name label below
         const nameLabel = document.createElementNS(SVG_NS, 'text');
         const labelY = (halfH / scale) + 8 * viewScale / scale;
@@ -593,33 +594,6 @@ function _buildSpatialPreview(opts = {}) {
 // ---------------------------------------------------------------------------
 // Build & save
 // ---------------------------------------------------------------------------
-
-/**
- * Return an SVG `points` string for a ray polygon connecting parent → child,
- * respecting the child's rayShape.
- * Returns null when geometry is unavailable.
- */
-function _rayPolygonPoints(child, parent) {
-    const childPts  = child.getAperturePointsWorld();
-    const parentPts = parent.getAperturePointsWorld();
-    if (!childPts || childPts.length < 2 || !parentPts || parentPts.length < 2) return null;
-
-    const shape = child.rayShape || 'collimated';
-    const p = (pt) => `${pt.x},${pt.y}`;
-
-    if (shape === 'divergent') {
-        // Triangle: parentCenter → childUpper → childLower
-        const pc = parent.getApertureCenterWorld();
-        return `${p(pc)} ${p(childPts[0])} ${p(childPts[1])}`;
-    }
-    if (shape === 'convergent') {
-        // Triangle: parentUpper → childCenter → parentLower
-        const cc = child.getApertureCenterWorld();
-        return `${p(parentPts[0])} ${p(cc)} ${p(parentPts[1])}`;
-    }
-    // collimated / manual / array — 4-vertex rectangle
-    return `${p(parentPts[0])} ${p(childPts[0])} ${p(childPts[1])} ${p(parentPts[1])}`;
-}
 
 function _buildAndSaveComposite() {
     const ids = state.memberIds;
@@ -666,6 +640,7 @@ function _buildAndSaveComposite() {
             rayColorInheritFromParent:   comp.rayColorInheritFromParent   ?? true,
             rayPolygonColor2:            comp.rayPolygonColor2            || comp.rayPolygonColor || '#00ffff',
             gradientEnabled:             comp.gradientEnabled             ?? false,
+            visible:                     comp.visible                     ?? true,
             internalParentIndex
         };
     });
@@ -753,15 +728,8 @@ function _buildSnapshotSvg(ids) {
         const parentComp = _cm.getComponent(comp.parent);
         if (!parentComp) return;
 
-        const pointsStr = _rayPolygonPoints(comp, parentComp);
-        if (!pointsStr) return;
-
-        const polygon = document.createElementNS(SVG_NS, 'polygon');
-        polygon.setAttribute('points', pointsStr);
-        polygon.setAttribute('fill', comp.rayPolygonColor || '#00ffff');
-        polygon.setAttribute('fill-opacity', comp.rayPolygonOpacity ?? 0.2);
-        polygon.setAttribute('stroke', 'none');
-        rayGroup.appendChild(polygon);
+        const polygons = getPolygonsForConnection(parentComp, comp);
+        polygons.forEach(p => rayGroup.appendChild(p));
     });
 
     svg.appendChild(rayGroup);
@@ -784,6 +752,9 @@ function _buildSnapshotSvg(ids) {
         tp.push(`matrix(${scale*a},${scale*b},${scale*c},${scale*d},0,0)`);
         if (cx !== 0 || cy !== 0) tp.push(`translate(${-cx},${-cy})`);
         wrapper.setAttribute('transform', tp.join(' '));
+
+        // Respect visibility (matches real canvas behaviour)
+        if (!comp.visible) wrapper.style.opacity = '0';
 
         let artwork;
         try { artwork = def.draw(SVG_NS); } catch { return; }

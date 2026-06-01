@@ -817,6 +817,9 @@ export class ComponentManager {
       component.setApertureRadius(member.apertureRadius ?? 15);
       if (member.apertureCenterOffset != null) component.setApertureCenterOffset(member.apertureCenterOffset);
 
+      // Restore visibility state before render so the initial draw is correct
+      component.visible = member.visible ?? true;
+
       // Render to SVG
       const group = component.render();
       group.setAttribute('data-id', id);

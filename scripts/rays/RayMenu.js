@@ -159,12 +159,14 @@ function wireEvents(body) {
     if (e.target.checked && currentComponent.parent != null) {
       const parentComp = componentManager.getComponent(currentComponent.parent);
       if (parentComp) {
-        currentComponent.rayPolygonColor   = parentComp.rayPolygonColor;
-        currentComponent.rayPolygonOpacity = parentComp.rayPolygonOpacity;
+        const inheritedColor   = parentComp.rayPolygonColor;
+        const inheritedOpacity = parentComp.rayPolygonOpacity;
+        currentComponent.rayPolygonColor   = inheritedColor;
+        currentComponent.rayPolygonOpacity = inheritedOpacity;
         // Sync hue slider UI
         const hueSlider = get('rp-hue');
         const hueVal    = body.querySelector('#rp-hue-val');
-        const m = parentComp.rayPolygonColor?.match(/hsl\((\d+)/);
+        const m = inheritedColor?.match(/hsl\((\d+)/);
         if (m && hueSlider) {
           hueSlider.value = m[1];
           if (hueVal) hueVal.textContent = m[1] + '°';
@@ -173,27 +175,24 @@ function wireEvents(body) {
         const opSlider = get('rp-opacity');
         const opVal    = body.querySelector('#rp-opacity-val');
         if (opSlider) {
-          opSlider.value = parentComp.rayPolygonOpacity;
-          if (opVal) opVal.textContent = parentComp.rayPolygonOpacity.toFixed(2);
+          opSlider.value = inheritedOpacity;
+          if (opVal) opVal.textContent = inheritedOpacity.toFixed(2);
         }
-        // Extract hue for propagation
-        const m2 = parentComp.rayPolygonColor?.match(/hsl\((\d+)/);
-        const inheritedHue = m2 ? parseInt(m2[1]) : null;
-        propagateColor(currentComponent, inheritedHue, parentComp.rayPolygonOpacity);
+        propagateColor(currentComponent, inheritedColor, inheritedOpacity);
         apply();
       }
     }
   });
 
-  // Propagate hue/opacity down the tree to all descendants that opt-in
-  function propagateColor(comp, hue, opacity) {
+  // Propagate color/opacity down the tree to all descendants that opt-in
+  function propagateColor(comp, color, opacity) {
     for (const childId of comp.children) {
       const child = componentManager.getComponent(childId);
       if (!child) continue;
       if (child.rayColorInheritFromParent ?? true) {
-        if (hue !== null) child.rayPolygonColor = `hsl(${hue}, 70%, 50%)`;
+        if (color !== null) child.rayPolygonColor = color;
         if (opacity !== null) child.rayPolygonOpacity = opacity;
-        propagateColor(child, hue, opacity);
+        propagateColor(child, color, opacity);
       }
     }
   }
@@ -210,8 +209,9 @@ function wireEvents(body) {
     untickInherit();
     const hue = parseInt(e.target.value);
     body.querySelector('#rp-hue-val').textContent = hue + '°';
-    currentComponent.rayPolygonColor = `hsl(${hue}, 70%, 50%)`;
-    propagateColor(currentComponent, hue, null);
+    const color = `hsl(${hue}, 70%, 50%)`;
+    currentComponent.rayPolygonColor = color;
+    propagateColor(currentComponent, color, null);
     apply();
   });
 
