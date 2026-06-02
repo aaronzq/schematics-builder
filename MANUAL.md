@@ -27,6 +27,7 @@ Open `index.html` directly in a browser — no build step, no server required (a
 | Zoom in/out | Mouse wheel or trackpad pinch |
 | Fit to canvas | Click **Fit** in the toolbar |
 | Toggle grid | Click **Grid** in the toolbar |
+| Reset canvas | Choose **Edit → Reset Canvas** |
 
 ---
 
@@ -204,6 +205,8 @@ Cut-link and Re-link on a composite's exit port operate on the **entry port's ex
 ## 8. Saving and Loading
 
 Use the **File** menu to save and load schematics.
+
+Use **Edit → Reset Canvas** to clear the current canvas. This removes all components, links, rays, selections, handles, and debug graphics from the drawing area.
 
 ### Schematic JSON
 

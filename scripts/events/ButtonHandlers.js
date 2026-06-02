@@ -10,9 +10,10 @@ import { canvas } from '../Canvas.js';
 import { updateRays } from '../rays/DrawRays.js';
 import { toggleApertureRays } from '../rays/ApertureRays.js';
 import { toggleTraceLines } from '../rays/TraceLines.js';
-import { showRelinkHoverBoxes, removeRelinkHoverBoxes, removeHoverBox } from './HoverHandlers.js';
+import { showRelinkHoverBoxes, removeRelinkHoverBoxes, removeHoverBox, clearSelectionHoverBoxes } from './HoverHandlers.js';
 import { LINK_ARROW_COLOR } from '../config.js';
 import { actionHistory } from '../history/ActionHistory.js';
+import { restoreSceneSnapshot } from '../history/HistorySnapshots.js';
 
 /**
  * Update toolbar button visibility based on selection mode
@@ -267,6 +268,33 @@ function performDelete() {
   }
 }
 
+function performResetCanvas() {
+  actionHistory.run('Reset canvas', 'reset-canvas', () => {
+    if (relinkMode.active) {
+      exitRelinkMode();
+    }
+
+    restoreSceneSnapshot({
+      idCounter: 0,
+      compositeInstanceCounter: 0,
+      currentId: null,
+      selectedIds: [],
+      nextPosition: { x: 0, y: 0 },
+      components: []
+    });
+
+    removeHoverBox();
+    clearSelectionHoverBoxes();
+    removeRotationHandle();
+    removeScaleHandle();
+    removeArrowHandle();
+    removeUnifiedBoundingBox();
+    updateRays();
+    canvas.centerAllComponents();
+    updateToolbarButtons();
+  });
+}
+
 export function setupActionButtons() {
   actionHistory.subscribe(() => {
     updateHistoryButtons();
@@ -281,6 +309,12 @@ export function setupActionButtons() {
   const redoBtn = document.getElementById('redo-btn');
   if (redoBtn) {
     redoBtn.addEventListener('click', () => actionHistory.redo());
+  }
+
+  // Reset canvas button
+  const resetCanvasBtn = document.getElementById('reset-canvas-btn');
+  if (resetCanvasBtn) {
+    resetCanvasBtn.addEventListener('click', performResetCanvas);
   }
 
   // Delete button

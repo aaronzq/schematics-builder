@@ -905,24 +905,20 @@ document.getElementById('center-all-btn').addEventListener('click', () => {
 - **Component Flipping**: Horizontal/vertical flip with reflection matrix transform
 - **Debug Visualization**: DebugLayer.js — center markers, up/forward vectors, aperture points, array segment points (toggle via `SHOW_DEBUG_DRAWING` in config.js)
 - **File I/O**: Filename editor (Google Docs-style)
-
-### ❌ Not Yet Implemented
-- **Reset Canvas**: `reset-canvas-btn` exists in HTML but has no JS handler
-- **Gallery Integration**: `gallery/index.html` exists; `saveCanvasAndNavigate()` called from HTML but not defined in scripts
-- **Gradient Rendering**: Solid color only; no HSL perpendicular gradient
-- **Multi-Ray Layers**: One polygon per parent-child pair; no stacked rays per connection
-
-### ✅ Implemented Persistence
+- **Reset Canvas**: `reset-canvas-btn` clears the scene through an empty snapshot restore and records an undoable reset action
 - **Schematic JSON Import/Export**: Snapshot-based save/load in `Fileio.js` using `captureSceneSnapshot()` / `restoreSceneSnapshot()`
 - **User Components Import/Export**: Separate JSON library files for browser-local user composites
 - **SVG Export**: Presentation export includes components plus currently enabled rays/trace; excludes grid, debug, and editing overlays
 - **Undo/Redo**: Session-only history exists and is cleared after schematic import
 - **Ray Display Mode Toggling**: No "dotted only" / "solid only" / "both" modes yet
+- **Gradient Rendering**: Solid color only; no HSL perpendicular gradient
+
+### ❌ Not Yet Implemented
+- **Gallery Integration**: `gallery/index.html` exists; `saveCanvasAndNavigate()` called from HTML but not defined in scripts
+- **Multi-Ray Layers**: One polygon per parent-child pair; no stacked rays per connection
 
 
 ## Core Architecture Concepts
-
-
 
 ### 2. Component State & Hierarchy
 
@@ -1275,12 +1271,11 @@ Export SVG: clone presentation layers, excluding grid/debug/editing overlays
 14. Filename editor
 
 ### Not Yet Implemented ❌
-1. Reset canvas (HTML button exists, no handler)
-2. Gallery integration (`saveCanvasAndNavigate()` not defined in scripts)
-3. Multi-ray layers per parent-child connection
-8. Ray display mode cycling (both / dotted only / solid only)
-9. Component preview tooltips
-10. Keyboard shortcuts
+1. Gallery integration (`saveCanvasAndNavigate()` not defined in scripts)
+2. Multi-ray layers per parent-child connection
+3. Ray display mode cycling (both / dotted only / solid only)
+4. Component preview tooltips
+5. Keyboard shortcuts
 
 ## Key Implementation Rules
 
