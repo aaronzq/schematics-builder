@@ -1056,6 +1056,10 @@ export class ComponentManager {
       }
 
       console.log(`Ungrouped ${nonCompositeIds.size} non-composite component(s): [${Array.from(nonCompositeIds).join(', ')}]`);
+      const compositeIds = new Set();
+      compositeInstanceMap.forEach(instanceIds => {
+        instanceIds.forEach(id => compositeIds.add(id));
+      });
       if (compositeIds.size > 0) {
         console.log(`Composite members preserved: [${Array.from(compositeIds).join(', ')}]`);
       }

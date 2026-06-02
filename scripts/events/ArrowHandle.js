@@ -6,6 +6,7 @@ import {
   ARROW_TIP_SNAP_SIZE
 } from '../config.js';
 import { ensureArrowheadMarker } from '../utils/svgUtils.js';
+import { actionHistory } from '../history/ActionHistory.js';
 
 /**
  * Shows an arrow for the specified component
@@ -90,6 +91,7 @@ function setupArrowDragging(handle, line, componentId, centerX, centerY) {
   let isDragging = false;
 
   handle.addEventListener('mousedown', (e) => {
+    actionHistory.begin('Move spawn arrow', 'move-arrow');
     isDragging = true;
     componentManager.ignoreNextCanvasClick = true;
     e.stopPropagation(); // Prevent component dragging
@@ -134,6 +136,7 @@ function setupArrowDragging(handle, line, componentId, centerX, centerY) {
       componentManager.ignoreNextCanvasClick = true;
       // Update nextPosition to the arrow tip after dragging
       componentManager.updateNextPositionFromComponent(componentId);
+      actionHistory.commit();
       console.log(`Arrow handle dragging completed for component [ID: ${componentId}]`);
     }
   });

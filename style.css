@@ -460,6 +460,18 @@ body, html {
   color: #000;
 }
 
+.tool-btn:disabled {
+  cursor: default;
+  color: #aaa;
+  opacity: 0.55;
+}
+
+.tool-btn:disabled:hover {
+  background: transparent;
+  border-color: transparent;
+  color: #aaa;
+}
+
 /* Icons sizing */
 .tool-btn span.material-symbols-outlined {
   font-size: 18px;

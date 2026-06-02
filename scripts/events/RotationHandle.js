@@ -17,6 +17,7 @@ import {
 } from './HoverHandlers.js';
 import { showUnifiedBoundingBox, removeUnifiedBoundingBox, getUnifiedBoundingBoxBounds } from './InteractionHandlers.js';
 import { updateRays } from '../rays/DrawRays.js';
+import { actionHistory } from '../history/ActionHistory.js';
 
 export function showRotationHandle(componentId) {
   removeRotationHandle();
@@ -135,6 +136,7 @@ function setupGroupRotationHandleDrag(handle, centroid) {
 
   handle.addEventListener('mousedown', (e) => {
     e.stopPropagation();
+    actionHistory.begin('Rotate selection', 'rotate-components');
     isDragging = true;
     handle.style.cursor = 'grabbing';
     
@@ -287,6 +289,8 @@ function setupGroupRotationHandleDrag(handle, centroid) {
     
     document.removeEventListener('mousemove', handleDrag);
     document.removeEventListener('mouseup', handleEnd);
+
+    actionHistory.commit();
     
     // Show unified bounding box and handles after rotation finishes
     showUnifiedBoundingBox();
@@ -301,6 +305,7 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
 
   handle.addEventListener('mousedown', (e) => {
     e.stopPropagation();
+    actionHistory.begin('Rotate component', 'rotate-component');
     isDragging = true;
     handle.style.cursor = 'grabbing';
     const svg = document.getElementById('canvas');
@@ -395,6 +400,8 @@ function setupRotationHandleDrag(handle, componentId, centerX, centerY) {
     
     document.removeEventListener('mousemove', handleDrag);
     document.removeEventListener('mouseup', handleEnd);
+
+    actionHistory.commit();
     
     showRotationHandle(componentId);
   }

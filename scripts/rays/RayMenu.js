@@ -9,6 +9,7 @@ import { updateRays } from './DrawRays.js';
 import { rebuildDebugForComponent } from '../utils/DebugLayer.js';
 import { APERTURE_RADIUS_STEP, APERTURE_OFFSET_STEP, ARRAY_SIZE_RATIO_STEP, ARRAY_POSITION_RATIO_STEP,
          DEFAULT_SOLID_RAY_COLOR, DEFAULT_RAY_POLYGON_OPACITY } from '../config.js';
+import { actionHistory } from '../history/ActionHistory.js';
 
 /** Extract the 0-359 hue from either an HSL or 6-digit hex color string. */
 function _colorToHue(color) {
@@ -180,65 +181,77 @@ function wireEvents(body) {
     rebuildDebugForComponent(currentComponent);
   };
 
+  const beginControlHistory = (label, type) => {
+    if (!actionHistory.isApplyingHistory) actionHistory.begin(label, type);
+  };
+
+  const commitControlHistory = () => {
+    if (!actionHistory.isApplyingHistory) actionHistory.commit();
+  };
+
   get('rp-shape').addEventListener('change', e => {
-    if (!currentComponent) return;
-    const newShape = e.target.value;
-    currentComponent.setRayShape(newShape);
-    if (newShape === 'collimated') currentComponent.coneAngle = 0;
-    body.querySelector('#rp-array-section').style.display =
-      newShape === 'array' ? '' : 'none';
+    actionHistory.run('Change ray shape', 'ray-shape', () => {
+      if (!currentComponent) return;
+      const newShape = e.target.value;
+      currentComponent.setRayShape(newShape);
+      if (newShape === 'collimated') currentComponent.coneAngle = 0;
+      body.querySelector('#rp-array-section').style.display =
+        newShape === 'array' ? '' : 'none';
 
-    // Re-evaluate whether the radius slider should be enabled or disabled.
-    const parentComp = (currentComponent.parent != null)
-      ? componentManager.getComponent(currentComponent.parent) : null;
-    const divergentParentControlled = newShape === 'divergent' && parentComp && parentComp.coneAngle;
-    const radiusDisabled = !!parentComp && (newShape === 'collimated' || divergentParentControlled);
-    const radiusSlider = get('rp-radius');
-    const radiusLabel  = radiusSlider?.closest('.rp-field')?.querySelector('.rp-label');
-    radiusSlider.disabled = radiusDisabled;
-    if (radiusLabel) radiusLabel.classList.toggle('rp-label-disabled', radiusDisabled);
+      // Re-evaluate whether the radius slider should be enabled or disabled.
+      const parentComp = (currentComponent.parent != null)
+        ? componentManager.getComponent(currentComponent.parent) : null;
+      const divergentParentControlled = newShape === 'divergent' && parentComp && parentComp.coneAngle;
+      const radiusDisabled = !!parentComp && (newShape === 'collimated' || divergentParentControlled);
+      const radiusSlider = get('rp-radius');
+      const radiusLabel  = radiusSlider?.closest('.rp-field')?.querySelector('.rp-label');
+      radiusSlider.disabled = radiusDisabled;
+      if (radiusLabel) radiusLabel.classList.toggle('rp-label-disabled', radiusDisabled);
 
-    apply();
+      apply();
+    });
   });
 
   get('rp-inherit-color').addEventListener('change', e => {
-    if (!currentComponent) return;
-    currentComponent.rayColorInheritFromParent = e.target.checked;
-    if (e.target.checked && currentComponent.parent != null) {
-      const parentComp = componentManager.getComponent(currentComponent.parent);
-      if (parentComp) {
-        const inheritedColor    = parentComp.rayPolygonColor;
-        const inheritedOpacity  = parentComp.rayPolygonOpacity;
-        const inheritedGradient = parentComp.rayGradientEnabled;
-        const inheritedColor2   = parentComp.rayPolygonColor2;
-        currentComponent.rayPolygonColor    = inheritedColor;
-        currentComponent.rayPolygonOpacity  = inheritedOpacity;
-        currentComponent.rayGradientEnabled = inheritedGradient;
-        currentComponent.rayPolygonColor2   = inheritedColor2;
-        // Sync knob1 position
-        const knob1 = get('rp-knob1');
-        const knob2 = get('rp-knob2');
-        const hueVal = body.querySelector('#rp-hue-val');
-        const h1 = _colorToHue(inheritedColor);
-        const h2 = _colorToHue(inheritedColor2);
-        if (knob1) knob1.style.left = `${(h1/359*100).toFixed(2)}%`;
-        if (knob2) knob2.style.left = `${(h2/359*100).toFixed(2)}%`;
-        if (knob2) knob2.style.display = inheritedGradient ? 'block' : 'none';
-        const gradCb = get('rp-gradient');
-        if (gradCb) gradCb.checked = inheritedGradient;
-        if (hueVal) hueVal.innerHTML = inheritedGradient ? `${h1}&#176; / ${h2}&#176;` : `${h1}&#176;`;
-        // Sync opacity slider UI
-        const opSlider = get('rp-opacity');
-        const opVal    = body.querySelector('#rp-opacity-val');
-        if (opSlider) {
-          opSlider.value = inheritedOpacity;
-          syncSliderProgress(opSlider);
-          if (opVal) opVal.textContent = inheritedOpacity.toFixed(2);
+    actionHistory.run('Toggle color inheritance', 'ray-inherit-color', () => {
+      if (!currentComponent) return;
+      currentComponent.rayColorInheritFromParent = e.target.checked;
+      if (e.target.checked && currentComponent.parent != null) {
+        const parentComp = componentManager.getComponent(currentComponent.parent);
+        if (parentComp) {
+          const inheritedColor    = parentComp.rayPolygonColor;
+          const inheritedOpacity  = parentComp.rayPolygonOpacity;
+          const inheritedGradient = parentComp.rayGradientEnabled;
+          const inheritedColor2   = parentComp.rayPolygonColor2;
+          currentComponent.rayPolygonColor    = inheritedColor;
+          currentComponent.rayPolygonOpacity  = inheritedOpacity;
+          currentComponent.rayGradientEnabled = inheritedGradient;
+          currentComponent.rayPolygonColor2   = inheritedColor2;
+          // Sync knob1 position
+          const knob1 = get('rp-knob1');
+          const knob2 = get('rp-knob2');
+          const hueVal = body.querySelector('#rp-hue-val');
+          const h1 = _colorToHue(inheritedColor);
+          const h2 = _colorToHue(inheritedColor2);
+          if (knob1) knob1.style.left = `${(h1/359*100).toFixed(2)}%`;
+          if (knob2) knob2.style.left = `${(h2/359*100).toFixed(2)}%`;
+          if (knob2) knob2.style.display = inheritedGradient ? 'block' : 'none';
+          const gradCb = get('rp-gradient');
+          if (gradCb) gradCb.checked = inheritedGradient;
+          if (hueVal) hueVal.innerHTML = inheritedGradient ? `${h1}&#176; / ${h2}&#176;` : `${h1}&#176;`;
+          // Sync opacity slider UI
+          const opSlider = get('rp-opacity');
+          const opVal    = body.querySelector('#rp-opacity-val');
+          if (opSlider) {
+            opSlider.value = inheritedOpacity;
+            syncSliderProgress(opSlider);
+            if (opVal) opVal.textContent = inheritedOpacity.toFixed(2);
+          }
+          propagateColor(currentComponent, inheritedColor, inheritedOpacity, inheritedGradient, inheritedColor2);
+          apply();
         }
-        propagateColor(currentComponent, inheritedColor, inheritedOpacity, inheritedGradient, inheritedColor2);
-        apply();
       }
-    }
+    });
   });
 
   // Propagate color/opacity/gradient down the tree to all descendants that opt-in.
@@ -286,6 +299,7 @@ function wireEvents(body) {
     knobEl.addEventListener('mousedown', e => {
       e.preventDefault();
       e.stopPropagation();
+      actionHistory.begin(isKnob1 ? 'Change ray color' : 'Change gradient color', 'ray-color');
 
       // Activate this knob visually
       const otherKnob = get(isKnob1 ? 'rp-knob2' : 'rp-knob1');
@@ -322,6 +336,7 @@ function wireEvents(body) {
       const onUp = () => {
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
+        actionHistory.commit();
       };
 
       document.addEventListener('mousemove', onMove);
@@ -338,33 +353,36 @@ function wireEvents(body) {
   const gradientCb = get('rp-gradient');
   if (gradientCb) {
     gradientCb.addEventListener('change', e => {
-      if (!currentComponent) return;
-      untickInherit();
-      const enabled = e.target.checked;
-      currentComponent.rayGradientEnabled = enabled;
-      if (enabled) {
-        const h1 = _colorToHue(currentComponent.rayPolygonColor);
-        const spacedHue = (h1 + 30) % 360;
-        currentComponent.rayPolygonColor2 = _hueToRayColor(spacedHue);
-        if (knob2El) _setKnobHue(knob2El, spacedHue, false);
-        propagateColor(currentComponent, null, null, null, currentComponent.rayPolygonColor2);
-      }
-      // Show/hide knob2
-      if (knob2El) knob2El.style.display = enabled ? 'block' : 'none';
-      // Update value label
-      const hueVal = body.querySelector('#rp-hue-val');
-      if (hueVal) {
-        const h1 = _colorToHue(currentComponent.rayPolygonColor);
-        const h2 = _colorToHue(currentComponent.rayPolygonColor2);
-        hueVal.innerHTML = enabled ? `${h1}&#176; / ${h2}&#176;` : `${h1}&#176;`;
-      }
-      propagateColor(currentComponent, null, null, enabled, null);
-      apply();
+      actionHistory.run('Toggle ray gradient', 'ray-gradient', () => {
+        if (!currentComponent) return;
+        untickInherit();
+        const enabled = e.target.checked;
+        currentComponent.rayGradientEnabled = enabled;
+        if (enabled) {
+          const h1 = _colorToHue(currentComponent.rayPolygonColor);
+          const spacedHue = (h1 + 30) % 360;
+          currentComponent.rayPolygonColor2 = _hueToRayColor(spacedHue);
+          if (knob2El) _setKnobHue(knob2El, spacedHue, false);
+          propagateColor(currentComponent, null, null, null, currentComponent.rayPolygonColor2);
+        }
+        // Show/hide knob2
+        if (knob2El) knob2El.style.display = enabled ? 'block' : 'none';
+        // Update value label
+        const hueVal = body.querySelector('#rp-hue-val');
+        if (hueVal) {
+          const h1 = _colorToHue(currentComponent.rayPolygonColor);
+          const h2 = _colorToHue(currentComponent.rayPolygonColor2);
+          hueVal.innerHTML = enabled ? `${h1}&#176; / ${h2}&#176;` : `${h1}&#176;`;
+        }
+        propagateColor(currentComponent, null, null, enabled, null);
+        apply();
+      });
     });
   }
 
   get('rp-opacity').addEventListener('input', e => {
     if (!currentComponent) return;
+    beginControlHistory('Change ray opacity', 'ray-opacity');
     untickInherit();
     const v = parseFloat(e.target.value);
     body.querySelector('#rp-opacity-val').textContent = v.toFixed(2);
@@ -372,44 +390,55 @@ function wireEvents(body) {
     propagateColor(currentComponent, null, v, null, null);
     apply();
   });
+  get('rp-opacity').addEventListener('change', commitControlHistory);
 
   get('rp-radius').addEventListener('input', e => {
     if (!currentComponent) return;
+    beginControlHistory('Change aperture radius', 'aperture-radius');
     const v = parseFloat(e.target.value);
     body.querySelector('#rp-radius-val').textContent = v;
     currentComponent.setApertureRadius(v);
     apply();
   });
+  get('rp-radius').addEventListener('change', commitControlHistory);
 
   get('rp-offset').addEventListener('input', e => {
     if (!currentComponent) return;
+    beginControlHistory('Change aperture offset', 'aperture-offset');
     const v = parseFloat(e.target.value);
     body.querySelector('#rp-offset-val').textContent = v;
     currentComponent.setApertureCenterOffset(v);
     apply();
   });
+  get('rp-offset').addEventListener('change', commitControlHistory);
 
   get('rp-segments').addEventListener('change', e => {
-    if (!currentComponent) return;
-    currentComponent.setArraySegments(parseInt(e.target.value));
-    apply();
+    actionHistory.run('Change array segments', 'array-segments', () => {
+      if (!currentComponent) return;
+      currentComponent.setArraySegments(parseInt(e.target.value));
+      apply();
+    });
   });
 
   get('rp-size-ratio').addEventListener('input', e => {
     if (!currentComponent) return;
+    beginControlHistory('Change array size', 'array-size-ratio');
     const v = parseFloat(e.target.value);
     body.querySelector('#rp-size-ratio-val').textContent = v.toFixed(2);
     currentComponent.setArraySizeRatio(v);
     apply();
   });
+  get('rp-size-ratio').addEventListener('change', commitControlHistory);
 
   get('rp-position-ratio').addEventListener('input', e => {
     if (!currentComponent) return;
+    beginControlHistory('Change array position', 'array-position-ratio');
     const v = parseFloat(e.target.value);
     body.querySelector('#rp-position-ratio-val').textContent = v.toFixed(2);
     currentComponent.setArrayPositionRatio(v);
     apply();
   });
+  get('rp-position-ratio').addEventListener('change', commitControlHistory);
 }
 
 // â”€â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

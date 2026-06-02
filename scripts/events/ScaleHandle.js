@@ -18,6 +18,7 @@ import {
 } from './HoverHandlers.js';
 import { showUnifiedBoundingBox, removeUnifiedBoundingBox, getUnifiedBoundingBoxBounds } from './InteractionHandlers.js';
 import { updateRays } from '../rays/DrawRays.js';
+import { actionHistory } from '../history/ActionHistory.js';
 
 export function showScaleHandle(componentId) {
   removeScaleHandle();
@@ -86,6 +87,7 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
 
   handle.addEventListener('mousedown', (e) => {
     e.stopPropagation();
+    actionHistory.begin('Scale component', 'scale-component');
     isDragging = true;
     handle.style.cursor = 'grabbing';
     
@@ -204,6 +206,8 @@ function setupScaleHandleDrag(handle, componentId, centerX, centerY, initialHand
     document.removeEventListener('mousemove', handleDrag);
     document.removeEventListener('mouseup', handleEnd);
 
+    actionHistory.commit();
+
     showScaleHandle(componentId);
   }
 }
@@ -266,6 +270,7 @@ function setupGroupScaleHandleDrag(handle, centroid) {
 
   handle.addEventListener('mousedown', (e) => {
     e.stopPropagation();
+    actionHistory.begin('Scale selection', 'scale-components');
     isDragging = true;
     handle.style.cursor = 'grabbing';
     
@@ -435,6 +440,8 @@ function setupGroupScaleHandleDrag(handle, centroid) {
     
     document.removeEventListener('mousemove', handleDrag);
     document.removeEventListener('mouseup', handleEnd);
+
+    actionHistory.commit();
 
     // Refresh handles
     showUnifiedBoundingBox();

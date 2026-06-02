@@ -22,6 +22,7 @@ import {
   DRAGGING_SNAP_INCREMENT
 } from '../config.js';
 import { updateRays } from '../rays/DrawRays.js';
+import { actionHistory } from '../history/ActionHistory.js';
 
 let selectionBox = null;
 let isSelectionBoxActive = false;
@@ -290,6 +291,8 @@ export function setupComponentDragging() {
     const component = componentManager.getComponent(draggedId);
     if (!component) return;
 
+    actionHistory.begin('Move selection', 'move-components');
+
     // Select the clicked component (and its group if it belongs to one)
     componentManager.selectComponent(draggedId);
     
@@ -361,6 +364,8 @@ export function setupComponentDragging() {
     if (!isPointInUnifiedBbox(svgPt.x, svgPt.y)) return;
 
     // Start group drag from empty space
+    actionHistory.begin('Move selection', 'move-components');
+
     isDragging = true;
     hasMoved = false;
     isGroupDrag = true;
@@ -520,6 +525,12 @@ export function setupComponentDragging() {
       // Reset cursor
       const canvas = document.getElementById('canvas');
       if (canvas) canvas.style.cursor = '';
+
+      if (hasMoved) {
+        actionHistory.commit();
+      } else {
+        actionHistory.cancel();
+      }
 
       isDragging = false;
       hasMoved = false;

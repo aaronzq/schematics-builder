@@ -12,6 +12,7 @@ import { toggleApertureRays } from '../rays/ApertureRays.js';
 import { toggleTraceLines } from '../rays/TraceLines.js';
 import { showRelinkHoverBoxes, removeRelinkHoverBoxes, removeHoverBox } from './HoverHandlers.js';
 import { LINK_ARROW_COLOR } from '../config.js';
+import { actionHistory } from '../history/ActionHistory.js';
 
 /**
  * Update toolbar button visibility based on selection mode
@@ -198,6 +199,20 @@ function setButtonVisibility(button, visible) {
   }
 }
 
+function updateHistoryButtons() {
+  const undoBtn = document.getElementById('undo-btn');
+  const redoBtn = document.getElementById('redo-btn');
+  if (undoBtn) undoBtn.disabled = !actionHistory.canUndo();
+  if (redoBtn) redoBtn.disabled = !actionHistory.canRedo();
+}
+
+function isTypingTarget(target) {
+  const el = target instanceof Element ? target : document.activeElement;
+  if (!el) return false;
+  const tag = el.tagName;
+  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+}
+
 export function setupComponentButtons() {
   // Use event delegation on the sidebar so all category menus are covered
   const sidebar = document.querySelector('.sidebar');
@@ -207,7 +222,7 @@ export function setupComponentButtons() {
     const button = e.target.closest('button[data-component]');
     if (button) {
       const type = button.dataset.component;
-      addComponent(type);
+      actionHistory.run(`Add ${type}`, 'add-component', () => addComponent(type));
     }
   });
 
@@ -216,19 +231,36 @@ export function setupComponentButtons() {
 
 function performDelete() {
   if (componentManager.selectedIds.size > 0) {
-    const idsToDelete = Array.from(componentManager.selectedIds);
-    idsToDelete.forEach(id => componentManager.deleteComponent(id));
-    removeHoverBox();
-    removeRotationHandle();
-    removeScaleHandle();
-    removeArrowHandle();
-    removeUnifiedBoundingBox();
-    updateRays();
-    updateToolbarButtons();
+    actionHistory.run('Delete selection', 'delete-components', () => {
+      const idsToDelete = Array.from(componentManager.selectedIds);
+      idsToDelete.forEach(id => componentManager.deleteComponent(id));
+      removeHoverBox();
+      removeRotationHandle();
+      removeScaleHandle();
+      removeArrowHandle();
+      removeUnifiedBoundingBox();
+      updateRays();
+      updateToolbarButtons();
+    });
   }
 }
 
 export function setupActionButtons() {
+  actionHistory.subscribe(() => {
+    updateHistoryButtons();
+    updateToolbarButtons();
+  });
+
+  const undoBtn = document.getElementById('undo-btn');
+  if (undoBtn) {
+    undoBtn.addEventListener('click', () => actionHistory.undo());
+  }
+
+  const redoBtn = document.getElementById('redo-btn');
+  if (redoBtn) {
+    redoBtn.addEventListener('click', () => actionHistory.redo());
+  }
+
   // Delete button
   const deleteBtn = document.getElementById('delete-btn');
   if (deleteBtn) {
@@ -237,6 +269,26 @@ export function setupActionButtons() {
 
   // Keyboard Delete / Backspace
   document.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+    const mod = e.ctrlKey || e.metaKey;
+
+    if (mod && !isTypingTarget(e.target)) {
+      if (key === 'z') {
+        e.preventDefault();
+        if (e.shiftKey) {
+          actionHistory.redo();
+        } else {
+          actionHistory.undo();
+        }
+        return;
+      }
+      if (key === 'y') {
+        e.preventDefault();
+        actionHistory.redo();
+        return;
+      }
+    }
+
     if (e.key === 'Delete' || e.key === 'Backspace') {
       // Skip if focus is inside a text input to avoid interfering with typing
       const tag = document.activeElement && document.activeElement.tagName;
@@ -250,8 +302,10 @@ export function setupActionButtons() {
   if (flipHorizontalBtn) {
     flipHorizontalBtn.addEventListener('click', () => {
       if (componentManager.selectedIds.size > 0) {
-        componentManager.selectedIds.forEach(id => {
-          componentManager.flipComponentHorizontal(id);
+        actionHistory.run('Flip horizontal', 'flip-horizontal', () => {
+          componentManager.selectedIds.forEach(id => {
+            componentManager.flipComponentHorizontal(id);
+          });
         });
       }
     });
@@ -262,8 +316,10 @@ export function setupActionButtons() {
   if (flipVerticalBtn) {
     flipVerticalBtn.addEventListener('click', () => {
       if (componentManager.selectedIds.size > 0) {
-        componentManager.selectedIds.forEach(id => {
-          componentManager.flipComponentVertical(id);
+        actionHistory.run('Flip vertical', 'flip-vertical', () => {
+          componentManager.selectedIds.forEach(id => {
+            componentManager.flipComponentVertical(id);
+          });
         });
       }
     });
@@ -274,7 +330,7 @@ export function setupActionButtons() {
   if (hideComponentBtn) {
     hideComponentBtn.addEventListener('click', () => {
       if (componentManager.selectedIds.size > 0) {
-        componentManager.hideComponent();
+        actionHistory.run('Hide selection', 'hide-components', () => componentManager.hideComponent());
       }
     });
   }
@@ -284,7 +340,7 @@ export function setupActionButtons() {
   if (showComponentBtn) {
     showComponentBtn.addEventListener('click', () => {
       if (componentManager.selectedIds.size > 0) {
-        componentManager.showComponent();
+        actionHistory.run('Show selection', 'show-components', () => componentManager.showComponent());
       }
     });
   }
@@ -293,7 +349,7 @@ export function setupActionButtons() {
   const showAllComponentsBtn = document.getElementById('show-all-components-btn');
   if (showAllComponentsBtn) {
     showAllComponentsBtn.addEventListener('click', () => {
-      componentManager.showAllComponents();
+      actionHistory.run('Show all components', 'show-all-components', () => componentManager.showAllComponents());
     });
   }
 
@@ -301,12 +357,14 @@ export function setupActionButtons() {
   const groupBtn = document.getElementById('group-btn');
   if (groupBtn) {
     groupBtn.addEventListener('click', () => {
-      if (componentManager.groupSelectedComponents()) {
-        // Refresh display
-        const selectedIds = Array.from(componentManager.selectedIds);
-        componentManager.selectMultiple(selectedIds);
-        updateToolbarButtons();
-      }
+      actionHistory.run('Group selection', 'group-components', () => {
+        if (componentManager.groupSelectedComponents()) {
+          // Refresh display
+          const selectedIds = Array.from(componentManager.selectedIds);
+          componentManager.selectMultiple(selectedIds);
+          updateToolbarButtons();
+        }
+      });
     });
   }
 
@@ -314,8 +372,10 @@ export function setupActionButtons() {
   const ungroupBtn = document.getElementById('ungroup-btn');
   if (ungroupBtn) {
     ungroupBtn.addEventListener('click', () => {
-      componentManager.ungroupSelectedComponents();
-      updateToolbarButtons();
+      actionHistory.run('Ungroup selection', 'ungroup-components', () => {
+        componentManager.ungroupSelectedComponents();
+        updateToolbarButtons();
+      });
     });
   }
 
@@ -348,16 +408,18 @@ export function setupActionButtons() {
   if (cutLinkBtn) {
     cutLinkBtn.addEventListener('click', () => {
       if (componentManager.currentId !== null) {
-        // For composites, cut the entry port's external parent link
-        let targetId = componentManager.currentId;
-        const comp = componentManager.getComponent(targetId);
-        if (comp && comp.isExitPort && comp.isCompositeInstance) {
-          const entryId = componentManager.getCompositeEntryPortId(targetId);
-          if (entryId !== null) targetId = entryId;
-        }
-        if (componentManager.cutParentLink(targetId)) {
-          updateRays();
-        }
+        actionHistory.run('Cut link', 'cut-link', () => {
+          // For composites, cut the entry port's external parent link
+          let targetId = componentManager.currentId;
+          const comp = componentManager.getComponent(targetId);
+          if (comp && comp.isExitPort && comp.isCompositeInstance) {
+            const entryId = componentManager.getCompositeEntryPortId(targetId);
+            if (entryId !== null) targetId = entryId;
+          }
+          if (componentManager.cutParentLink(targetId)) {
+            updateRays();
+          }
+        });
       } else {
         console.log('No component selected to cut parent link');
       }
@@ -633,10 +695,12 @@ function handleRelinkClick(event) {
     }
     
     // Try to change parent
-    if (componentManager.changeParent(relinkMode.childId, newParentId)) {
-      updateRays();
-      console.log(`Successfully re-linked component ${relinkMode.childId} to parent ${newParentId}`);
-    }
+    actionHistory.run('Re-link component', 'relink-component', () => {
+      if (componentManager.changeParent(relinkMode.childId, newParentId)) {
+        updateRays();
+        console.log(`Successfully re-linked component ${relinkMode.childId} to parent ${newParentId}`);
+      }
+    });
   } else {
     // Clicked on canvas - just cancel
     console.log('Re-link cancelled');
