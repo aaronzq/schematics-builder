@@ -29,6 +29,10 @@ function _colorToHue(color) {
   return Math.round(h * 60 + 360) % 360;
 }
 
+function _hueToRayColor(hue) {
+  return `hsl(${hue}, 70%, 50%)`;
+}
+
 let currentComponent = null;
 
 // â”€â”€â”€ HTML template â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -84,22 +88,21 @@ function buildPanelHTML(comp) {
     <div class="rp-section rp-color-section">
       <div class="rp-section-title">Color</div>
 
-      <div class="rp-field rp-field-checkbox">
+      <div class="rp-field rp-field-checkbox rp-checkbox-row">
         <label class="rp-checkbox-label${compLocked ? ' rp-label-disabled' : ''}" for="rp-inherit-color">
           <input type="checkbox" id="rp-inherit-color" ${inheritColor ? 'checked' : ''}${compLocked ? ' disabled' : ''}>
           Inherit from parent${compLocked ? ' <span class="rp-lock-note">(entry port only)</span>' : ''}
+        </label>
+        <label class="rp-gradient-toggle${compLocked ? ' rp-label-disabled' : ''}">
+          <input type="checkbox" id="rp-gradient" ${gradientEnabled ? 'checked' : ''}${compLocked ? ' disabled' : ''}>
+          Color Gradient
         </label>
       </div>
 
       <div class="rp-field">
         <div class="rp-hue-label-row">
-          <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Color Hue
-            <span class="rp-value" id="rp-hue-val">${gradientEnabled ? hue1 + '&#176; / ' + hue2 + '&#176;' : hue1 + '&#176;'}</span>
-          </label>
-          <label class="rp-gradient-toggle${compLocked ? ' rp-label-disabled' : ''}">
-            <input type="checkbox" id="rp-gradient" ${gradientEnabled ? 'checked' : ''}${compLocked ? ' disabled' : ''}>
-            Gradient
-          </label>
+          <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Color Hue</label>
+          <span class="rp-value" id="rp-hue-val">${gradientEnabled ? hue1 + '&#176; / ' + hue2 + '&#176;' : hue1 + '&#176;'}</span>
         </div>
         <div class="rp-hue-track" id="rp-hue-track"${compLocked ? ' style="pointer-events:none;opacity:0.5"' : ''}>
           <div class="rp-hue-knob active" id="rp-knob1"
@@ -155,6 +158,21 @@ function buildPanelHTML(comp) {
 
 function wireEvents(body) {
   const get = id => body.querySelector('#' + id);
+
+  function syncSliderProgress(slider) {
+    if (!slider) return;
+    const min = parseFloat(slider.min || '0');
+    const max = parseFloat(slider.max || '100');
+    const value = parseFloat(slider.value || '0');
+    const progress = max === min ? 0 : ((value - min) / (max - min)) * 100;
+    slider.style.setProperty('--rp-slider-progress', `${Math.max(0, Math.min(100, progress))}%`);
+  }
+
+  body.querySelectorAll('.rp-slider').forEach(slider => {
+    syncSliderProgress(slider);
+    slider.addEventListener('input', () => syncSliderProgress(slider));
+    slider.addEventListener('change', () => syncSliderProgress(slider));
+  });
 
   const apply = () => {
     if (!currentComponent) return;
@@ -214,6 +232,7 @@ function wireEvents(body) {
         const opVal    = body.querySelector('#rp-opacity-val');
         if (opSlider) {
           opSlider.value = inheritedOpacity;
+          syncSliderProgress(opSlider);
           if (opVal) opVal.textContent = inheritedOpacity.toFixed(2);
         }
         propagateColor(currentComponent, inheritedColor, inheritedOpacity, inheritedGradient, inheritedColor2);
@@ -323,6 +342,13 @@ function wireEvents(body) {
       untickInherit();
       const enabled = e.target.checked;
       currentComponent.rayGradientEnabled = enabled;
+      if (enabled) {
+        const h1 = _colorToHue(currentComponent.rayPolygonColor);
+        const spacedHue = (h1 + 30) % 360;
+        currentComponent.rayPolygonColor2 = _hueToRayColor(spacedHue);
+        if (knob2El) _setKnobHue(knob2El, spacedHue, false);
+        propagateColor(currentComponent, null, null, null, currentComponent.rayPolygonColor2);
+      }
       // Show/hide knob2
       if (knob2El) knob2El.style.display = enabled ? 'block' : 'none';
       // Update value label
