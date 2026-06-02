@@ -60,6 +60,13 @@ class ActionHistory {
     return this.redoStack.length > 0;
   }
 
+  clear() {
+    this.undoStack = [];
+    this.redoStack = [];
+    this.activeAction = null;
+    this._notify();
+  }
+
   undo() {
     if (!this.canUndo() || this.isApplyingHistory) return false;
     const action = this.undoStack.pop();

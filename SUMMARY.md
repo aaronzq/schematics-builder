@@ -907,13 +907,16 @@ document.getElementById('center-all-btn').addEventListener('click', () => {
 - **File I/O**: Filename editor (Google Docs-style)
 
 ### ❌ Not Yet Implemented
-- **JSON Import/Export**: `import-schematic-btn` and `export-schematic-btn` exist in HTML but have no JS handlers
-- **SVG Export**: `export-svg-btn` exists in HTML but has no JS handler
 - **Reset Canvas**: `reset-canvas-btn` exists in HTML but has no JS handler
 - **Gallery Integration**: `gallery/index.html` exists; `saveCanvasAndNavigate()` called from HTML but not defined in scripts
-- **Undo/Redo**: UI buttons exist (`undo-btn`, `redo-btn`) but no action history is implemented
 - **Gradient Rendering**: Solid color only; no HSL perpendicular gradient
 - **Multi-Ray Layers**: One polygon per parent-child pair; no stacked rays per connection
+
+### ✅ Implemented Persistence
+- **Schematic JSON Import/Export**: Snapshot-based save/load in `Fileio.js` using `captureSceneSnapshot()` / `restoreSceneSnapshot()`
+- **User Components Import/Export**: Separate JSON library files for browser-local user composites
+- **SVG Export**: Presentation export includes components plus currently enabled rays/trace; excludes grid, debug, and editing overlays
+- **Undo/Redo**: Session-only history exists and is cleared after schematic import
 - **Ray Display Mode Toggling**: No "dotted only" / "solid only" / "both" modes yet
 
 
@@ -1246,9 +1249,11 @@ Trigger (move/rotate/config change)
 
 ### Pipeline 4: Import/Export
 ```
-(Not yet implemented — buttons exist in HTML but have no JS handlers)
-Future: Export: Serialize component Map → JSON → download file
-        Import: Load JSON → reconstruct Component instances → rebuild DOM → updateRays()
+Export schematic JSON: capture scene snapshot + current viewBox → download file
+Import schematic JSON: validate schema/dependencies → restore snapshot → updateRays()
+Export user components: serialize browser-local user composite definitions
+Import user components: merge/overwrite definitions into localStorage and registry
+Export SVG: clone presentation layers, excluding grid/debug/editing overlays
 ```
 
 ## Implementation Priorities
@@ -1270,13 +1275,9 @@ Future: Export: Serialize component Map → JSON → download file
 14. Filename editor
 
 ### Not Yet Implemented ❌
-1. JSON import / export (HTML buttons exist, no JS handlers)
-2. SVG export (HTML button exists, no handler)
-3. Reset canvas (HTML button exists, no handler)
-4. Gallery integration (`saveCanvasAndNavigate()` not defined in scripts)
-5. Undo / redo (UI buttons exist, no history stack)
-6. Gradient rendering (perpendicular HSL gradient across ray width)
-7. Multi-ray layers per parent-child connection
+1. Reset canvas (HTML button exists, no handler)
+2. Gallery integration (`saveCanvasAndNavigate()` not defined in scripts)
+3. Multi-ray layers per parent-child connection
 8. Ray display mode cycling (both / dotted only / solid only)
 9. Component preview tooltips
 10. Keyboard shortcuts

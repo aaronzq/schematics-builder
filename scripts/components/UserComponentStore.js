@@ -114,6 +114,68 @@ export function saveUserComponent(def) {
 }
 
 /**
+ * Return all local user composite definitions for file export.
+ * The returned objects are detached copies so callers can safely format them.
+ *
+ * @returns {Object[]}
+ */
+export function exportUserComponents() {
+    return _readStore().map(def => ({ ...def, isBuiltIn: false, isComposite: true }));
+}
+
+/**
+ * Bulk-import user composite definitions.
+ *
+ * Imported entries are merged into the current local store by key. Existing
+ * entries with matching keys are overwritten; unrelated local entries remain.
+ * Every imported entry is forced to be a user composite.
+ *
+ * @param {Object[]} defs
+ * @returns {number} Number of imported definitions.
+ */
+export function importUserComponents(defs) {
+    if (!Array.isArray(defs)) {
+        throw new Error('UserComponentStore.importUserComponents: defs must be an array.');
+    }
+
+    const sanitisedDefs = defs.map((def, index) => {
+        if (!def || typeof def !== 'object') {
+            throw new Error(`User component at index ${index} must be an object.`);
+        }
+        if (def.isComposite !== true) {
+            const label = def.key !== undefined && def.key !== null ? def.key : index;
+            throw new Error(`User component "${label}" must have isComposite: true.`);
+        }
+        if (typeof def.key !== 'string' || !def.key.trim()) {
+            throw new Error(`User component at index ${index} must have a non-empty string key.`);
+        }
+
+        return {
+            ...def,
+            key: def.key.trim(),
+            category: def.category || 'User Components',
+            isBuiltIn: false,
+            isComposite: true
+        };
+    });
+
+    const merged = _readStore();
+    for (const def of sanitisedDefs) {
+        const idx = merged.findIndex(existing => existing.key === def.key);
+        if (idx >= 0) {
+            merged[idx] = def;
+        } else {
+            merged.push(def);
+        }
+        components[def.key] = def;
+    }
+
+    _writeStore(merged);
+    _notify();
+    return sanitisedDefs.length;
+}
+
+/**
  * Delete a user composite by key.
  *
  * Removes the entry from localStorage and from the live `components` registry.

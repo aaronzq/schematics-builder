@@ -203,7 +203,25 @@ Cut-link and Re-link on a composite's exit port operate on the **entry port's ex
 
 ## 8. Saving and Loading
 
-> **Note**: JSON import/export and SVG export are not yet implemented (buttons exist in the toolbar but have no handlers). Saving currently happens automatically for user composites via `localStorage`.
+Use the **File** menu to save and load schematics.
+
+### Schematic JSON
+
+- **Export JSON** saves the current canvas as a versioned snapshot file.
+- **Import JSON** restores a saved schematic snapshot immediately.
+- If the schematic uses user-created composite components that are not installed in the current browser, import fails with an error. Import the needed **User Components** file first, then import the schematic again.
+
+### SVG export
+
+**Export SVG** saves the current presentation view of the schematic:
+- Components are included.
+- Rays are included when rays are currently enabled.
+- Trace lines are included when Trace is currently on.
+- Grid, debug graphics, selection boxes, hover boxes, handles, and other editing overlays are never included.
+
+### User component libraries
+
+Use **Export User Components** to save browser-local user composites as a portable JSON file. Use **Import User Components** to merge that file into the current browser; imported components overwrite existing user components with the same key.
 
 ### User composites persist automatically
 

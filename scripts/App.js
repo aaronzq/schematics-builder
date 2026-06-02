@@ -1,7 +1,7 @@
 import { setupComponentButtons, setupActionButtons, updateToolbarButtons } from './events/ButtonHandlers.js';
 import { setupComponentSelection, setupComponentDragging, setupCanvasPanning, setupCanvasZoom, setupSelectionBox } from './events/InteractionHandlers.js';
 import { refreshSidebarMenu } from './components/ComponentMenu.js';
-import { setupFilenameEditor } from './Fileio.js';
+import { setupFileActions, setupFilenameEditor } from './Fileio.js';
 import { loadUserComponents } from './components/UserComponentStore.js';
 import { openSaveCompositeDialog } from './components/SaveCompositeDialog.js';
 import { componentManager } from './components/index.js';
@@ -27,6 +27,7 @@ export function initializeApp() {
   setupCanvasZoom();
   setupSelectionBox();
   setupFilenameEditor();
+  setupFileActions();
   updateToolbarButtons();
   initDebugLayer();
   setupRayMenu();              // Initialize ray panel (Phase 3)
