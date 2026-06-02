@@ -66,8 +66,10 @@ export class ComponentManager {
 
       // Inherit color from parent if the flag is set (default true)
       if (component.rayColorInheritFromParent ?? true) {
-        component.rayPolygonColor   = previousComponent.rayPolygonColor;
-        component.rayPolygonOpacity = previousComponent.rayPolygonOpacity;
+        component.rayPolygonColor    = previousComponent.rayPolygonColor;
+        component.rayPolygonOpacity  = previousComponent.rayPolygonOpacity;
+        component.rayGradientEnabled = previousComponent.rayGradientEnabled;
+        component.rayPolygonColor2   = previousComponent.rayPolygonColor2;
       }
 
       // Scale aperture to match parent projection at spawn time
@@ -778,9 +780,11 @@ export class ComponentManager {
       component.compositeInstanceId = compositeInstId;
 
       // Restore display properties
-      component.rayPolygonColor   = member.rayPolygonColor   ?? '#00ffff';
-      component.rayPolygonOpacity = member.rayPolygonOpacity ?? 0.2;
+      component.rayPolygonColor    = member.rayPolygonColor   ?? '#00ffff';
+      component.rayPolygonOpacity  = member.rayPolygonOpacity ?? 0.2;
       component.rayColorInheritFromParent = member.rayColorInheritFromParent ?? true;
+      component.rayGradientEnabled = member.rayGradientEnabled ?? false;
+      component.rayPolygonColor2   = member.rayPolygonColor2  ?? component.rayPolygonColor;
       component.coneAngle         = member.coneAngle         ?? 0;
 
       // Restore upVector so aperturePoints orientation matches the saved layout.
@@ -878,8 +882,10 @@ export class ComponentManager {
     if (entryComp.rayColorInheritFromParent && externalParentId != null) {
       const extParent = this.components.get(externalParentId);
       if (extParent) {
-        entryComp.rayPolygonColor   = extParent.rayPolygonColor;
-        entryComp.rayPolygonOpacity = extParent.rayPolygonOpacity;
+        entryComp.rayPolygonColor    = extParent.rayPolygonColor;
+        entryComp.rayPolygonOpacity  = extParent.rayPolygonOpacity;
+        entryComp.rayGradientEnabled = extParent.rayGradientEnabled;
+        entryComp.rayPolygonColor2   = extParent.rayPolygonColor2;
         // Cascade to downstream composite members that also opt in
         const propagate = (comp) => {
           for (const childId of comp.children) {
@@ -887,8 +893,10 @@ export class ComponentManager {
             if (!child || !child.isCompositeInstance ||
                 child.compositeInstanceId !== comp.compositeInstanceId) continue;
             if (child.rayColorInheritFromParent ?? true) {
-              child.rayPolygonColor   = comp.rayPolygonColor;
-              child.rayPolygonOpacity = comp.rayPolygonOpacity;
+              child.rayPolygonColor    = comp.rayPolygonColor;
+              child.rayPolygonOpacity  = comp.rayPolygonOpacity;
+              child.rayGradientEnabled = comp.rayGradientEnabled;
+              child.rayPolygonColor2   = comp.rayPolygonColor2;
               propagate(child);
             }
           }

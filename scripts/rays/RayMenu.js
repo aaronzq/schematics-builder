@@ -40,7 +40,8 @@ const EMPTY_HTML = `
 `;
 
 function buildPanelHTML(comp) {
-  const hue     = _colorToHue(comp.rayPolygonColor || DEFAULT_SOLID_RAY_COLOR);
+  const hue1 = _colorToHue(comp.rayPolygonColor  || DEFAULT_SOLID_RAY_COLOR);
+  const hue2 = _colorToHue(comp.rayPolygonColor2 || comp.rayPolygonColor || DEFAULT_SOLID_RAY_COLOR);
 
   const shape    = comp.rayShape              ?? 'collimated';
   const opacity  = comp.rayPolygonOpacity     ?? DEFAULT_RAY_POLYGON_OPACITY;
@@ -50,6 +51,7 @@ function buildPanelHTML(comp) {
   const sizeRatio = comp.arraySizeRatio        ?? 0.8;
   const positionRatio = comp.arrayPositionRatio ?? 1.0;
   const inheritColor = comp.rayColorInheritFromParent ?? true;
+  const gradientEnabled = comp.rayGradientEnabled ?? false;
   // Non-entry composite members have all ray controls locked in the UI;
   // only the entry port may be edited. Ray propagation still flows normally.
   const compLocked = comp.isCompositeInstance && !comp.isEntryPort;
@@ -90,9 +92,21 @@ function buildPanelHTML(comp) {
       </div>
 
       <div class="rp-field">
-        <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Color Hue <span class="rp-value" id="rp-hue-val">${hue}&#176;</span></label>
-        <input type="range" id="rp-hue" class="rp-slider rp-hue-slider"
-               min="0" max="359" step="1" value="${hue}"${compLocked ? ' disabled' : ''}>
+        <div class="rp-hue-label-row">
+          <label class="rp-label${compLocked ? ' rp-label-disabled' : ''}">Color Hue
+            <span class="rp-value" id="rp-hue-val">${gradientEnabled ? hue1 + '&#176; / ' + hue2 + '&#176;' : hue1 + '&#176;'}</span>
+          </label>
+          <label class="rp-gradient-toggle${compLocked ? ' rp-label-disabled' : ''}">
+            <input type="checkbox" id="rp-gradient" ${gradientEnabled ? 'checked' : ''}${compLocked ? ' disabled' : ''}>
+            Gradient
+          </label>
+        </div>
+        <div class="rp-hue-track" id="rp-hue-track"${compLocked ? ' style="pointer-events:none;opacity:0.5"' : ''}>
+          <div class="rp-hue-knob active" id="rp-knob1"
+               style="left:${(hue1 / 359 * 100).toFixed(2)}%" title="Upper aperture (knob 1): ${hue1}&deg;"></div>
+          <div class="rp-hue-knob" id="rp-knob2"
+               style="left:${(hue2 / 359 * 100).toFixed(2)}%;display:${gradientEnabled ? 'block' : 'none'}" title="Lower aperture (knob 2): ${hue2}&deg;"></div>
+        </div>
       </div>
 
       <div class="rp-field">
@@ -175,18 +189,26 @@ function wireEvents(body) {
     if (e.target.checked && currentComponent.parent != null) {
       const parentComp = componentManager.getComponent(currentComponent.parent);
       if (parentComp) {
-        const inheritedColor   = parentComp.rayPolygonColor;
-        const inheritedOpacity = parentComp.rayPolygonOpacity;
-        currentComponent.rayPolygonColor   = inheritedColor;
-        currentComponent.rayPolygonOpacity = inheritedOpacity;
-        // Sync hue slider UI
-        const hueSlider = get('rp-hue');
-        const hueVal    = body.querySelector('#rp-hue-val');
-        const m = inheritedColor?.match(/hsl\((\d+)/);
-        if (m && hueSlider) {
-          hueSlider.value = m[1];
-          if (hueVal) hueVal.textContent = m[1] + '°';
-        }
+        const inheritedColor    = parentComp.rayPolygonColor;
+        const inheritedOpacity  = parentComp.rayPolygonOpacity;
+        const inheritedGradient = parentComp.rayGradientEnabled;
+        const inheritedColor2   = parentComp.rayPolygonColor2;
+        currentComponent.rayPolygonColor    = inheritedColor;
+        currentComponent.rayPolygonOpacity  = inheritedOpacity;
+        currentComponent.rayGradientEnabled = inheritedGradient;
+        currentComponent.rayPolygonColor2   = inheritedColor2;
+        // Sync knob1 position
+        const knob1 = get('rp-knob1');
+        const knob2 = get('rp-knob2');
+        const hueVal = body.querySelector('#rp-hue-val');
+        const h1 = _colorToHue(inheritedColor);
+        const h2 = _colorToHue(inheritedColor2);
+        if (knob1) knob1.style.left = `${(h1/359*100).toFixed(2)}%`;
+        if (knob2) knob2.style.left = `${(h2/359*100).toFixed(2)}%`;
+        if (knob2) knob2.style.display = inheritedGradient ? 'block' : 'none';
+        const gradCb = get('rp-gradient');
+        if (gradCb) gradCb.checked = inheritedGradient;
+        if (hueVal) hueVal.innerHTML = inheritedGradient ? `${h1}&#176; / ${h2}&#176;` : `${h1}&#176;`;
         // Sync opacity slider UI
         const opSlider = get('rp-opacity');
         const opVal    = body.querySelector('#rp-opacity-val');
@@ -194,21 +216,24 @@ function wireEvents(body) {
           opSlider.value = inheritedOpacity;
           if (opVal) opVal.textContent = inheritedOpacity.toFixed(2);
         }
-        propagateColor(currentComponent, inheritedColor, inheritedOpacity);
+        propagateColor(currentComponent, inheritedColor, inheritedOpacity, inheritedGradient, inheritedColor2);
         apply();
       }
     }
   });
 
-  // Propagate color/opacity down the tree to all descendants that opt-in
-  function propagateColor(comp, color, opacity) {
+  // Propagate color/opacity/gradient down the tree to all descendants that opt-in.
+  // Any null argument is skipped (i.e. that property is not changed on descendants).
+  function propagateColor(comp, color, opacity, gradientEnabled, color2) {
     for (const childId of comp.children) {
       const child = componentManager.getComponent(childId);
       if (!child) continue;
       if (child.rayColorInheritFromParent ?? true) {
-        if (color !== null) child.rayPolygonColor = color;
-        if (opacity !== null) child.rayPolygonOpacity = opacity;
-        propagateColor(child, color, opacity);
+        if (color !== null && color !== undefined)           child.rayPolygonColor    = color;
+        if (opacity !== null && opacity !== undefined)       child.rayPolygonOpacity  = opacity;
+        if (gradientEnabled !== null && gradientEnabled !== undefined) child.rayGradientEnabled = gradientEnabled;
+        if (color2 !== null && color2 !== undefined)         child.rayPolygonColor2   = color2;
+        propagateColor(child, color, opacity, gradientEnabled, color2);
       }
     }
   }
@@ -220,16 +245,97 @@ function wireEvents(body) {
     if (cb) cb.checked = false;
   }
 
-  get('rp-hue').addEventListener('input', e => {
-    if (!currentComponent) return;
-    untickInherit();
-    const hue = parseInt(e.target.value);
-    body.querySelector('#rp-hue-val').textContent = hue + '°';
-    const color = `hsl(${hue}, 70%, 50%)`;
-    currentComponent.rayPolygonColor = color;
-    propagateColor(currentComponent, color, null);
-    apply();
-  });
+  // ── Dual-knob hue track ───────────────────────────────────────────────────
+
+  /** Convert a pointer clientX to a 0–359 hue value relative to the hue track. */
+  function _clientXToHue(clientX) {
+    const track = get('rp-hue-track');
+    if (!track) return 0;
+    const rect = track.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+    return Math.round((x / rect.width) * 359);
+  }
+
+  /** Update a knob's CSS left position from a hue value (0–359). */
+  function _setKnobHue(knobEl, hue, isKnob1) {
+    knobEl.style.left = `${(hue / 359 * 100).toFixed(2)}%`;
+    knobEl.title = `${isKnob1 ? 'Upper' : 'Lower'} aperture (knob ${isKnob1 ? 1 : 2}): ${hue}°`;
+  }
+
+  /** Attach pointer-drag listeners to a hue knob. */
+  function _attachKnobDrag(knobEl, isKnob1) {
+    knobEl.addEventListener('mousedown', e => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Activate this knob visually
+      const otherKnob = get(isKnob1 ? 'rp-knob2' : 'rp-knob1');
+      knobEl.classList.add('active');
+      if (otherKnob) otherKnob.classList.remove('active');
+
+      const onMove = (moveEvent) => {
+        if (!currentComponent) return;
+        const hue = _clientXToHue(moveEvent.clientX);
+        _setKnobHue(knobEl, hue, isKnob1);
+        const color = `hsl(${hue}, 70%, 50%)`;
+
+        untickInherit();
+        if (isKnob1) {
+          currentComponent.rayPolygonColor = color;
+          propagateColor(currentComponent, color, null, null, null);
+        } else {
+          currentComponent.rayPolygonColor2 = color;
+          propagateColor(currentComponent, null, null, null, color);
+        }
+
+        // Update hue value label
+        const hueVal = body.querySelector('#rp-hue-val');
+        if (hueVal) {
+          const h1 = _colorToHue(currentComponent.rayPolygonColor);
+          const h2 = _colorToHue(currentComponent.rayPolygonColor2);
+          hueVal.innerHTML = (currentComponent.rayGradientEnabled)
+            ? `${h1}&#176; / ${h2}&#176;`
+            : `${h1}&#176;`;
+        }
+        apply();
+      };
+
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  const knob1El = get('rp-knob1');
+  const knob2El = get('rp-knob2');
+  if (knob1El) _attachKnobDrag(knob1El, true);
+  if (knob2El) _attachKnobDrag(knob2El, false);
+
+  // Gradient toggle
+  const gradientCb = get('rp-gradient');
+  if (gradientCb) {
+    gradientCb.addEventListener('change', e => {
+      if (!currentComponent) return;
+      untickInherit();
+      const enabled = e.target.checked;
+      currentComponent.rayGradientEnabled = enabled;
+      // Show/hide knob2
+      if (knob2El) knob2El.style.display = enabled ? 'block' : 'none';
+      // Update value label
+      const hueVal = body.querySelector('#rp-hue-val');
+      if (hueVal) {
+        const h1 = _colorToHue(currentComponent.rayPolygonColor);
+        const h2 = _colorToHue(currentComponent.rayPolygonColor2);
+        hueVal.innerHTML = enabled ? `${h1}&#176; / ${h2}&#176;` : `${h1}&#176;`;
+      }
+      propagateColor(currentComponent, null, null, enabled, null);
+      apply();
+    });
+  }
 
   get('rp-opacity').addEventListener('input', e => {
     if (!currentComponent) return;
@@ -237,7 +343,7 @@ function wireEvents(body) {
     const v = parseFloat(e.target.value);
     body.querySelector('#rp-opacity-val').textContent = v.toFixed(2);
     currentComponent.rayPolygonOpacity = v;
-    propagateColor(currentComponent, null, v);
+    propagateColor(currentComponent, null, v, null, null);
     apply();
   });
 

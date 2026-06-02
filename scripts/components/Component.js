@@ -7,7 +7,9 @@ import {
   DEFAULT_ARRAY_POSITION_RATIO,
   MAX_ARRAY_SEGMENTS,
   DEFAULT_SOLID_RAY_COLOR,
-  DEFAULT_RAY_POLYGON_OPACITY
+  DEFAULT_RAY_POLYGON_OPACITY,
+  DEFAULT_RAY_GRADIENT_ENABLED,
+  DEFAULT_RAY_GRADIENT_COLOR2
 } from '../config.js';
 
 export class Component {
@@ -69,6 +71,8 @@ export class Component {
     this.rayPolygonColor = config.rayPolygonColor || DEFAULT_SOLID_RAY_COLOR;
     this.rayPolygonOpacity = config.rayPolygonOpacity ?? DEFAULT_RAY_POLYGON_OPACITY;
     this.rayColorInheritFromParent = config.rayColorInheritFromParent ?? true;
+    this.rayGradientEnabled = config.rayGradientEnabled ?? DEFAULT_RAY_GRADIENT_ENABLED;
+    this.rayPolygonColor2 = config.rayPolygonColor2 || config.rayPolygonColor || DEFAULT_RAY_GRADIENT_COLOR2;
 
     // Manual / Array aperture properties
     // apertureCenterOffset: signed displacement along upVector from the definition's

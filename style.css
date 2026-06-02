@@ -1201,9 +1201,75 @@ input[type="range"].single-knob {
   accent-color: #007acc;
 }
 
-/* Hue slider — rainbow gradient track */
+/* Hue slider — rainbow gradient track with draggable knobs */
 .rp-hue-track {
   position: relative;
+  height: 10px;
+  border-radius: 5px;
+  background: linear-gradient(to right,
+    hsl(0,70%,50%), hsl(30,70%,50%), hsl(60,70%,50%), hsl(90,70%,50%),
+    hsl(120,70%,50%), hsl(150,70%,50%), hsl(180,70%,50%), hsl(210,70%,50%),
+    hsl(240,70%,50%), hsl(270,70%,50%), hsl(300,70%,50%), hsl(330,70%,50%),
+    hsl(359,70%,50%));
+  margin: 6px 0 4px;
+  cursor: crosshair;
+  user-select: none;
+}
+
+/* Draggable hue knob */
+.rp-hue-knob {
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #666;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  z-index: 2;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.35);
+  transition: width 0.1s, height 0.1s, border-color 0.1s;
+}
+
+.rp-hue-knob.active {
+  width: 20px;
+  height: 20px;
+  border-color: #222;
+  z-index: 3;
+}
+
+.rp-hue-knob:active {
+  cursor: grabbing;
+}
+
+/* Row containing hue label + gradient toggle */
+.rp-hue-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 2px;
+}
+
+/* Gradient mode toggle checkbox + label */
+.rp-gradient-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #555;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rp-gradient-toggle input[type="checkbox"] {
+  cursor: pointer;
+  margin: 0;
+}
+
+.rp-gradient-toggle.rp-label-disabled {
+  opacity: 0.45;
+  pointer-events: none;
 }
 
 .rp-hue-slider {

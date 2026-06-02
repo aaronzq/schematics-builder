@@ -7,6 +7,8 @@
 
 import { componentManager } from '../components/ComponentManager.js';
 import { DEFAULT_SOLID_RAY_COLOR, DEFAULT_RAY_POLYGON_OPACITY } from '../config.js';
+import { calculateProjections } from './ApertureScaling.js';
+import { hexToRgb, rgbToHsl } from '../utils/colorUtils.js';
 
 // Ray visibility settings
 export let showApertureRays = true;
@@ -22,7 +24,16 @@ export function drawApertureRays() {
     
     // Remove existing aperture rays
     hideApertureRays();
-    
+
+    // Get or create <defs> in the SVG for gradient definitions
+    let defs = canvas.querySelector('defs');
+    if (!defs) {
+        defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+        canvas.insertBefore(defs, canvas.firstChild);
+    }
+    // Remove stale ray gradient definitions from the previous draw
+    defs.querySelectorAll('[id^="ray-grad-"]').forEach(el => el.remove());
+
     // Create aperture rays group
     const rayGroup = document.createElementNS("http://www.w3.org/2000/svg", "g");
     rayGroup.setAttribute("id", "aperture-rays");
@@ -45,10 +56,15 @@ export function drawApertureRays() {
             ? rawParent
             : componentManager.getCompositeExitPort(rawParent);
         if (!parent) return;
+
+        // Create SVG gradient def if gradient mode is on; returns gradient ID or null
+        const gradientId = child.rayGradientEnabled
+            ? _createGradientDef(defs, parent, child)
+            : null;
         
         // Dispatch to appropriate rendering function based on child's ray shape
         // and parent's ray shape (for array mode decision)
-        const polygons = getPolygonsForConnection(parent, child);
+        const polygons = getPolygonsForConnection(parent, child, gradientId);
         
         polygons.forEach(polygon => {
             polygon.dataset.childId = childKey; // Map key (integer) matches selectedIds/children
@@ -79,34 +95,34 @@ export function drawApertureRays() {
  *
  * Exported so the composite preview dialog can reuse identical ray geometry.
  */
-export function getPolygonsForConnection(parent, child) {
+export function getPolygonsForConnection(parent, child, gradientId = null) {
     const polygons = [];
     
     switch (child.rayShape) {
         case 'collimated':
-            const collimated = _createCollimatedPolygon(parent, child);
+            const collimated = _createCollimatedPolygon(parent, child, gradientId);
             if (collimated) polygons.push(collimated);
             break;
         case 'divergent':
-            const divergent = _createDivergentPolygon(parent, child);
+            const divergent = _createDivergentPolygon(parent, child, gradientId);
             if (divergent) polygons.push(divergent);
             break;
         case 'convergent':
-            const convergent = _createConvergentPolygon(parent, child);
+            const convergent = _createConvergentPolygon(parent, child, gradientId);
             if (convergent) polygons.push(convergent);
             break;
         case 'manual':
-            const manual = _createManualPolygon(parent, child);
+            const manual = _createManualPolygon(parent, child, gradientId);
             if (manual) polygons.push(manual);
             break;
         case 'array':
             if (parent.rayShape === 'array') {
                 // Parent is array, child is array: center-aligned segment-to-segment connections
-                _createArrayToArrayPolygons(parent, child, polygons);
+                _createArrayToArrayPolygons(parent, child, polygons, gradientId);
             } else {
                 // Parent is non-array (collimated/divergent/convergent/manual), child is array:
                 // treat child as manual — connect parent upper/lower to child full extent
-                const arrayAsManual = _createArrayAsManualPolygon(parent, child);
+                const arrayAsManual = _createArrayAsManualPolygon(parent, child, gradientId);
                 if (arrayAsManual) polygons.push(arrayAsManual);
             }
             break;
@@ -136,7 +152,7 @@ function _getParentExtentWorld(parent) {
 /**
  * Collimated: 4-vertex polygon [parentUpper, childUpper, childLower, parentLower]
  */
-function _createCollimatedPolygon(parent, child) {
+function _createCollimatedPolygon(parent, child, gradientId = null) {
     const parentExtent = _getParentExtentWorld(parent);
     const childPts = child.getAperturePointsWorld();
     
@@ -152,7 +168,8 @@ function _createCollimatedPolygon(parent, child) {
     child.coneAngle = 0;
     return _createPolygonElement(
         [parentUpper, childUpper, childLower, parentLower],
-        child
+        child,
+        gradientId
     );
 }
 
@@ -164,7 +181,7 @@ function _createCollimatedPolygon(parent, child) {
  *   - If parent.coneAngle == 0: keep child aperture radius, derive and assign
  *     coneAngle = atan(childRadius / axisDistance).
  */
-function _createDivergentPolygon(parent, child) {
+function _createDivergentPolygon(parent, child, gradientId = null) {
     const parentCenter = parent.getApertureCenterWorld();
     const childCenter  = child.getApertureCenterWorld();
 
@@ -195,7 +212,8 @@ function _createDivergentPolygon(parent, child) {
 
     return _createPolygonElement(
         [parentCenter, childUpper, childLower],
-        child
+        child,
+        gradientId
     );
 }
 
@@ -203,7 +221,7 @@ function _createDivergentPolygon(parent, child) {
  * Convergent: 3-vertex polygon [parentUpper, childCenter, parentLower]
  * Also calculates and assigns child.coneAngle from the geometry.
  */
-function _createConvergentPolygon(parent, child) {
+function _createConvergentPolygon(parent, child, gradientId = null) {
     const parentExtent = _getParentExtentWorld(parent);
     const childCenter = child.getApertureCenterWorld();
     
@@ -234,7 +252,8 @@ function _createConvergentPolygon(parent, child) {
     
     return _createPolygonElement(
         [parentUpper, childCenter, parentLower],
-        child
+        child,
+        gradientId
     );
 }
 
@@ -242,8 +261,8 @@ function _createConvergentPolygon(parent, child) {
  * Manual: 4-vertex polygon [parentUpper, childUpper, childLower, parentLower]
  * Same geometry as collimated, but semantically different (no auto-scaling).
  */
-function _createManualPolygon(parent, child) {
-    return _createCollimatedPolygon(parent, child);
+function _createManualPolygon(parent, child, gradientId = null) {
+    return _createCollimatedPolygon(parent, child, gradientId);
 }
 
 /**
@@ -251,7 +270,7 @@ function _createManualPolygon(parent, child) {
  * Uses child's first point (top of first segment) and last point (bottom of last segment).
  * [parentUpper, childTop, childBottom, parentLower]
  */
-function _createArrayAsManualPolygon(parent, child) {
+function _createArrayAsManualPolygon(parent, child, gradientId = null) {
     const parentPts = parent.getAperturePointsWorld();
     // Use full ±radius extent for the child (not sub-segment endpoints)
     const childExtent = child.getApertureFullExtentWorld();
@@ -266,7 +285,8 @@ function _createArrayAsManualPolygon(parent, child) {
 
     return _createPolygonElement(
         [parentUpper, childTop, childBottom, parentLower],
-        child
+        child,
+        gradientId
     );
 }
 
@@ -276,7 +296,7 @@ function _createArrayAsManualPolygon(parent, child) {
  * Uses center-aligned pairing: if counts differ, the center segments are connected
  * and the outer ones on the side with more segments are ignored.
  */
-function _createArrayToArrayPolygons(parent, child, polygons) {
+function _createArrayToArrayPolygons(parent, child, polygons, gradientId = null) {
     const parentPts = parent.getAperturePointsWorld();
     const childPts = child.getAperturePointsWorld();
     
@@ -306,7 +326,8 @@ function _createArrayToArrayPolygons(parent, child, polygons) {
                 childPts[childSegBotIdx],    // childSegBot[i]
                 parentPts[parentSegBotIdx]   // parentSegBot[i]
             ],
-            child
+            child,
+            gradientId
         );
         
         if (polygon) {
@@ -315,13 +336,120 @@ function _createArrayToArrayPolygons(parent, child, polygons) {
     }
 }
 
+// ─── Gradient helpers ────────────────────────────────────────────────────────
+
+/**
+ * Parse a color string (hsl(h,s%,l%) or hex) to {h, s, l} with s and l in 0–100.
+ */
+function _colorToHSL(colorStr) {
+    const hslMatch = colorStr && colorStr.match(/hsl\(\s*([\d.]+)\s*,\s*([\d.]+)%\s*,\s*([\d.]+)%/);
+    if (hslMatch) {
+        return { h: parseFloat(hslMatch[1]), s: parseFloat(hslMatch[2]), l: parseFloat(hslMatch[3]) };
+    }
+    const rgb = hexToRgb(colorStr || '');
+    if (rgb) return rgbToHsl(rgb.r, rgb.g, rgb.b);
+    return { h: 0, s: 70, l: 50 };
+}
+
+/**
+ * Create an SVG <linearGradient> element in the given <defs> for a parent→child connection.
+ * The gradient runs perpendicular to the center-to-center line (trace line), oriented so
+ * that x1,y1 is always the upper aperture side (child upVector direction) → knob1 color,
+ * and x2,y2 is the lower side → knob2 color.
+ * Returns the gradient ID string, or null if the gradient cannot be computed.
+ */
+function _createGradientDef(defs, parent, child) {
+    const gradientId = `ray-grad-${child.id}`;
+
+    // Center-to-center direction
+    const childCenter  = child.getCenterPointWorld();
+    const parentCenter = parent.getCenterPointWorld();
+    const dx = childCenter.x - parentCenter.x;
+    const dy = childCenter.y - parentCenter.y;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 1e-6) return null;
+
+    // Raw perpendicular: 90° CCW rotation of center line unit vector
+    const rawPerpX = -dy / len;
+    const rawPerpY =  dx / len;
+
+    // Orient perpendicular to align with child's world-space upVector
+    // so that the positive perp direction always points "up"
+    const rad = child.rotation * Math.PI / 180;
+    const cos = Math.cos(rad), sin = Math.sin(rad);
+    const childGlobalUpX = child.upVector.x * cos - child.upVector.y * sin;
+    const childGlobalUpY = child.upVector.x * sin + child.upVector.y * cos;
+    const dot = childGlobalUpX * rawPerpX + childGlobalUpY * rawPerpY;
+    const upPerpX = dot >= 0 ? rawPerpX : -rawPerpX;
+    const upPerpY = dot >= 0 ? rawPerpY : -rawPerpY;
+
+    // Half-extent = max of parent and child aperture projections onto perpendicular
+    const projections = calculateProjections(child, parent);
+    const halfExtent = projections
+        ? Math.max(projections.parent.apertureProjection, projections.child.apertureProjection)
+        : child.apertureRadius;
+    if (halfExtent < 1e-6) return null;
+
+    // Gradient center at child aperture center (accounts for apertureCenterOffset)
+    const gradCenter = child.getApertureCenterWorld();
+    const x1 = gradCenter.x + upPerpX * halfExtent;  // upper → knob1 (color1)
+    const y1 = gradCenter.y + upPerpY * halfExtent;
+    const x2 = gradCenter.x - upPerpX * halfExtent;  // lower → knob2 (color2)
+    const y2 = gradCenter.y - upPerpY * halfExtent;
+
+    // Build the linearGradient element
+    const gradient = document.createElementNS("http://www.w3.org/2000/svg", "linearGradient");
+    gradient.setAttribute("id", gradientId);
+    gradient.setAttribute("gradientUnits", "userSpaceOnUse");
+    gradient.setAttribute("x1", x1);
+    gradient.setAttribute("y1", y1);
+    gradient.setAttribute("x2", x2);
+    gradient.setAttribute("y2", y2);
+
+    // Parse colors and compute averaged saturation/lightness for the 5-stop hue interpolation
+    const hsl1 = _colorToHSL(child.rayPolygonColor  || DEFAULT_SOLID_RAY_COLOR);
+    const hsl2 = _colorToHSL(child.rayPolygonColor2 || child.rayPolygonColor || DEFAULT_SOLID_RAY_COLOR);
+    const avgS = (hsl1.s + hsl2.s) / 2;
+    const avgL = (hsl1.l + hsl2.l) / 2;
+    const opacity = child.rayPolygonOpacity ?? DEFAULT_RAY_POLYGON_OPACITY;
+
+    for (let i = 0; i < 5; i++) {
+        const t = i / 4;
+        let h = hsl1.h + (hsl2.h - hsl1.h) * t;
+        h = ((h % 360) + 360) % 360;
+        const stop = document.createElementNS("http://www.w3.org/2000/svg", "stop");
+        stop.setAttribute("offset", `${t * 100}%`);
+        stop.setAttribute("stop-color", `hsl(${Math.round(h)}, ${Math.round(avgS)}%, ${Math.round(avgL)}%)`);
+        stop.setAttribute("stop-opacity", String(opacity));
+        gradient.appendChild(stop);
+    }
+
+    defs.appendChild(gradient);
+    return gradientId;
+}
+
+/**
+ * Public helper: ensure `svgEl` has a <defs>, create a gradient for parent→child
+ * in that defs, and return the gradient ID (or null if not applicable).
+ * Used by external SVG builders (e.g. composite save dialog preview/snapshot).
+ */
+export function createRayGradientForSvg(svgEl, parent, child) {
+    if (!child.rayGradientEnabled) return null;
+    let defs = svgEl.querySelector('defs');
+    if (!defs) {
+        defs = document.createElementNS("http://www.w3.org/2000/svg", "defs");
+        svgEl.insertBefore(defs, svgEl.firstChild);
+    }
+    return _createGradientDef(defs, parent, child);
+}
+
 // ─── SVG polygon element creation ───────────────────────────────────────────
 
 /**
  * Create an SVG polygon element with the given vertices and child's color/opacity.
  * Vertices should be an array of {x, y} objects.
  */
-function _createPolygonElement(vertices, child) {
+function _createPolygonElement(vertices, child, gradientId = null) {
     if (!vertices || vertices.length < 3) {
         return null;
     }
@@ -334,8 +462,14 @@ function _createPolygonElement(vertices, child) {
         .join(" ");
     
     polygon.setAttribute("points", pointsString);
-    polygon.setAttribute("fill", child.rayPolygonColor || DEFAULT_SOLID_RAY_COLOR);
-    polygon.setAttribute("fill-opacity", child.rayPolygonOpacity ?? DEFAULT_RAY_POLYGON_OPACITY);
+    if (gradientId) {
+        // Gradient fill — opacity is embedded in the gradient stops
+        polygon.setAttribute("fill", `url(#${gradientId})`);
+        polygon.setAttribute("fill-opacity", "1");
+    } else {
+        polygon.setAttribute("fill", child.rayPolygonColor || DEFAULT_SOLID_RAY_COLOR);
+        polygon.setAttribute("fill-opacity", child.rayPolygonOpacity ?? DEFAULT_RAY_POLYGON_OPACITY);
+    }
     polygon.setAttribute("stroke", "none");
     polygon.setAttribute("pointer-events", "none");
 

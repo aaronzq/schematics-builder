@@ -71,6 +71,8 @@ export const ARRAY_POSITION_RATIO_STEP = 0.05;   // Step size for array position
 // ===== Ray rendering =====
 export const DEFAULT_SOLID_RAY_COLOR = '#0095ff';
 export const DEFAULT_RAY_POLYGON_OPACITY = 0.2;
+export const DEFAULT_RAY_GRADIENT_ENABLED = false;
+export const DEFAULT_RAY_GRADIENT_COLOR2 = '#0095ff'; // Defaults to same as color1; user drags knob2 to differentiate
 
 // ===== Component visibility =====
 export const HIDDEN_COMPONENT_OPACITY = 0;

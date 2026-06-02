@@ -18,7 +18,7 @@
 import { components as componentRegistry } from './ComponentLibrary.js';
 import { saveUserComponent } from './UserComponentStore.js';
 import { COMPOSITE_DIALOG } from '../config.js';
-import { getPolygonsForConnection } from '../rays/ApertureRays.js';
+import { getPolygonsForConnection, createRayGradientForSvg } from '../rays/ApertureRays.js';
 
 // ---------------------------------------------------------------------------
 // Module-level dialog state
@@ -438,7 +438,8 @@ function _buildSpatialPreview(opts = {}) {
         const parentComp = _cm.getComponent(comp.parent);
         if (!parentComp) return;
 
-        const polygons = getPolygonsForConnection(parentComp, comp);
+        const gradientId = createRayGradientForSvg(svg, parentComp, comp);
+        const polygons = getPolygonsForConnection(parentComp, comp, gradientId);
         polygons.forEach(p => {
             p.setAttribute('pointer-events', 'none');
             rayGroup.appendChild(p);
@@ -652,7 +653,7 @@ function _buildAndSaveComposite() {
             rayPolygonOpacity:           comp.rayPolygonOpacity           ?? 0.2,
             rayColorInheritFromParent:   comp.rayColorInheritFromParent   ?? true,
             rayPolygonColor2:            comp.rayPolygonColor2            || comp.rayPolygonColor || '#00ffff',
-            gradientEnabled:             comp.gradientEnabled             ?? false,
+            rayGradientEnabled:          comp.rayGradientEnabled          ?? false,
             visible:                     comp.visible                     ?? true,
             internalParentIndex
         };
@@ -741,7 +742,8 @@ function _buildSnapshotSvg(ids) {
         const parentComp = _cm.getComponent(comp.parent);
         if (!parentComp) return;
 
-        const polygons = getPolygonsForConnection(parentComp, comp);
+        const gradientId = createRayGradientForSvg(svg, parentComp, comp);
+        const polygons = getPolygonsForConnection(parentComp, comp, gradientId);
         polygons.forEach(p => rayGroup.appendChild(p));
     });
 
