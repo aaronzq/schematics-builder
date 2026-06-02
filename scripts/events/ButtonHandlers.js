@@ -210,7 +210,29 @@ function isTypingTarget(target) {
   const el = target instanceof Element ? target : document.activeElement;
   if (!el) return false;
   const tag = el.tagName;
-  return tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable;
+  if (tag === 'TEXTAREA' || tag === 'SELECT' || el.isContentEditable) return true;
+  if (tag !== 'INPUT') return false;
+
+  const inputType = (el.getAttribute('type') || 'text').toLowerCase();
+  return [
+    'text',
+    'search',
+    'url',
+    'tel',
+    'email',
+    'password',
+    'number',
+    'date',
+    'datetime-local',
+    'month',
+    'time',
+    'week'
+  ].includes(inputType);
+}
+
+function isSaveCompositeDialogOpen() {
+  const dialog = document.getElementById('save-composite-dialog');
+  return !!dialog && dialog.open;
 }
 
 export function setupComponentButtons() {
@@ -271,6 +293,13 @@ export function setupActionButtons() {
   document.addEventListener('keydown', (e) => {
     const key = e.key.toLowerCase();
     const mod = e.ctrlKey || e.metaKey;
+
+    if (mod && isSaveCompositeDialogOpen() && !isTypingTarget(e.target)) {
+      if (key === 'z' || key === 'y') {
+        e.preventDefault();
+        return;
+      }
+    }
 
     if (mod && !isTypingTarget(e.target)) {
       if (key === 'z') {

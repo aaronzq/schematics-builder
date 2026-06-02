@@ -29,7 +29,7 @@ class ActionHistory {
 
   begin(label, type) {
     if (this.isApplyingHistory) return;
-    if (this.activeAction) this.commit();
+    if (this.activeAction) return;
     this.activeAction = {
       label,
       type,
