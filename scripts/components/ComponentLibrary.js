@@ -570,7 +570,7 @@ export const components = {
         apertureCenter: { x: 0, y: 0 },
         upVector: { x: 0, y: -1 },
         forwardVector: { x: 1, y: 0 },
-        apertureRadius: 0,
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
         coneAngle: DEFAULT_CONE_ANGLE,
         rayShape: 'convergent',
 
