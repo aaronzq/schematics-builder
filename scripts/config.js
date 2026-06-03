@@ -103,7 +103,7 @@ export const HOVER_BOX_STROKE = '#555';
 export const HOVER_BOX_STROKE_WIDTH = 2.5;
 
 // ===== Debug visualization =====
-export const SHOW_DEBUG_DRAWING = true;
+export const SHOW_DEBUG_DRAWING = false;
 export const UP_VECTOR_LENGTH = 60;
 export const FORWARD_VECTOR_LENGTH = 60;
 export const CENTER_MARKER_RADIUS = 2;
