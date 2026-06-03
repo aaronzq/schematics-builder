@@ -1482,7 +1482,7 @@ input[type="range"].single-knob {
   stroke-opacity: 1;
 }
 
-
+dialog.ray-menu-dialog {
   position: fixed;
   border: 1px solid #ccc;
   border-radius: 8px;
