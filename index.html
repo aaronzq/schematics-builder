@@ -14,114 +14,136 @@
 
   <meta charset="UTF-8">
   <title>Optical Schematic Builder</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
   <div class="main-layout">
-    <header class="title-row">
-      <h1>Optical Schematic Builder</h1>
-      <nav class="header-nav">
-        <a href="#" onclick="saveCanvasAndNavigate('gallery/index.html'); return false;" class="nav-link">Gallery</a>
-        <a href="#" onclick="saveCanvasAndNavigate('tutorial/index.html'); return false;" class="nav-link">Tutorial</a>
-      </nav>
-    </header>
+    <div class="menubar-container">
+      <div class="app-header-left">
+        <div class="app-icon">
+          <span class="material-symbols-outlined" style="font-size: 40px; color: #3a3a3a;">graph_7</span>
+        </div>
+        <div class="menu-content-wrapper">
+          <div class="filename-container">
+             <input type="text" class="filename-text" value="Untitled Schematic" placeholder="Untitled Schematic">
+          </div>
+          <nav class="menubar-nav">
+            <div class="menu-group">
+              <span class="menu-label">File</span>
+              <div class="menu-dropdown">
+                <button id="import-schematic-btn" class="menu-btn">Import JSON</button>
+                <button id="export-schematic-btn" class="menu-btn">Export JSON</button>
+                <div class="menu-separator"></div>
+                <button id="import-user-components-btn" class="menu-btn">Import User Components</button>
+                <button id="export-user-components-btn" class="menu-btn">Export User Components</button>
+                <div class="menu-separator"></div>
+                <button id="export-svg-btn" class="menu-btn">Export SVG</button>
+              </div>
+            </div>
+            <div class="menu-group">
+              <span class="menu-label">Edit</span>
+              <div class="menu-dropdown">
+                <button id="reset-canvas-btn" class="menu-btn">Reset Canvas</button>
+                <div class="menu-separator"></div>
+                <button id="toggle-grid-btn" class="menu-btn">Grid On</button>
+                <button id="trace-btn" class="menu-btn">Trace On</button>
+                <button id="rays-toggle-btn" class="menu-btn">Only Ray</button>
+              </div>
+            </div>
+            <div class="menu-group">
+              <span class="menu-label" onclick="saveCanvasAndNavigate('gallery/index.html');">Gallery</span>
+            </div>
+            <div class="menu-group">
+              <span class="menu-label" onclick="saveCanvasAndNavigate('tutorial/index.html');">Help</span>
+            </div>
+          </nav>
+        </div>
+      </div>
+      <a class="legacy-version-link" href="v1/">Go to the older website</a>
+    </div>
+    
     <div class="content-row">
-      <aside class="sidebar">
-        <div class="component-menu">
-          <p class="component-menu-title">Add Component</p>
-          <button onclick="addComponent('point')">Point</button>
-          <button onclick="addComponent('plane')">Plane</button>
-          <button onclick="addComponent('objective')">Objective 1</button>
-          <button onclick="addComponent('objective2')">Objective 2</button>
-          <button onclick="addComponent('objective3')">Objective 3</button>
-          <button onclick="addComponent('lens')">Convex Lens 1</button>
-          <button onclick="addComponent('lens-transparent')">Convex Lens 2</button>
-          <button onclick="addComponent('lens2')">Concave Lens</button>
-          <button onclick="addComponent('lens3')">Aspheric Lens</button>
-          <button onclick="addComponent('mirror')">Flat Mirror</button>
-          <button onclick="addComponent('mirror2')">Concave Mirror</button>
-          <button onclick="addComponent('mirror3')">Convex Mirror</button>
-          <button onclick="addComponent('plate')">Plate/Filter</button>
-          <button onclick="addComponent('cube')">Cube</button>
-          <button onclick="addComponent('mask')">Mask</button>
-          <button onclick="addComponent('aperture')">Aperture</button>
-          <button onclick="addComponent('wedge-prism')">Wedge Prism 1</button>
-          <button onclick="addComponent('wedge-prism2')">Wedge Prism 2</button>
-          <button onclick="addComponent('right-angle-prism')">Right Angle Prism</button>
-          <button onclick="addComponent('grating')">Grating</button>
-          <button onclick="addComponent('doe')">DOE</button>
-          <button onclick="addComponent('lenslet-array')">Lenslet Array</button>
-          <button onclick="addComponent('dmd')">DMD</button>
-          <button onclick="addComponent('slm')">SLM</button>
-          <button onclick="addComponent('polygon-scanner')">Polygon Scanner</button>
-          <button onclick="addComponent('voice-coil-mirror')">Voice Coil Mirror</button>
-          <button onclick="addComponent('voice-coil-mirror2')">Voice Coil Mirror2</button>
-          <button onclick="addComponent('detector')">Detector</button>
-          <button onclick="addComponent('photo-diode')">PD</button>
+      <aside class="sidebar" id="sidebar">
+        <div class="sidebar-inner">
+          <div class="sidebar-header">
+            <h2>Component Library</h2>
+            <p class="sidebar-subtitle">Click to place component</p>
+          </div>
+          <div id="component-menu-root"></div>
+        </div>
+        <div class="sidebar-resize-handle" id="sidebar-resize-handle"></div>
+      </aside>
+      <div class="right-column">
+        <div class="secondary-toolbar">
+           <button id="undo-btn" class="tool-btn" title="Undo"><span class="material-symbols-outlined">undo</span></button>
+           <button id="redo-btn" class="tool-btn" title="Redo"><span class="material-symbols-outlined">redo</span></button>
+           <div class="tool-separator"></div>
+           <button id="delete-btn" class="tool-btn" title="Delete"><span class="material-symbols-outlined">delete</span></button>
+           <button id="hide-component-btn" class="tool-btn" title="Hide Selection"><span class="material-symbols-outlined">visibility_off</span></button>
+           <button id="show-component-btn" class="tool-btn" title="Show Selection"><span class="material-symbols-outlined">visibility</span></button>
+           <button id="show-all-components-btn" class="tool-btn" title="Show All"><span class="material-symbols-outlined">visibility</span> <sub>ALL</sub></button> 
+           <button id="flip-horizontal-btn" class="tool-btn" title="Flip Horizontal"><span class="material-symbols-outlined">flip</span></button>
+           <button id="flip-vertical-btn" class="tool-btn" title="Flip Vertical"><span class="material-symbols-outlined" style="transform: rotate(90deg);">flip</span></button>            
+           <button id="group-btn" class="tool-btn" title="Group"><span class="material-symbols-outlined">group</span></button>
+           <button id="ungroup-btn" class="tool-btn" title="Ungroup"><span class="material-symbols-outlined">group_off</span></button>
+           <button id="cut-link-btn" class="tool-btn" title="Remove current link"><span class="material-symbols-outlined">link_off</span></button>
+           <button id="re-link-btn" class="tool-btn" title="Re-link to a component"><span class="material-symbols-outlined">add_link</span></button>
+           <div class="tool-separator" id="save-composite-separator" style="display:none"></div>
+           <button id="save-as-composite-btn" class="tool-btn" title="Save component" style="display:none"><span class="material-symbols-outlined"><span class="material-symbols-outlined">
+bookmark_star
+</span></span></button>
+           
+        </div>
+        <main class="workspace-area">
+          <div class="canvas-container">
+            <!-- <canvas id="grid-canvas" style="position:absolute; left:0; top:0; z-index:0;"></canvas> -->
+            <svg id="canvas" style="position:relative; z-index:1;">
+              <defs>
+                <!-- Component definitions will go here -->
+              </defs>
+              <!-- <circle cx="0" cy="0" r="5" fill="red"/> -->
+              <g id="grid" pointer-events="none"></g>
+              <g id="schematics"></g>
+              <g id="debug-overlay"></g>
+            </svg>
+          </div>
+        </main>
+      </div>
+
+      <!-- Ray Configuration Panel (right column) -->
+      <aside class="ray-panel" id="ray-panel">
+        <div class="ray-panel-inner">
+          <div class="ray-panel-header">
+            <h2>Ray Configuration</h2>
+          </div>
+          <div id="ray-panel-body">
+            <!-- Populated by RayMenu.js when a component is selected -->
+          </div>
         </div>
       </aside>
-      <main class="workspace-area">
-        <div class="action-toolbar">
-          <div class="action-row">
-            <div class="action-title-column">
-              <p class="action-label">Component Actions</p>
-            </div>
-            <div class="action-buttons-column">
-              <button id="delete-btn">Delete</button>
-              <button id="flip-horizontal-btn">Flip X</button>
-              <button id="flip-vertical-btn">Flip Y</button>            
-              <button id="hide-component-btn">Hide</button>
-              <button id="show-component-btn">Show</button>
-              <button id="show-all-components-btn">Show All</button> 
-            </div>
-          </div>
-          <div class="action-row">
-            <div class="action-title-column">
-              <p class="action-label">Canvas Actions</p>
-            </div>
-            <div class="action-buttons-column">
-              <button id="reset-canvas-btn">Reset</button>
-              <button id="trace-btn">Hide Trace</button>
-              <button id="rays-toggle-btn">Hide Rays</button>
-              <button id="toggle-grid-btn">Hide Grid</button>
-            </div>
-          </div>
-          <div class="action-row">
-            <div class="action-title-column">
-              <p class="action-label">Export/Import</p>
-            </div>
-            <div class="action-buttons-column">
-              <button id="export-svg-btn">Export SVG</button>  
-              <button id="export-schematic-btn">Export JSON</button>
-              <button id="import-schematic-btn">Import JSON</button>
-            </div>
-          </div>
-        </div>
-        <div class="canvas-container">
-          <!-- <canvas id="grid-canvas" style="position:absolute; left:0; top:0; z-index:0;"></canvas> -->
-          <svg id="canvas" style="position:relative; z-index:1;">
-            <defs>
-              <!-- Component definitions will go here -->
-            </defs>
-            <!-- <circle cx="0" cy="0" r="5" fill="red"/> -->
-            <g id="grid"></g>
-            <g id="components"></g>
-          </svg>
-        </div>
-      </main>
     </div>
     <footer class="footer">
-      <p>
-        Developed by &nbsp 
-        <a href="https://github.com/aaronzq/schematics-builder" target="_blank" rel="noopener">
-          <img style="filter: invert(100%)" src="img/github-mark.svg" alt="GitHub">
-          aaronzq
-        </a>
-      </p>
+      <div class="footer-content">
+        <p style="margin-bottom: 4px; font-weight: bold; color: #fff;">Optical Schematic Builder</p>
+        <p>
+          Developed by &nbsp; 
+          <a href="https://github.com/aaronzq/schematics-builder" target="_blank" rel="noopener">
+            <img style="filter: invert(100%)" src="img/github-mark.svg" alt="GitHub">
+            aaronzq
+          </a>
+        </p>
+      </div>
     </footer>
   </div>
 
-  <script type="module" src="scripts/main.js"></script>
+  <dialog id="save-composite-dialog">
+    <!-- SaveCompositeDialog.js manages this dialog's content dynamically -->
+  </dialog>
+
+  <!-- ray-menu-dialog removed: ray config is now in the right panel (#ray-panel) -->
+
+  <script type="module" src="scripts/App.js"></script>
 </body>
 </html>
