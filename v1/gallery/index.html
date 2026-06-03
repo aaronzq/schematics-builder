@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Example Gallery — Optical Schematic Builder</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header">
+    <a class="back-btn" href="../index.html">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back
+    </a>
+    <h1 class="title">Example Gallery</h1>
+    <div></div> <!-- Spacer for flexbox centering -->
+  </header>
+
+  <main class="main">
+    <div class="gallery">
+
+      <div class="card" data-file="Bai_Lu_et_al_nm2024.json">
+        <div class="card-image">
+          <img src="../img/Bai_Lu_et_al_nm2024.svg" alt="Bai Lu et al. (2024)" loading="lazy" >
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Bai et al. Nature Methods (2024)</h3>
+          <button class="import-btn" onclick="importExample('Bai_Lu_et_al_nm2024.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Howe_Carmel_et_al_bioRxiv2025.json">
+        <div class="card-image">
+          <img src="../img/Howe_Carmel_et_al_bioRxiv2025.svg" alt="Howe Carmel et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Howe et al. bioRxiv (2025)</h3>
+          <button class="import-btn" onclick="importExample('Howe_Carmel_et_al_bioRxiv2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Kabuli_Leyla_et_al_sr2025.json">
+        <div class="card-image">
+          <img src="../img/Kabuli_Leyla_et_al_sr2025.svg" alt="Kabuli Leyla et al. (2025)" loading="lazy">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Kabuli et al. Scientific Reports (2025)</h3>
+          <button class="import-btn" onclick="importExample('Kabuli_Leyla_et_al_sr2025.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="doe_system_aaron.json">
+        <div class="card-image">
+          <img src="../img/doe_system_aaron.svg" alt="DOE system" loading="lazy" style="display:block;margin:0 auto;max-width:none;max-height:none;width:auto;height:auto;transform-origin:center center;transform:scale(0.6);">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Diffractive components</h3>
+          <button class="import-btn" onclick="importExample('doe_system_aaron.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Weber_Timothy_et_al_nn2023.json">
+        <div class="card-image">
+          <img src="../img/Weber_Timothy_et_al_nn2023.svg" alt="Weber Timothy et al. (2023)" loading="lazy"
+     style="display:block;margin:0 auto;max-width:none;max-height:none;width:auto;height:auto;transform-origin:center center; transform: translate(50px, -25px) scale(0.45);">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Weber et al. Nature Neuroscience (2023)</h3>
+          <button class="import-btn" onclick="importExample('Weber_Timothy_et_al_nn2023.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Xiao_Sheng_et_al_nm2024.json">
+        <div class="card-image">
+          <img src="../img/Xiao_Sheng_et_al_nm2024.svg" alt="Xiao Sheng et al. (2024)" loading="lazy"
+     style="display:block;margin:0 auto;max-width:none;max-height:none;width:auto;height:auto;transform-origin:center center; transform: translate(-10px, -30px) scale(0.45);">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Xiao et al. Nature Methods (2024)</h3>
+          <button class="import-btn" onclick="importExample('Xiao_Sheng_et_al_nm2024.json')">Import</button>
+        </div>
+      </div>
+
+      <div class="card" data-file="Bohm_et_al_nc2024.json">
+        <div class="card-image">
+          <img src="../img/Bohm_et_al_nc2024.svg" alt="Bohm et al. (2024)" loading="lazy"
+     style="display:block;margin:0 auto;max-width:none;max-height:none;width:auto;height:auto;transform-origin:center center; transform: translate(0px, 0px) scale(0.45);">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Böhm et al. Nature Communications (2024)</h3>
+          <button class="import-btn" onclick="importExample('Bohm_et_al_nc2024.json')">Import</button>
+        </div>
+      </div>
+
+      <!-- <div class="card" data-file="template.json">
+        <div class="card-image">
+          <img src="../img/template.svg" alt="Template" loading="lazy" style="display:block;margin:0 auto;max-width:none;max-height:none;width:auto;height:auto;transform-origin:center center;transform:scale(0.6);">
+        </div>
+        <div class="card-content">
+          <h3 class="card-title">Template</h3>
+          <button class="import-btn" onclick="importExample('template.json')">Import</button>
+        </div>
+      </div> -->
+
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <p>
+      Developed by &nbsp 
+      <a href="https://github.com/aaronzq/schematics-builder" target="_blank" rel="noopener">
+        <img style="filter: invert(100%)" src="../img/github-mark.svg" alt="GitHub">
+        aaronzq
+      </a>
+    </p>
+  </footer>
+
+  <script>
+    function importExample(filename) {
+      sessionStorage.setItem('importExample', filename);
+      window.location.href = '../index.html';
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Quick Tutorial — Optical Schematic Builder</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="header">
+    <a class="back-btn" href="../index.html">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Back
+    </a>
+    <h1 class="title">Quick Tutorial</h1>
+    <div></div> <!-- Spacer for flexbox centering -->
+  </header>
+
+  <main class="main">
+
+    <section id="steps" class="section">
+      <h2>General Steps</h2>
+      <ol class="steps-list">
+        <li>Add components from left sidebar.</li>
+        <li>Adjust blue arrow for where new components will be placed.</li>
+        <li>Flip, hide, or delete components.</li>
+        <li>Change ray shape and color.</li>
+        <li>Export as SVG or JSON.</li>
+      </ol>
+    </section>
+
+    <section id="quick-demo" class="section">
+      <h2>Quick Demo</h2>
+      <div class="demo-list">
+
+        <div class="demo-item">
+          <h4>1. 4F System</h4>
+            <p>Use <span style="background: #00f2ff; padding: 2px 6px; border-radius: 4px; font-weight: bold;">hidden</span> <strong>Plane</strong>, <strong>Convergent</strong> and <strong>Divergent</strong> ray shapes to draw focal points between components</p>
+            <img src="../img/fourf.gif" alt="4f demo" loading="lazy">
+        </div>
+
+        <div class="demo-item">
+          <h4>2. Mirror in Convergent Ray Path</h4>
+          <p>Use <strong>Manual</strong> ray shape to draw arbitrary ray paths.</p>
+          <img src="../img/divergent_mirror.gif" alt="Mirror in convergent rays demo" loading="lazy">
+        </div>
+
+        <div class="demo-item">
+          <h4>3. Ray truncation with Aperture</h4>
+          <p>Use <span style="background: #00f2ff; padding: 2px 6px; border-radius: 4px; font-weight: bold;">hidden</span> <strong>Plane</strong> and <strong>Manual</strong> ray shape to draw rays after apertures.</p>
+          <img src="../img/aperture.gif" alt="Aperture demo" loading="lazy">
+        </div>
+
+        <div class="demo-item">
+          <h4>4. Splits Light with Dichroic Mirror/Cube</h4>
+          <p>Use <strong>hue slider</strong> to adjust ray color. Use <strong>color palette</strong> to quickly select existing colors. Add multiple rays for more wavelengths. </p>
+          <img src="../img/dichronic.gif" alt="Dichronic demo" loading="lazy">
+        </div>
+
+        <div class="demo-item">
+          <h4>5. Dispersion with a Grating</h4>
+          <p>Enable <strong>color gradient</strong> to represent dispersion.</p>
+          <img src="../img/grating.gif" alt="Grating demo" loading="lazy">
+        </div>
+
+      </div>
+    </section>
+
+    <section id="control-manuals" class="section">
+      <h2>Control Manuals</h2>
+      <div class="control-grid">
+        <div class="control-item">
+          <h5>Mouse Controls</h5>
+          <ul>
+            <li><strong>Left click:</strong> Select component or add from sidebar</li>
+            <li><strong>Right click + drag:</strong> Pan the canvas view</li>
+            <li><strong>Mouse wheel:</strong> Zoom in/out</li>
+          </ul>
+        </div>
+        <div class="control-item">
+          <h5>Component Actions</h5>
+          <ul>
+            <li><strong>Delete Selected:</strong> Remove chosen component</li>
+            <li><strong>Flip X/Y:</strong> Mirror component orientation</li>
+            <li><strong>Hide/Show:</strong> Toggle component visibility</li>
+            <li><strong>Show All:</strong> Reveal all hidden components</li>
+          </ul>
+        </div>
+        <div class="control-item">
+          <h5>Render Options</h5>
+          <ul>
+            <li><strong>Reset:</strong> Reset entire canvas</li>
+            <li><strong>Hide Trace:</strong> Toggle center trace line visibility</li>
+            <li><strong>Hide Rays:</strong> Toggle ray rendering style</li>
+            <li><strong>Hide Grid:</strong> Toggle alignment grid</li>
+          </ul>
+        </div>
+        <div class="control-item">
+          <h5>Export/Import</h5>
+          <ul>
+            <li><strong>Export SVG:</strong> Save as vector image</li>
+            <li><strong>Export JSON:</strong> Save complete schematic to local directory</li>
+            <li><strong>Import JSON:</strong> Load saved schematic from local directory</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <p>
+      Developed by &nbsp 
+      <a href="https://github.com/aaronzq/schematics-builder" target="_blank" rel="noopener">
+        <img style="filter: invert(100%)" src="../img/github-mark.svg" alt="GitHub">
+        aaronzq
+      </a>
+    </p>
+  </footer>
+</body>
+</html>
