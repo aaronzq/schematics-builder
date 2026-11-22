@@ -1,0 +1,111 @@
+{
+  "schema": "schematics-builder.user-components",
+  "version": 1,
+  "metadata": {
+    "exportedAt": "2026-11-11T19:59:00.126Z"
+  },
+  "components": [
+    {
+      "key": "user_reflective_collimator_1794427136150",
+      "label": "Reflective Collimator",
+      "category": "User Components",
+      "isComposite": true,
+      "isBuiltIn": false,
+      "members": [
+        {
+          "type": "plane",
+          "relX": -100,
+          "relY": -41.33333333333333,
+          "rotation": 0,
+          "scale": 1,
+          "rayShape": "collimated",
+          "apertureRadius": 18,
+          "apertureCenterOffset": 0,
+          "coneAngle": 0,
+          "upVector": {
+            "x": 0,
+            "y": -1
+          },
+          "arraySegments": 3,
+          "arraySizeRatio": 1,
+          "arrayPositionRatio": 1,
+          "rayPolygonColor": "#0095ff",
+          "rayPolygonOpacity": 0.2,
+          "couplerSplitRatio": 50,
+          "couplerArmLength": 40,
+          "couplerInputPort": "in1",
+          "couplerActivePort": "out1",
+          "parentPort": null,
+          "rayColorInheritFromParent": true,
+          "rayPolygonColor2": "#0095ff",
+          "rayGradientEnabled": false,
+          "visible": true,
+          "internalParentIndex": null
+        },
+        {
+          "type": "reflective-collimator",
+          "relX": 50,
+          "relY": -41.33333333333333,
+          "rotation": 0,
+          "scale": 1.6,
+          "rayShape": "collimated",
+          "apertureRadius": 18,
+          "apertureCenterOffset": 0,
+          "coneAngle": 0,
+          "upVector": {
+            "x": 0,
+            "y": -1
+          },
+          "arraySegments": 3,
+          "arraySizeRatio": 1,
+          "arrayPositionRatio": 1,
+          "rayPolygonColor": "#0095ff",
+          "rayPolygonOpacity": 0.2,
+          "couplerSplitRatio": 50,
+          "couplerArmLength": 40,
+          "couplerInputPort": "in1",
+          "couplerActivePort": "out1",
+          "parentPort": null,
+          "rayColorInheritFromParent": true,
+          "rayPolygonColor2": "#0095ff",
+          "rayGradientEnabled": false,
+          "visible": true,
+          "internalParentIndex": 0
+        },
+        {
+          "type": "point",
+          "relX": 50,
+          "relY": 82.66666666666667,
+          "rotation": 90,
+          "scale": 1,
+          "rayShape": "convergent",
+          "apertureRadius": 18,
+          "apertureCenterOffset": 0,
+          "coneAngle": 10.69,
+          "upVector": {
+            "x": 0,
+            "y": -1
+          },
+          "arraySegments": 3,
+          "arraySizeRatio": 1,
+          "arrayPositionRatio": 1,
+          "rayPolygonColor": "#0095ff",
+          "rayPolygonOpacity": 0.2,
+          "couplerSplitRatio": 50,
+          "couplerArmLength": 40,
+          "couplerInputPort": "in1",
+          "couplerActivePort": "out1",
+          "parentPort": null,
+          "rayColorInheritFromParent": true,
+          "rayPolygonColor2": "#0095ff",
+          "rayGradientEnabled": false,
+          "visible": true,
+          "internalParentIndex": 1
+        }
+      ],
+      "entryMemberIndex": 2,
+      "exitMemberIndex": 0,
+      "snapshotSvg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"121.7 -217.7 251.6 223.5\" preserveAspectRatio=\"xMidYMid meet\"><g><polygon points=\"158,-172 281.18710356381956,-171.99999999999994 328.8122255135348,-135.99999999999997 158,-136\" fill=\"#0095ff\" fill-opacity=\"0.2\" stroke=\"none\" pointer-events=\"none\" data-edge1=\"158,-172,281.18710356381956,-171.99999999999994\" data-edge2=\"158,-136,328.8122255135348,-135.99999999999997\"/><polygon points=\"281.18710356381956,-171.99999999999994 308,-30 328.8122255135348,-135.99999999999997\" fill=\"#0095ff\" fill-opacity=\"0.2\" stroke=\"none\" pointer-events=\"none\" data-edge1=\"281.18710356381956,-171.99999999999994,308,-30\" data-edge2=\"328.8122255135348,-135.99999999999997,308,-30\"/></g><g transform=\"translate(158,-154) matrix(1,0,0,1,0,0)\"><g><line x1=\"0\" y1=\"-20\" x2=\"0\" y2=\"20\" stroke=\"black\" stroke-width=\"1.5\"/></g></g><g transform=\"translate(308,-154) matrix(1.6,0,0,1.6,0,0)\"><g><path d=\"M -26.8 -17 Q 4.2 -0.1 18.4 17.2\" fill=\"none\" stroke=\"black\" stroke-width=\"3\" stroke-linecap=\"round\"/><path d=\"M 0 6 V 16 M -3 12 L 0 16 L 3 12\" fill=\"none\" stroke=\"#d32f2f\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\" pointer-events=\"none\"><title>Focus direction (schematic; not focal distance)</title></path></g></g><g transform=\"translate(308,-30) rotate(90) matrix(1,0,0,1,0,0)\"><g><circle cx=\"0\" cy=\"0\" r=\"2.5\" stroke=\"black\" fill=\"black\"/></g></g></svg>"
+    }
+  ]
+}

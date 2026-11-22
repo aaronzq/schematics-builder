@@ -1,4 +1,5 @@
 import { Component } from './Component.js';
+import { isCoupler, couplerPorts, branchPort } from './FiberPorts.js';
 import { components as componentRegistry } from './ComponentLibrary.js';
 import { autoCenter } from '../Canvas.js';
 import { showRotationHandle, removeRotationHandle } from '../events/RotationHandle.js';
@@ -25,6 +26,16 @@ export class ComponentManager {
   }
 
   addComponent(type, position = null) {
+    const source = this.components.get(this.currentId);
+    let chosenPort = null;
+    if (isCoupler(source)) {
+      const occupied = source.children.map(id => branchPort(source, this.components.get(id), this));
+      const free = couplerPorts(source).filter(p => p.id !== source.couplerInputPort && !occupied.includes(p.id));
+      chosenPort = free.find(p => p.id === source.couplerActivePort)?.id || free.find(p => p.id.startsWith('out'))?.id || free[0]?.id;
+      if (!chosenPort) { alert('All coupler branch ports are connected. Remove a connection before adding another.'); return; }
+      source.couplerActivePort = chosenPort;
+      this.updateNextPositionFromComponent(this.currentId);
+    }
 
     // If it's a composite definition, expand it instead of creating a single component
     const def = componentRegistry[type];
@@ -62,6 +73,7 @@ export class ComponentManager {
       
       // Set up parent-child relationship
       component.parent = previousId;
+      component.parentPort = chosenPort;
       previousComponent.children.push(id);
 
       // Inherit color from parent if the flag is set (default true)
@@ -70,6 +82,18 @@ export class ComponentManager {
         component.rayPolygonOpacity  = previousComponent.rayPolygonOpacity;
         component.rayGradientEnabled = previousComponent.rayGradientEnabled;
         component.rayPolygonColor2   = previousComponent.rayPolygonColor2;
+      }
+
+      // A simple fiber coupler uses its first two children as the two output arms.
+      // Preserve the incoming beam's total visual weight while distributing it
+      // according to the user-selected splitting ratio.
+      if (isCoupler(previousComponent) && chosenPort?.startsWith('out')) {
+        const outputIndex = chosenPort === 'out1' ? 0 : 1;
+        const ratio = previousComponent.couplerSplitRatio ?? 50;
+        const fraction = outputIndex === 0 ? ratio / 100 : (100 - ratio) / 100;
+        const totalOpacity = Math.min(1, (previousComponent.rayPolygonOpacity ?? 0.2) * 2);
+        component.rayPolygonOpacity = totalOpacity * fraction;
+        component.rayColorInheritFromParent = false;
       }
 
       // Scale aperture to match parent projection at spawn time
@@ -541,6 +565,24 @@ export class ComponentManager {
   }
 
   // Multi-selection group transformation methods
+  flipGroup(axis) {
+    const center = this.getGroupCentroid(this.selectedIds);
+    const horizontal = axis === 'horizontal';
+    this.selectedIds.forEach(id => {
+      const component = this.components.get(id);
+      if (!component) return;
+      const arrow = { ...component.arrowVector };
+      component.groupMirror = !component.groupMirror;
+      component.setPosition(
+        horizontal ? 2 * center.x - component.x : component.x,
+        horizontal ? component.y : 2 * center.y - component.y
+      );
+      component.setRotation(horizontal ? 180 - component.rotation : -component.rotation);
+      component.setArrowVector(horizontal ? -arrow.x : arrow.x, horizontal ? arrow.y : -arrow.y);
+    });
+    if (this.currentId !== null) this.updateNextPositionFromComponent(this.currentId);
+  }
+
   getGroupCentroid(ids) {
     const idsArray = Array.isArray(ids) ? ids : Array.from(ids);
     if (idsArray.length === 0) return { x: 0, y: 0 };
@@ -756,6 +798,12 @@ export class ComponentManager {
     def.members.forEach((member, index) => {
       const id = this.idCounter++;
       const component = new Component(member.type);
+      component.setCouplerSplitRatio(member.couplerSplitRatio ?? 50);
+      component.setCouplerArmLength(member.couplerArmLength ?? 40);
+      component.couplerInputPort = member.couplerInputPort || 'in1';
+      component.couplerActivePort = member.couplerActivePort || 'out1';
+      component.parentPort = member.parentPort ?? null;
+      if (member.fiberPoints?.length) component.setFiberPoints(member.fiberPoints);
 
       // Rotate relative offset by deltaAngle so the whole composite rotates around the entry port
       const dx = (member.relX ?? 0) - entryOffsetX;
@@ -867,6 +915,7 @@ export class ComponentManager {
       const entryId = spawnedIds[def.entryMemberIndex];
       if (externalParent && entryComponent) {
         entryComponent.parent = externalParentId;
+        entryComponent.parentPort = isCoupler(externalParent) ? externalParent.couplerActivePort : null;
         externalParent.children.push(entryId);
       }
     }

@@ -1,4 +1,6 @@
 import { componentManager } from '../components/ComponentManager.js';
+import { outputAperture } from './fiberOutput.js';
+import { isCoupler } from '../components/FiberPorts.js';
 
 // Trace line settings
 export let showTraceLines = true;
@@ -37,10 +39,11 @@ export function drawTraceLines() {
         
         const parentComponent = componentManager.getComponent(component.parent);
         if (!parentComponent) return;
+        if (isCoupler(component) || isCoupler(parentComponent) || parentComponent.type === 'supercontinuum-source') return;
         
         // Get aperture centers in world space
         const childCenter = component.getApertureCenterWorld();
-        const parentCenter = parentComponent.getApertureCenterWorld();
+        const parentCenter = outputAperture(parentComponent).getApertureCenterWorld();
         
         // Draw black dotted line between aperture centers
         const traceLine = document.createElementNS("http://www.w3.org/2000/svg", "line");

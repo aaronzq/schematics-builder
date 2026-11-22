@@ -13,7 +13,8 @@ import { toggleTraceLines } from '../rays/TraceLines.js';
 import { showRelinkHoverBoxes, removeRelinkHoverBoxes, removeHoverBox, clearSelectionHoverBoxes } from './HoverHandlers.js';
 import { LINK_ARROW_COLOR } from '../config.js';
 import { actionHistory } from '../history/ActionHistory.js';
-import { restoreSceneSnapshot } from '../history/HistorySnapshots.js';
+import { startFiberDrawing } from './FiberDrawing.js';
+import { captureSceneSnapshot, restoreSceneSnapshot } from '../history/HistorySnapshots.js';
 
 /**
  * Update toolbar button visibility based on selection mode
@@ -245,6 +246,8 @@ export function setupComponentButtons() {
     const button = e.target.closest('button[data-component]');
     if (button) {
       const type = button.dataset.component;
+      if (type === 'draw-fiber') { startFiberDrawing(); return; }
+      if (type === 'connect-fiber') { startFiberDrawing(true); return; }
       actionHistory.run(`Add ${type}`, 'add-component', () => addComponent(type));
     }
   });
@@ -366,6 +369,11 @@ export function setupActionButtons() {
     flipHorizontalBtn.addEventListener('click', () => {
       if (componentManager.selectedIds.size > 0) {
         actionHistory.run('Flip horizontal', 'flip-horizontal', () => {
+          if (componentManager.selectedIds.size > 1) {
+            componentManager.flipGroup('horizontal');
+            restoreSceneSnapshot(captureSceneSnapshot());
+            return;
+          }
           componentManager.selectedIds.forEach(id => {
             componentManager.flipComponentHorizontal(id);
           });
@@ -380,6 +388,11 @@ export function setupActionButtons() {
     flipVerticalBtn.addEventListener('click', () => {
       if (componentManager.selectedIds.size > 0) {
         actionHistory.run('Flip vertical', 'flip-vertical', () => {
+          if (componentManager.selectedIds.size > 1) {
+            componentManager.flipGroup('vertical');
+            restoreSceneSnapshot(captureSceneSnapshot());
+            return;
+          }
           componentManager.selectedIds.forEach(id => {
             componentManager.flipComponentVertical(id);
           });

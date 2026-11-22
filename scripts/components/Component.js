@@ -1,4 +1,5 @@
 import { components as componentLibrary } from './ComponentLibrary.js';
+import { isCoupler, portWorld } from './FiberPorts.js';
 import { 
   ARROW_LENGTH,
   DEFAULT_APERTURE_CENTER_OFFSET,
@@ -39,6 +40,8 @@ export class Component {
         apertureRadius: definition.apertureRadius,
         coneAngle: definition.coneAngle,
         rayShape: definition.rayShape,
+        couplerSplitRatio: definition.couplerSplitRatio,
+        couplerArmLength: definition.couplerArmLength,
         drawFunction: definition.draw
       };
       
@@ -74,6 +77,13 @@ export class Component {
     this.rayGradientEnabled = config.rayGradientEnabled ?? DEFAULT_RAY_GRADIENT_ENABLED;
     this.rayPolygonColor2 = config.rayPolygonColor2 || config.rayPolygonColor || DEFAULT_RAY_GRADIENT_COLOR2;
 
+    // Fiber-coupler display and split settings (unused by other component types).
+    this.couplerSplitRatio = config.couplerSplitRatio ?? 50;
+    this.couplerArmLength = config.couplerArmLength ?? 40;
+    this.couplerInputPort = 'in1';
+    this.couplerActivePort = 'out1';
+    this.parentPort = null;
+
     // Manual / Array aperture properties
     // apertureCenterOffset: signed displacement along upVector from the definition's
     // apertureCenter. The original apertureCenter is preserved for easy reset/undo.
@@ -99,6 +109,7 @@ export class Component {
     this.visible = true;
     this.flipX = false;
     this.flipY = false;
+    this.groupMirror = false;
 
     this.element = null;
     this.shapeGroup = null;
@@ -254,6 +265,32 @@ export class Component {
     this.aperturePoints = this._getAperturePoints();
   }
 
+  setCouplerSplitRatio(ratio) {
+    this.couplerSplitRatio = Math.max(0, Math.min(100, Number(ratio)));
+    this._refreshDrawing();
+  }
+
+  setFiberPoints(points) {
+    this.fiberPoints = points.map(p => ({ x: p.x, y: p.y }));
+    const xs = points.map(p => p.x), ys = points.map(p => p.y);
+    this.localBounds = { minX: Math.min(...xs) - 2, maxX: Math.max(...xs) + 2,
+      minY: Math.min(...ys) - 2, maxY: Math.max(...ys) + 2 };
+    this.width = this.localBounds.maxX - this.localBounds.minX;
+    this.height = this.localBounds.maxY - this.localBounds.minY;
+    this._refreshDrawing();
+  }
+
+  setCouplerArmLength(length) {
+    this.couplerArmLength = Math.max(10, Math.min(150, Number(length)));
+    if (isCoupler(this)) {
+      const halfWidth = 20 + this.couplerArmLength;
+      this.localBounds = { minX: -halfWidth - 4, maxX: halfWidth + 4, minY: -20, maxY: 20 };
+      this.width = halfWidth * 2 + 8;
+      this.height = 40;
+    }
+    this._refreshDrawing();
+  }
+
   setApertureCenterOffset(offset) {
     this.apertureCenterOffset = offset;
     this.aperturePoints = this._getAperturePoints();
@@ -336,6 +373,8 @@ export class Component {
       a = na; b = nb; c = nc; d = nd;
     }
 
+    // Group reflection affects the complete local geometry, including optics.
+    if (this.groupMirror) { b = -b; d = -d; }
     return { a, b, c, d };
   }
 
@@ -354,7 +393,7 @@ export class Component {
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
     const lx = localX - cx;
-    const ly = localY - cy;
+    const ly = (localY - cy) * (this.groupMirror ? -1 : 1);
     return {
       x: this.x + (lx * cos - ly * sin),
       y: this.y + (lx * sin + ly * cos)
@@ -392,10 +431,27 @@ export class Component {
     ];
   }
 
+  getArrowOrigin() {
+    if (isCoupler(this)) return portWorld(this, this.couplerActivePort);
+    const p = this.type === 'fiber' ? { x: 45, y: 0 }
+      : this.type === 'polarization-controller' ? { x: 48, y: 0 }
+      : this.type === 'draw-fiber' && this.fiberPoints?.length
+        ? this.fiberPoints[this.fiberPoints.length - 1] : null;
+    if (p) {
+      const m = this._getFlipMatrix();
+      const x = p.x - this.centerPoint.x, y = p.y - this.centerPoint.y;
+      return this.localToWorld(
+        this.centerPoint.x + this.scale * (m.a * x + m.c * y),
+        this.centerPoint.y + this.scale * (m.b * x + m.d * y) * (this.groupMirror ? -1 : 1)
+      );
+    }
+    return this.getCenterPointWorld();
+  }
+
   getArrowEndpoint() {
     // Returns the absolute position of the arrow tip in world coordinates.
-    // The arrow originates from the optical center (centerPoint in world space).
-    const oc = this.getCenterPointWorld();
+    // Use the output end for fiber components, otherwise the optical center.
+    const oc = this.getArrowOrigin();
     return {
       x: oc.x + this.arrowVector.x,
       y: oc.y + this.arrowVector.y
@@ -461,7 +517,7 @@ export class Component {
 
     // Wrap shape in its own group for visibility control
     const shapeGroup = document.createElementNS(ns, 'g');
-    const shape = this.drawFunction(ns);
+    const shape = this.drawFunction(ns, this);
     shapeGroup.appendChild(shape);
     group.appendChild(shapeGroup);
     this.shapeGroup = shapeGroup;
@@ -476,6 +532,25 @@ export class Component {
     this.element = group;
 
     return group;
+  }
+
+  _refreshDrawing() {
+    if (!this.element || !this.shapeGroup) return;
+    const ns = 'http://www.w3.org/2000/svg';
+    this.shapeGroup.replaceChildren(this.drawFunction(ns, this));
+
+    const hitArea = this.element.querySelector('.component-hit-area');
+    if (hitArea) {
+      const lb = this.localBounds;
+      const hitW = Math.max(lb.maxX - lb.minX, 10);
+      const hitH = Math.max(lb.maxY - lb.minY, 10);
+      const hitCx = (lb.minX + lb.maxX) / 2;
+      const hitCy = (lb.minY + lb.maxY) / 2;
+      hitArea.setAttribute('x', hitCx - hitW / 2);
+      hitArea.setAttribute('y', hitCy - hitH / 2);
+      hitArea.setAttribute('width', hitW);
+      hitArea.setAttribute('height', hitH);
+    }
   }
 
   getBoundingBox() {
@@ -493,8 +568,9 @@ export class Component {
       { x: this.localBounds.maxX, y: this.localBounds.maxY },
       { x: this.localBounds.minX, y: this.localBounds.maxY }
     ].map(({ x, y }) => {
-      const lx = (x - cx) * s;
-      const ly = (y - cy) * s;
+      const fm = this._getFlipMatrix();
+      const lx = (fm.a * (x - cx) + fm.c * (y - cy)) * s;
+      const ly = (fm.b * (x - cx) + fm.d * (y - cy)) * s;
       return { x: this.x + (lx * cos - ly * sin), y: this.y + (lx * sin + ly * cos) };
     });
     const minX = Math.min(...corners.map(c => c.x));

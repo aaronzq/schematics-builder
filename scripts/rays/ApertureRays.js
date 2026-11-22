@@ -6,6 +6,8 @@
  */
 
 import { componentManager } from '../components/ComponentManager.js';
+import { outputAperture } from './fiberOutput.js';
+import { isCoupler, portWorld, branchPort } from '../components/FiberPorts.js';
 import { DEFAULT_SOLID_RAY_COLOR, DEFAULT_RAY_POLYGON_OPACITY } from '../config.js';
 import { calculateProjections } from './ApertureScaling.js';
 import { hexToRgb, rgbToHsl } from '../utils/colorUtils.js';
@@ -96,6 +98,21 @@ export function drawApertureRays() {
  * Exported so the composite preview dialog can reuse identical ray geometry.
  */
 export function getPolygonsForConnection(parent, child, gradientId = null) {
+    parent = outputAperture(parent);
+    if (parent.type === 'supercontinuum-source' || isCoupler(parent) || isCoupler(child)) {
+        // The source delivers light through fiber, represented by a cable line.
+        const start = isCoupler(parent) ? portWorld(parent, branchPort(parent, child, componentManager)) : parent.getApertureCenterWorld();
+        const end = isCoupler(child) ? portWorld(child, child.couplerInputPort) : child.getApertureCenterWorld();
+        const fiber = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        fiber.setAttribute('d', `M ${start.x} ${start.y} L ${end.x} ${end.y}`);
+        fiber.setAttribute('fill', 'none');
+        fiber.setAttribute('stroke', 'black');
+        fiber.setAttribute('stroke-width', '2');
+        fiber.setAttribute('pointer-events', 'none');
+        return [fiber];
+    }
+    parent = withReflectiveSurfaceAperture(parent);
+    child = withReflectiveSurfaceAperture(child);
     const polygons = [];
     
     switch (child.rayShape) {
@@ -129,6 +146,56 @@ export function getPolygonsForConnection(parent, child, gradientId = null) {
     }
     
     return polygons;
+}
+
+// Intersect the incoming beam edges with the actual RC artwork. Both adjacent
+// connections reuse these points, so their edges meet on the same surface.
+function withReflectiveSurfaceAperture(component) {
+    if (component.type !== 'reflective-collimator') return component;
+    const upstream = componentManager.getComponent(component.parent);
+    if (!upstream) return component;
+    const origin = outputAperture(upstream).getApertureCenterWorld();
+    const center = component.getApertureCenterWorld();
+    const dx = center.x - origin.x;
+    const dy = center.y - origin.y;
+    const length = Math.hypot(dx, dy);
+    if (length < 1e-8) return component;
+    const nx = -dy / length, ny = dx / length;
+    const flip = component._getFlipMatrix();
+    const surface = t => {
+        // Same reference-traced quadratic as ComponentLibrary.
+        const u = 1 - t;
+        const x = -26.8 * u * u + 2 * 4.2 * u * t + 18.4 * t * t;
+        const y = -17 * u * u - 2 * 0.1 * u * t + 17.2 * t * t;
+        return component.localToWorld(
+            component.scale * (flip.a * x + flip.c * y),
+            component.scale * (flip.b * x + flip.d * y) * (component.groupMirror ? -1 : 1)
+        );
+    };
+    const p0 = surface(0), pm = surface(0.5), p1 = surface(1);
+    const project = p => nx * p.x + ny * p.y;
+    const a = 2 * (project(p1) + project(p0) - 2 * project(pm));
+    const b = project(p1) - project(p0) - a;
+    const points = component.getAperturePointsWorld().map(point => {
+        const c = project(p0) - project(point);
+        const discriminant = b * b - 4 * a * c;
+        const roots = Math.abs(a) < 1e-8
+            ? (Math.abs(b) < 1e-8 ? [] : [-c / b])
+            : (discriminant < 0 ? [] : [
+                (-b + Math.sqrt(discriminant)) / (2 * a),
+                (-b - Math.sqrt(discriminant)) / (2 * a)
+            ]);
+        const valid = roots.filter(t => t >= 0 && t <= 1);
+        if (!valid.length) {
+            // Beam wider than the mirror: clip to the nearest surface endpoint.
+            return Math.abs(project(p0) - project(point)) < Math.abs(project(p1) - project(point)) ? p0 : p1;
+        }
+        valid.sort((s, t) => Math.abs(s - 0.5) - Math.abs(t - 0.5));
+        return surface(valid[0]);
+    });
+    const view = Object.create(component);
+    view.getAperturePointsWorld = () => points;
+    return view;
 }
 
 // ─── Polygon creation functions ─────────────────────────────────────────────
@@ -359,6 +426,7 @@ function _colorToHSL(colorStr) {
  * Returns the gradient ID string, or null if the gradient cannot be computed.
  */
 function _createGradientDef(defs, parent, child) {
+    parent = outputAperture(parent);
     const gradientId = `ray-grad-${child.id}`;
 
     // Center-to-center direction
