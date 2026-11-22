@@ -23,6 +23,7 @@
  *             parent: {apertureProjection, upProjectionFactor, apertureRadius} } | null}
  */
 export function calculateProjections(child, parent) {
+    parent = outputAperture(parent);
     const childCenter  = child.getCenterPointWorld();
     const parentCenter = parent.getCenterPointWorld();
 
@@ -108,6 +109,7 @@ function scaleApertureToParent(child, parent) {
  * @returns {boolean}
  */
 function checkLinesCross(child, parent) {
+    parent = outputAperture(parent);
     // For array: use full aperture extent (±apertureRadius), not sub-segment points
     const childPts  = child.rayShape  === 'array' ? child.getApertureFullExtentWorld()  : child.getAperturePointsWorld();
     const parentPts = parent.rayShape === 'array' ? parent.getApertureFullExtentWorld() : parent.getAperturePointsWorld();
@@ -177,7 +179,7 @@ export function applyApertureScaling(child, parent) {
     // Divergent: aperture size depends on whether the parent already has a cone angle.
     if (child.rayShape === 'divergent') {
         const childCenter  = child.getApertureCenterWorld();
-        const parentCenter = parent.getApertureCenterWorld();
+        const parentCenter = outputAperture(parent).getApertureCenterWorld();
         const dx   = childCenter.x - parentCenter.x;
         const dy   = childCenter.y - parentCenter.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -248,3 +250,4 @@ export function recursivelyUpdateChildrenApertures(root, getComponent) {
         recursivelyUpdateChildrenApertures(child, getComponent);
     }
 }
+import { outputAperture } from './fiberOutput.js';

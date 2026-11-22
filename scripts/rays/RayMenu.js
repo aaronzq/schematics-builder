@@ -10,6 +10,8 @@ import { rebuildDebugForComponent } from '../utils/DebugLayer.js';
 import { APERTURE_RADIUS_STEP, APERTURE_OFFSET_STEP, ARRAY_SIZE_RATIO_STEP, ARRAY_POSITION_RATIO_STEP,
          DEFAULT_SOLID_RAY_COLOR, DEFAULT_RAY_POLYGON_OPACITY } from '../config.js';
 import { actionHistory } from '../history/ActionHistory.js';
+import { isCoupler, couplerPorts, branchPort } from '../components/FiberPorts.js';
+import { showArrowHandle } from '../events/ArrowHandle.js';
 
 /** Extract the 0-359 hue from either an HSL or 6-digit hex color string. */
 function _colorToHue(color) {
@@ -57,6 +59,9 @@ function buildPanelHTML(comp) {
   const positionRatio = comp.arrayPositionRatio ?? 1.0;
   const inheritColor = comp.rayColorInheritFromParent ?? true;
   const gradientEnabled = comp.rayGradientEnabled ?? false;
+  const isFiberCoupler = isCoupler(comp);
+  const couplerSplitRatio = comp.couplerSplitRatio ?? 50;
+  const couplerArmLength = comp.couplerArmLength ?? 40;
   // Non-entry composite members have all ray controls locked in the UI;
   // only the entry port may be edited. Ray propagation still flows normally.
   const compLocked = comp.isCompositeInstance && !comp.isEntryPort;
@@ -152,6 +157,32 @@ function buildPanelHTML(comp) {
                min="0" max="2" step="${ARRAY_POSITION_RATIO_STEP}" value="${positionRatio}"${compLocked ? ' disabled' : ''}>
       </div>
     </div>
+
+    ${isFiberCoupler ? `
+    <div class="rp-section rp-coupler-section">
+      <div class="rp-section-title">Fiber Coupler</div>
+      <div class="rp-field">
+        <label class="rp-label" for="rp-coupler-port">Port for next connection</label>
+        <select id="rp-coupler-port" class="rp-select">
+          ${couplerPorts(comp).filter(p => p.id !== comp.couplerInputPort).map(p => `<option value="${p.id}" ${p.id === comp.couplerActivePort ? 'selected' : ''}>${p.label}</option>`).join('')}
+        </select>
+      </div>
+      <p>Left upper/input receives the upstream connection. Click an unused port circle or choose a port above, then add a component.</p>
+      <div class="rp-field">
+        <label class="rp-label">Splitting Ratio
+          <span class="rp-value" id="rp-coupler-ratio-val">${Math.round(couplerSplitRatio)}/${Math.round(100 - couplerSplitRatio)}</span>
+        </label>
+        <input type="range" id="rp-coupler-ratio" class="rp-slider"
+               min="0" max="100" step="1" value="${couplerSplitRatio}">
+      </div>
+      <div class="rp-field">
+        <label class="rp-label">Arm Length
+          <span class="rp-value" id="rp-coupler-arm-val">${Math.round(couplerArmLength)}</span>
+        </label>
+        <input type="range" id="rp-coupler-arm" class="rp-slider"
+               min="10" max="150" step="5" value="${couplerArmLength}">
+      </div>
+    </div>` : ''}
   `;
 }
 
@@ -439,6 +470,47 @@ function wireEvents(body) {
     apply();
   });
   get('rp-position-ratio').addEventListener('change', commitControlHistory);
+
+  const couplerRatio = get('rp-coupler-ratio');
+  if (couplerRatio) {
+    couplerRatio.addEventListener('input', e => {
+      if (!currentComponent) return;
+      beginControlHistory('Change coupler splitting ratio', 'coupler-split-ratio');
+      const ratio = parseFloat(e.target.value);
+      currentComponent.setCouplerSplitRatio(ratio);
+      body.querySelector('#rp-coupler-ratio-val').textContent =
+        `${Math.round(ratio)}/${Math.round(100 - ratio)}`;
+
+      const outputIds = currentComponent.children.filter(id => branchPort(currentComponent, componentManager.getComponent(id), componentManager).startsWith('out'));
+      const totalOpacity = Math.min(1, (currentComponent.rayPolygonOpacity ?? 0.2) * 2);
+      outputIds.forEach((id, index) => {
+        const child = componentManager.getComponent(id);
+        if (!child) return;
+        const fraction = branchPort(currentComponent, child, componentManager) === 'out1' ? ratio / 100 : (100 - ratio) / 100;
+        child.rayPolygonOpacity = totalOpacity * fraction;
+        child.rayColorInheritFromParent = false;
+      });
+      apply();
+    });
+    couplerRatio.addEventListener('change', commitControlHistory);
+  }
+
+  const couplerArm = get('rp-coupler-arm');
+  get('rp-coupler-port')?.addEventListener('change', e => {
+    chooseCouplerPort(currentComponent, e.target.value);
+  });
+  if (couplerArm) {
+    couplerArm.addEventListener('input', e => {
+      if (!currentComponent) return;
+      beginControlHistory('Change coupler arm length', 'coupler-arm-length');
+      const length = parseFloat(e.target.value);
+      currentComponent.setCouplerArmLength(length);
+      componentManager.updateNextPositionFromComponent(componentManager.currentId);
+      body.querySelector('#rp-coupler-arm-val').textContent = Math.round(length);
+      apply();
+    });
+    couplerArm.addEventListener('change', commitControlHistory);
+  }
 }
 
 // â”€â”€â”€ Public API â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -452,6 +524,19 @@ export function setupRayMenu() {
 
   body.innerHTML = EMPTY_HTML;
 
+  document.addEventListener('mousedown', e => {
+    const dot = e.target.closest?.('[data-fiber-port]');
+    if (!dot) return;
+    const element = dot.closest('.component');
+    const id = Number(element?.getAttribute('data-id'));
+    const comp = componentManager.getComponent(id);
+    if (!isCoupler(comp)) return;
+    e.preventDefault();
+    e.stopPropagation();
+    componentManager.selectComponent(id);
+    chooseCouplerPort(comp, dot.getAttribute('data-fiber-port'));
+  }, true);
+
   ComponentManager.onSelectionChanged = (component) => {
     currentComponent = component;
     if (!component) {
@@ -461,4 +546,21 @@ export function setupRayMenu() {
     body.innerHTML = buildPanelHTML(component);
     wireEvents(body);
   };
+}
+
+function chooseCouplerPort(comp, port) {
+  if (!comp || port === comp.couplerInputPort) return;
+  const occupied = comp.children.some(id => branchPort(comp, componentManager.getComponent(id), componentManager) === port);
+  if (occupied) { alert('This port already has a connection. Choose an unused port.'); return; }
+  actionHistory.run('Select fiber port', 'fiber-port', () => {
+    comp.couplerActivePort = port;
+    const sign = port.startsWith('in') ? -1 : 1;
+    const angle = comp.rotation * Math.PI / 180;
+    comp.setArrowVector(sign * 150 * Math.cos(angle), sign * 150 * Math.sin(angle));
+    comp._refreshDrawing();
+    componentManager.updateNextPositionFromComponent(componentManager.currentId);
+    showArrowHandle(componentManager.currentId);
+  });
+  const select = document.getElementById('rp-coupler-port');
+  if (select) select.value = port;
 }

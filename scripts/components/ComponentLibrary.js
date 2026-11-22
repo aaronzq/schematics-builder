@@ -1,4 +1,5 @@
 import { DEFAULT_APERTURE_RADIUS, DEFAULT_CONE_ANGLE } from '../config.js';
+import { couplerPorts } from './FiberPorts.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -316,6 +317,55 @@ export const components = {
 
     // ── Prisms ────────────────────────────────────────────────────────────────
 
+    // Reflective collimator is grouped into the existing Mirrors sidebar category.
+    'reflective-collimator': {
+        category: 'Mirrors',
+        label: 'Reflective Collimator',
+        isComposite: false,
+        isBuiltIn: true,
+        localBounds: { minX: -29, maxX: 20, minY: -19, maxY: 19 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, 'g');
+
+            // Bare parabolic mirror surface. The quadratic midpoint is (0,0),
+            // matching the component's optical center and ray junction.
+            const mirror = document.createElementNS(ns, 'path');
+            // Trace of the supplied cutaway: shallow upper-left end, steeper
+            // lower-right end; tangent at the illuminated center is about 37 degrees.
+            mirror.setAttribute('d', 'M -26.8 -17 Q 4.2 -0.1 18.4 17.2');
+            mirror.setAttribute('fill', 'none');
+            mirror.setAttribute('stroke', 'black');
+            mirror.setAttribute('stroke-width', '3');
+            mirror.setAttribute('stroke-linecap', 'round');
+            g.appendChild(mirror);
+
+            // Qualitative focus-side indicator, transformed with the artwork.
+            // Its tip denotes direction only, not a calculated focal position.
+            const focusArrow = document.createElementNS(ns, 'path');
+            focusArrow.setAttribute('d', 'M 0 6 V 16 M -3 12 L 0 16 L 3 12');
+            focusArrow.setAttribute('fill', 'none');
+            focusArrow.setAttribute('stroke', '#d32f2f');
+            focusArrow.setAttribute('stroke-width', '1.5');
+            focusArrow.setAttribute('stroke-linecap', 'round');
+            focusArrow.setAttribute('stroke-linejoin', 'round');
+            focusArrow.setAttribute('pointer-events', 'none');
+            const focusTitle = document.createElementNS(ns, 'title');
+            focusTitle.textContent = 'Focus direction (schematic; not focal distance)';
+            focusArrow.appendChild(focusTitle);
+            g.appendChild(focusArrow);
+
+            return g;
+        }
+    },
+
     'right-angle-prism': {
         category: 'Prisms',
         label: 'Right-Angle Prism',
@@ -350,7 +400,298 @@ export const components = {
         }
     },
 
-    // ── Detectors ─────────────────────────────────────────────────────────────
+    // ── Diffractive Optics ───────────────────────────────────────────────
+
+    grating: {
+        category: 'Diffractive Optics',
+        label: 'Transmission Grating',
+        isComposite: false,
+        isBuiltIn: true,
+        localBounds: { minX: -5, maxX: 5, minY: -30, maxY: 30 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: DEFAULT_APERTURE_RADIUS,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, 'g');
+
+            // Transparent substrate.
+            const substrate = document.createElementNS(ns, 'rect');
+            substrate.setAttribute('x', '-5');
+            substrate.setAttribute('y', '-30');
+            substrate.setAttribute('width', '10');
+            substrate.setAttribute('height', '60');
+            substrate.setAttribute('rx', '1');
+            substrate.setAttribute('fill', '#7ec8e3');
+            substrate.setAttribute('fill-opacity', '0.35');
+            substrate.setAttribute('stroke', 'black');
+            substrate.setAttribute('stroke-width', '1.5');
+            g.appendChild(substrate);
+
+            // Repeated diagonal marks represent the grating grooves.
+            for (let y = -25; y <= 25; y += 5) {
+                const groove = document.createElementNS(ns, 'line');
+                groove.setAttribute('x1', '-5');
+                groove.setAttribute('y1', String(y - 2));
+                groove.setAttribute('x2', '5');
+                groove.setAttribute('y2', String(y + 2));
+                groove.setAttribute('stroke', '#245b78');
+                groove.setAttribute('stroke-width', '1');
+                g.appendChild(groove);
+            }
+
+            return g;
+        }
+    },
+
+    // ── Fiber Optics ──────────────────────────────────────────────────────
+
+    'supercontinuum-source': {
+        category: 'Light Sources',
+        label: 'Supercontinuum Source (Fiber Output)',
+        isComposite: false,
+        isBuiltIn: true,
+        localBounds: { minX: -152, maxX: 2, minY: -52, maxY: 52 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: 2,
+        coneAngle: 0,
+        rayShape: 'collimated',
+        draw: (ns) => {
+            const g = document.createElementNS(ns, 'g');
+            const add = (tag, attrs, text) => {
+                const el = document.createElementNS(ns, tag);
+                Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+                if (text) el.textContent = text;
+                g.appendChild(el);
+                return el;
+            };
+            add('rect', { x: -150, y: -50, width: 120, height: 100,
+                fill: 'white', stroke: 'black', 'stroke-width': 2 });
+            // Qualitative broadband spectrum: intensity versus wavelength.
+            // Unique IDs keep multiple sources and sidebar previews independent.
+            const gradientId = `source-spectrum-${crypto.randomUUID()}`;
+            const defs = add('defs', {});
+            const gradient = document.createElementNS(ns, 'linearGradient');
+            gradient.setAttribute('id', gradientId);
+            gradient.setAttribute('gradientUnits', 'userSpaceOnUse');
+            gradient.setAttribute('x1', '-132');
+            gradient.setAttribute('x2', '-47');
+            gradient.setAttribute('y1', '0');
+            gradient.setAttribute('y2', '0');
+            ['#7b2cbf', '#3546d3', '#008cdd', '#16a34a', '#e6bd00', '#f58220', '#dc2626'].forEach((color, i) => {
+                const stop = document.createElementNS(ns, 'stop');
+                stop.setAttribute('offset', `${i / 6 * 100}%`);
+                stop.setAttribute('stop-color', color);
+                gradient.appendChild(stop);
+            });
+            defs.appendChild(gradient);
+            add('path', { d: 'M -135 -39 V -8 H -45', fill: 'none',
+                stroke: '#555', 'stroke-width': 1 });
+            add('path', { d: 'M -132 -10 C -128 -30 -122 -33 -114 -27 S -102 -18 -95 -31 S -85 -42 -78 -33 S -68 -44 -59 -30 S -52 -16 -47 -11',
+                fill: 'none', stroke: `url(#${gradientId})`, 'stroke-width': 2,
+                'stroke-linecap': 'round' });
+            add('text', { x: -90, y: 16, 'text-anchor': 'middle',
+                'font-family': 'Arial, sans-serif', 'font-size': 12,
+                'font-weight': 'bold', fill: 'black' }, 'Supercontinuum');
+            add('text', { x: -90, y: 33, 'text-anchor': 'middle',
+                'font-family': 'Arial, sans-serif', 'font-size': 12,
+                'font-weight': 'bold', fill: 'black' }, 'source');
+            add('path', { d: 'M -30 0 H -24 C -18 0 -18 10 -12 10 S -6 0 0 0',
+                fill: 'none', stroke: 'black', 'stroke-width': 2 });
+            add('rect', { x: -34, y: -4, width: 7, height: 8,
+                fill: '#ddd', stroke: 'black', 'stroke-width': 1 });
+            return g;
+        }
+    },
+
+    'draw-fiber': {
+        category: 'Fiber Optics', label: 'Draw Fiber (drag; Esc to cancel)',
+        isComposite: false, isBuiltIn: true,
+        localBounds: { minX: -30, maxX: 30, minY: -12, maxY: 12 },
+        centerPoint: { x: 0, y: 0 }, apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 }, forwardVector: { x: 1, y: 0 },
+        apertureRadius: 0, rayShape: 'manual',
+        draw: (ns, instance) => {
+            const g = document.createElementNS(ns, 'g');
+            const path = document.createElementNS(ns, 'path');
+            const points = instance?.fiberPoints;
+            path.setAttribute('d', points?.length
+                ? points.map((p, i) => `${i ? 'L' : 'M'} ${p.x} ${p.y}`).join(' ')
+                : 'M -30 0 C -10 -28 10 28 30 0');
+            path.setAttribute('fill', 'none');
+            path.setAttribute('stroke', 'black');
+            path.setAttribute('stroke-width', '2');
+            path.setAttribute('stroke-linecap', 'round');
+            path.setAttribute('stroke-linejoin', 'round');
+            g.appendChild(path);
+            return g;
+        }
+    },
+
+    'fiber-coupler': {
+        category: 'Fiber Optics',
+        label: '2×2 Fiber Coupler',
+        isComposite: false,
+        isBuiltIn: true,
+        localBounds: { minX: -64, maxX: 64, minY: -20, maxY: 20 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: 4,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+        couplerSplitRatio: 50,
+        couplerArmLength: 40,
+
+        draw: (ns, instance) => {
+            const g = document.createElementNS(ns, 'g');
+            const ratio = instance?.couplerSplitRatio ?? 50;
+            const armLength = instance?.couplerArmLength ?? 40;
+            const halfBodyWidth = 20;
+
+            couplerPorts(instance).forEach(port => {
+                const side = port.x < 0 ? -1 : 1;
+                const y = Math.sign(port.y) * 6;
+                const fiber = document.createElementNS(ns, 'path');
+                fiber.setAttribute('d', `M ${side * 20} ${y} C ${side * (20 + armLength / 2)} ${y} ${side * (20 + armLength / 2)} ${port.y} ${port.x} ${port.y}`);
+                fiber.setAttribute('fill', 'none');
+                fiber.setAttribute('stroke', 'black');
+                fiber.setAttribute('stroke-width', '2');
+                g.appendChild(fiber);
+                const dot = document.createElementNS(ns, 'circle');
+                dot.setAttribute('cx', port.x);
+                dot.setAttribute('cy', port.y);
+                dot.setAttribute('r', '3');
+                dot.setAttribute('fill', instance?.couplerActivePort === port.id ? '#2196f3' : 'white');
+                dot.setAttribute('stroke', 'black');
+                dot.setAttribute('data-fiber-port', port.id);
+                const title = document.createElementNS(ns, 'title');
+                title.textContent = port.label;
+                dot.appendChild(title);
+                g.appendChild(dot);
+            });
+
+            const body = document.createElementNS(ns, 'rect');
+            body.setAttribute('x', String(-halfBodyWidth));
+            body.setAttribute('y', '-12');
+            body.setAttribute('width', String(halfBodyWidth * 2));
+            body.setAttribute('height', '24');
+            body.setAttribute('fill', 'white');
+            body.setAttribute('stroke', 'black');
+            body.setAttribute('stroke-width', '2');
+            g.appendChild(body);
+
+            const label = document.createElementNS(ns, 'text');
+            label.setAttribute('x', '0');
+            label.setAttribute('y', '4');
+            label.setAttribute('text-anchor', 'middle');
+            label.setAttribute('font-family', 'Arial, sans-serif');
+            label.setAttribute('font-size', '9');
+            label.setAttribute('font-weight', '600');
+            label.setAttribute('fill', 'black');
+            label.setAttribute('pointer-events', 'none');
+            label.textContent = `${Math.round(ratio)}/${Math.round(100 - ratio)}`;
+            g.appendChild(label);
+
+            return g;
+        }
+    },
+
+    'polarization-controller': {
+        category: 'Fiber Optics',
+        label: 'Polarization Controller',
+        isComposite: false,
+        isBuiltIn: true,
+        localBounds: { minX: -48, maxX: 48, minY: -29, maxY: 2 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: 4,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, 'g');
+
+            const fiber = document.createElementNS(ns, 'line');
+            fiber.setAttribute('x1', '-48');
+            fiber.setAttribute('y1', '0');
+            fiber.setAttribute('x2', '48');
+            fiber.setAttribute('y2', '0');
+            fiber.setAttribute('stroke', 'black');
+            fiber.setAttribute('stroke-width', '3');
+            fiber.setAttribute('stroke-linecap', 'round');
+            g.appendChild(fiber);
+
+            // Three overlapping fiber loops, matching a paddle-style controller symbol.
+            [-16, 0, 16].forEach(cx => {
+                const loop = document.createElementNS(ns, 'circle');
+                loop.setAttribute('cx', String(cx));
+                loop.setAttribute('cy', '-14');
+                loop.setAttribute('r', '14');
+                loop.setAttribute('fill', 'none');
+                loop.setAttribute('stroke', 'black');
+                loop.setAttribute('stroke-width', '3');
+                g.appendChild(loop);
+            });
+
+            return g;
+        }
+    },
+
+    fiber: {
+        category: 'Fiber Optics',
+        label: 'Fiber',
+        isComposite: false,
+        isBuiltIn: true,
+        localBounds: { minX: -45, maxX: 45, minY: -25, maxY: 2 },
+        centerPoint: { x: 0, y: 0 },
+        apertureCenter: { x: 0, y: 0 },
+        upVector: { x: 0, y: -1 },
+        forwardVector: { x: 1, y: 0 },
+        apertureRadius: 4,
+        coneAngle: DEFAULT_CONE_ANGLE,
+        rayShape: 'collimated',
+
+        draw: (ns) => {
+            const g = document.createElementNS(ns, 'g');
+
+            const fiberLine = document.createElementNS(ns, 'line');
+            fiberLine.setAttribute('x1', '-45');
+            fiberLine.setAttribute('y1', '0');
+            fiberLine.setAttribute('x2', '45');
+            fiberLine.setAttribute('y2', '0');
+            fiberLine.setAttribute('stroke', 'black');
+            fiberLine.setAttribute('stroke-width', '3');
+            fiberLine.setAttribute('stroke-linecap', 'round');
+            g.appendChild(fiberLine);
+
+            // Two overlapping loops identify a coiled fiber section.
+            [-9, 9].forEach(cx => {
+                const loop = document.createElementNS(ns, 'circle');
+                loop.setAttribute('cx', String(cx));
+                loop.setAttribute('cy', '-12');
+                loop.setAttribute('r', '12');
+                loop.setAttribute('fill', 'none');
+                loop.setAttribute('stroke', 'black');
+                loop.setAttribute('stroke-width', '3');
+                g.appendChild(loop);
+            });
+
+            return g;
+        }
+    },
+
+    // ── Detectors ────────────────────────────────────────────────────────────
 
     detector: {
         category: 'Detectors',
@@ -629,6 +970,69 @@ export const components = {
  * Get all available component types
  * @returns {Array<string>} List of component type names
  */
+components['mouse-sample'] = {
+    category: 'Samples',
+    label: 'Mouse Sample',
+    isComposite: false,
+    isBuiltIn: true,
+    localBounds: { minX: -93, maxX: 53, minY: -31, maxY: 24 },
+    // The optical target sits on the upper back, beneath an imaging objective.
+    centerPoint: { x: 0, y: -24 },
+    apertureCenter: { x: 0, y: -24 },
+    upVector: { x: 1, y: 0 },
+    forwardVector: { x: 0, y: -1 },
+    apertureRadius: 5,
+    coneAngle: 0,
+    rayShape: 'convergent',
+    draw: ns => {
+        const g = document.createElementNS(ns, 'g');
+        const add = (tag, attrs) => {
+            const el = document.createElementNS(ns, tag);
+            Object.entries(attrs).forEach(([key, value]) => el.setAttribute(key, value));
+            g.appendChild(el);
+        };
+        add('path', { d: 'M -30 13 C -50 20 -64 13 -75 18 S -85 20 -91 22',
+            fill: 'none', stroke: '#c69c96', 'stroke-width': 3,
+            'stroke-linecap': 'round' });
+        // Small paws sit below the body.
+        add('ellipse', { cx: -15, cy: 20, rx: 10, ry: 3, fill: '#b9958c' });
+        add('ellipse', { cx: 27, cy: 20, rx: 8, ry: 3, fill: '#b9958c' });
+        add('path', { d: 'M -37 15 C -43 -1 -29 -20 -10 -25 C 6 -30 20 -21 25 -9 C 34 -8 41 -1 46 7 L 51 14 Q 49 18 40 17 L 29 16 Q 24 22 11 18 Q -6 24 -25 19 Q -35 22 -37 15 Z',
+            fill: '#595654', stroke: '#4c4947', 'stroke-width': 1,
+            'stroke-linejoin': 'round' });
+        add('path', { d: 'M 22 -7 C 13 -12 12 -29 21 -29 C 31 -29 34 -13 27 -7 Z',
+            fill: '#77716b', stroke: '#504b48', 'stroke-width': 1 });
+        add('path', { d: 'M 23 -10 C 18 -14 17 -24 22 -25 C 28 -24 29 -14 25 -10 Z',
+            fill: '#c9a79c' });
+        add('circle', { cx: 37, cy: 3, r: 2, fill: '#181818' });
+        add('circle', { cx: 37.5, cy: 2.5, r: 0.6, fill: 'white' });
+        add('ellipse', { cx: 50, cy: 13, rx: 2, ry: 1.8, fill: '#292522' });
+        return g;
+    }
+};
+
+components['fiber-coupler-1x2'] = {
+    ...components['fiber-coupler'],
+    label: '1×2 Fiber Coupler',
+    draw: (ns, instance) => components['fiber-coupler'].draw(ns,
+        instance || { type: 'fiber-coupler-1x2' })
+};
+
+components['connect-fiber'] = {
+    ...components['draw-fiber'],
+    label: 'Connect Fiber (click start and end; Esc to cancel)',
+    draw: ns => {
+        const g = document.createElementNS(ns, 'g');
+        const path = document.createElementNS(ns, 'path');
+        path.setAttribute('d', 'M -30 -10 H -10 Q 0 -10 0 0 Q 0 10 10 10 H 30');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('stroke', 'black');
+        path.setAttribute('stroke-width', '2');
+        g.appendChild(path);
+        return g;
+    }
+};
+
 export function getComponentList() {
   return Object.keys(components);
 }

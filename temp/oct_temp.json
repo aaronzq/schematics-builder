@@ -1,0 +1,2714 @@
+{
+  "schema": "schematics-builder.schematic",
+  "version": 1,
+  "metadata": {
+    "filename": "Untitled Schematic",
+    "exportedAt": "2026-11-11T20:17:07.652Z"
+  },
+  "canvas": {
+    "viewBox": {
+      "x": -963.0693936242017,
+      "y": -338.3753170943386,
+      "width": 1964.445423043174,
+      "height": 988.0054354031367
+    }
+  },
+  "snapshot": {
+    "idCounter": 76,
+    "compositeInstanceCounter": 5,
+    "currentId": null,
+    "selectedIds": [],
+    "nextPosition": {
+      "x": 565.9527733499605,
+      "y": 305.27883704816884
+    },
+    "components": [
+      {
+        "mapId": 0,
+        "componentId": "plane-1794301200173-p5b337cel",
+        "type": "plane",
+        "name": "plane",
+        "x": -266.7029002921248,
+        "y": 112.99594554825961,
+        "rotation": 180,
+        "scale": 0.8,
+        "visible": false,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": null,
+        "children": [
+          1
+        ],
+        "isGrouped": true,
+        "groupMembers": [
+          1,
+          2,
+          11,
+          12,
+          13,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 1,
+        "componentId": "lens-1794301204543-a3943d13k",
+        "type": "lens",
+        "name": "lens",
+        "x": -386.7029002921248,
+        "y": 112.99594554825961,
+        "rotation": 180,
+        "scale": 0.8,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 0,
+        "children": [
+          2
+        ],
+        "isGrouped": true,
+        "groupMembers": [
+          0,
+          2,
+          11,
+          12,
+          13,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "rayShape": "divergent",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 8.53,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 2,
+        "componentId": "grating-1794301211525-phzj1jlte",
+        "type": "grating",
+        "name": "grating",
+        "x": -506.7029002921248,
+        "y": 112.99594554825961,
+        "rotation": 180,
+        "scale": 0.8,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -186,
+          "y": 90
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 1,
+        "children": [
+          11,
+          12,
+          13
+        ],
+        "isGrouped": true,
+        "groupMembers": [
+          0,
+          1,
+          11,
+          12,
+          13,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 11,
+        "componentId": "plane-1794301582370-zlqz3e3b0",
+        "type": "plane",
+        "name": "plane",
+        "x": -637.1029002921248,
+        "y": 200.9959455482596,
+        "rotation": 145.98668750008935,
+        "scale": 0.8,
+        "visible": false,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -155,
+          "y": 98
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 2,
+        "children": [
+          16
+        ],
+        "isGrouped": true,
+        "groupMembers": [
+          0,
+          1,
+          2,
+          12,
+          13,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "rayShape": "collimated",
+        "rayPolygonColor": "hsl(0, 70%, 50%)",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": false,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 14.920337221378698,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 12,
+        "componentId": "plane-1794301595796-1nwjv0ia3",
+        "type": "plane",
+        "name": "plane",
+        "x": -641.9029002921247,
+        "y": 190.59594554825964,
+        "rotation": 149.8913408641932,
+        "scale": 0.8,
+        "visible": false,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -160,
+          "y": 96
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 2,
+        "children": [
+          17,
+          19
+        ],
+        "isGrouped": true,
+        "groupMembers": [
+          0,
+          1,
+          2,
+          11,
+          13,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "rayShape": "collimated",
+        "rayPolygonColor": "hsl(130, 70%, 50%)",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": false,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 15.611448149785447,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 13,
+        "componentId": "plane-1794301607587-oj80ool6r",
+        "type": "plane",
+        "name": "plane",
+        "x": -649.1029002921248,
+        "y": 180.19594554825966,
+        "rotation": 154.7369014955009,
+        "scale": 0.8,
+        "visible": false,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -161,
+          "y": 93
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 2,
+        "children": [
+          18
+        ],
+        "isGrouped": true,
+        "groupMembers": [
+          0,
+          1,
+          2,
+          11,
+          12,
+          16,
+          17,
+          18,
+          19,
+          20
+        ],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 16.278436855339585,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 16,
+        "componentId": "plane-1794301776604-x0ddq73lq",
+        "type": "plane",
+        "name": "plane",
+        "x": -761.1029002921248,
+        "y": 279.39594554825965,
+        "rotation": 147.69654895161275,
+        "scale": 0.8,
+        "visible": false,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -126.78444697410063,
+          "y": 80.16048905459263
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 11,
+        "children": [],
+        "isGrouped": true,
+        "groupMembers": [
+          0,
+          1,
+          2,
+          11,
+          12,
+          13,
+          17,
+          18,
+          19,
+          20
+        ],
+        "rayShape": "convergent",
+        "rayPolygonColor": "hsl(0, 70%, 50%)",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 14.913693781800593,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 5.82,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 17,
+        "componentId": "plane-1794301795834-fyhhgv1l3",
+        "type": "plane",
+        "name": "plane",
+        "x": -769.9029002921247,
+        "y": 268.19594554825966,
+        "rotation": 149.03624346792648,
+        "scale": 0.8,
+        "visible": false,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -128.62393885688164,
+          "y": 77.17436331412898
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 12,
+        "children": [],
+        "isGrouped": true,
+        "groupMembers": [
+          0,
+          1,
+          2,
+          11,
+          12,
+          13,
+          16,
+          18,
+          19,
+          20
+        ],
+        "rayShape": "convergent",
+        "rayPolygonColor": "hsl(130, 70%, 50%)",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 15.56962700767719,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 5.94,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 18,
+        "componentId": "plane-1794301810082-qxyjwe9p6",
+        "type": "plane",
+        "name": "plane",
+        "x": -777.9029002921247,
+        "y": 254.59594554825964,
+        "rotation": 149.9875619710568,
+        "scale": 0.8,
+        "visible": false,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -129.88752616507557,
+          "y": 75.02819834380142
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 13,
+        "children": [],
+        "isGrouped": true,
+        "groupMembers": [
+          0,
+          1,
+          2,
+          11,
+          12,
+          13,
+          16,
+          17,
+          19,
+          20
+        ],
+        "rayShape": "convergent",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 16.22254414243916,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 6.17,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 19,
+        "componentId": "lens-1794301832606-64p7bewui",
+        "type": "lens",
+        "name": "lens",
+        "x": -641.9029002921247,
+        "y": 190.59594554825964,
+        "rotation": 149.03624346792648,
+        "scale": 1.2800000000000002,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -128.62393885688164,
+          "y": 77.17436331412898
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 12,
+        "children": [],
+        "isGrouped": true,
+        "groupMembers": [
+          0,
+          1,
+          2,
+          11,
+          12,
+          13,
+          16,
+          17,
+          18,
+          20
+        ],
+        "rayShape": "collimated",
+        "rayPolygonColor": "hsl(130, 70%, 50%)",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 15.221408350922507,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 20,
+        "componentId": "plane-1794301862383-3iyelq2or",
+        "type": "plane",
+        "name": "plane",
+        "x": -769.9029002921247,
+        "y": 267.39594554825965,
+        "rotation": 147.5,
+        "scale": 1.6,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -126.50871687193285,
+          "y": 80.59494125202359
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": null,
+        "children": [],
+        "isGrouped": true,
+        "groupMembers": [
+          0,
+          1,
+          2,
+          11,
+          12,
+          13,
+          16,
+          17,
+          18,
+          19
+        ],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 21,
+        "componentId": "supercontinuum-source-1794424596961-ap1z97bbd",
+        "type": "supercontinuum-source",
+        "name": "supercontinuum-source",
+        "x": -290,
+        "y": -31,
+        "rotation": 0,
+        "scale": 1.7000000000000002,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 96,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": null,
+        "children": [
+          25
+        ],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 2,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 25,
+        "componentId": "fiber-1794425648935-6l32onitn",
+        "type": "fiber",
+        "name": "fiber",
+        "x": -194,
+        "y": -31,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 21,
+        "children": [],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 2,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 26,
+        "componentId": "fiber-coupler-1794425660248-yw2luymn1",
+        "type": "fiber-coupler",
+        "name": "fiber-coupler",
+        "x": -47,
+        "y": 33,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 66,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": null,
+        "children": [
+          28,
+          30,
+          31
+        ],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 4,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out2",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 27,
+        "componentId": "draw-fiber-1794425700261-y30ljt0u3",
+        "type": "draw-fiber",
+        "name": "draw-fiber",
+        "x": -109.13938903808594,
+        "y": 16.822162628173828,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": null,
+        "children": [],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "manual",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 0,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "fiberPoints": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": -1.0720138549804688,
+            "y": -1.0720100402832031
+          },
+          {
+            "x": -2.1440200805664062,
+            "y": -1.6080150604248047
+          },
+          {
+            "x": -3.216033935546875,
+            "y": -2.680025100708008
+          },
+          {
+            "x": -5.360054016113281,
+            "y": -4.2880401611328125
+          },
+          {
+            "x": -6.968070983886719,
+            "y": -5.896055221557617
+          },
+          {
+            "x": -8.576087951660156,
+            "y": -7.504071235656738
+          },
+          {
+            "x": -10.720108032226562,
+            "y": -9.648091316223145
+          },
+          {
+            "x": -11.7921142578125,
+            "y": -11.25610637664795
+          },
+          {
+            "x": -13.936134338378906,
+            "y": -12.864121675491333
+          },
+          {
+            "x": -16.080154418945312,
+            "y": -15.54414701461792
+          },
+          {
+            "x": -17.68817138671875,
+            "y": -17.15216225385666
+          },
+          {
+            "x": -19.296188354492188,
+            "y": -19.29618263244629
+          },
+          {
+            "x": -20.368194580078125,
+            "y": -20.368192672729492
+          },
+          {
+            "x": -21.440200805664062,
+            "y": -21.440202713012695
+          },
+          {
+            "x": -22.512222290039062,
+            "y": -23.58422327041626
+          },
+          {
+            "x": -23.584228515625,
+            "y": -25.192238807678223
+          },
+          {
+            "x": -24.1202392578125,
+            "y": -26.264248847961426
+          },
+          {
+            "x": -25.192245483398438,
+            "y": -27.87226390838623
+          },
+          {
+            "x": -25.728240966796875,
+            "y": -28.944273948669434
+          },
+          {
+            "x": -26.264251708984375,
+            "y": -30.016283988952637
+          },
+          {
+            "x": -26.800262451171875,
+            "y": -31.08829402923584
+          },
+          {
+            "x": -27.872268676757812,
+            "y": -32.16030406951904
+          },
+          {
+            "x": -27.872268676757812,
+            "y": -33.23231506347656
+          },
+          {
+            "x": -28.408279418945312,
+            "y": -34.304325103759766
+          },
+          {
+            "x": -28.94427490234375,
+            "y": -35.37633514404297
+          },
+          {
+            "x": -29.48028564453125,
+            "y": -36.44834518432617
+          },
+          {
+            "x": -30.016281127929688,
+            "y": -37.520355224609375
+          },
+          {
+            "x": -31.088302612304688,
+            "y": -38.59236526489258
+          },
+          {
+            "x": -31.088302612304688,
+            "y": -39.66437530517578
+          },
+          {
+            "x": -32.160308837890625,
+            "y": -40.20038032531738
+          },
+          {
+            "x": -32.696319580078125,
+            "y": -41.272390365600586
+          },
+          {
+            "x": -33.76832580566406,
+            "y": -41.80839538574219
+          },
+          {
+            "x": -34.3043212890625,
+            "y": -42.88040542602539
+          },
+          {
+            "x": -34.84033203125,
+            "y": -43.952415466308594
+          },
+          {
+            "x": -35.91233825683594,
+            "y": -44.488420486450195
+          },
+          {
+            "x": -36.98435974121094,
+            "y": -45.0244255065918
+          },
+          {
+            "x": -37.520355224609375,
+            "y": -46.096435546875
+          },
+          {
+            "x": -38.59236145019531,
+            "y": -46.6324405670166
+          },
+          {
+            "x": -39.66438293457031,
+            "y": -47.1684455871582
+          },
+          {
+            "x": -39.66438293457031,
+            "y": -47.1684455871582
+          }
+        ],
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 28,
+        "componentId": "fiber-1794425714811-uyjqx1fbh",
+        "type": "fiber",
+        "name": "fiber",
+        "x": -172,
+        "y": 49,
+        "rotation": 180,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": -85,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": 1
+        },
+        "parent": 26,
+        "children": [],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 4,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": "in2",
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 29,
+        "componentId": "draw-fiber-1794425737521-7qhuyahdl",
+        "type": "draw-fiber",
+        "name": "draw-fiber",
+        "x": -218.03065490722656,
+        "y": 49.21822738647461,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": null,
+        "children": [],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "manual",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 0,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "fiberPoints": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": -1.3569183349609375,
+            "y": 0
+          },
+          {
+            "x": -2.7138214111328125,
+            "y": 0
+          },
+          {
+            "x": -5.4276580810546875,
+            "y": 2.0353736877441406
+          },
+          {
+            "x": -8.8199462890625,
+            "y": 4.070747375488281
+          },
+          {
+            "x": -12.212234497070312,
+            "y": 5.427665710449219
+          },
+          {
+            "x": -14.24761962890625,
+            "y": 6.784580230712891
+          },
+          {
+            "x": -16.282989501953125,
+            "y": 8.141494750976562
+          },
+          {
+            "x": -18.318359375,
+            "y": 10.176868438720703
+          },
+          {
+            "x": -20.353729248046875,
+            "y": 11.53378677368164
+          },
+          {
+            "x": -22.389114379882812,
+            "y": 13.569160461425781
+          },
+          {
+            "x": -25.102935791015625,
+            "y": 14.926074981689453
+          },
+          {
+            "x": -28.495223999023438,
+            "y": 17.639904022216797
+          },
+          {
+            "x": -30.530609130859375,
+            "y": 20.353740692138672
+          },
+          {
+            "x": -32.56597900390625,
+            "y": 23.746028900146484
+          },
+          {
+            "x": -33.92289733886719,
+            "y": 25.78140640258789
+          },
+          {
+            "x": -35.95826721191406,
+            "y": 28.495235443115234
+          },
+          {
+            "x": -37.99363708496094,
+            "y": 31.209064483642578
+          },
+          {
+            "x": -37.99363708496094,
+            "y": 32.565982818603516
+          },
+          {
+            "x": -40.02900695800781,
+            "y": 35.95827102661133
+          },
+          {
+            "x": -40.70747375488281,
+            "y": 37.993648529052734
+          },
+          {
+            "x": -40.70747375488281,
+            "y": 40.02901840209961
+          },
+          {
+            "x": -42.74284362792969,
+            "y": 44.09976577758789
+          },
+          {
+            "x": -43.42131042480469,
+            "y": 46.813594818115234
+          },
+          {
+            "x": -43.42131042480469,
+            "y": 49.52743148803711
+          },
+          {
+            "x": -44.09974670410156,
+            "y": 51.562801361083984
+          },
+          {
+            "x": -44.09974670410156,
+            "y": 52.91971969604492
+          },
+          {
+            "x": -44.77821350097656,
+            "y": 54.27663803100586
+          },
+          {
+            "x": -44.77821350097656,
+            "y": 56.312007904052734
+          },
+          {
+            "x": -45.45668029785156,
+            "y": 58.34738540649414
+          },
+          {
+            "x": -46.13514709472656,
+            "y": 59.70429611206055
+          },
+          {
+            "x": -46.13514709472656,
+            "y": 61.061214447021484
+          },
+          {
+            "x": -46.81358337402344,
+            "y": 62.41813278198242
+          },
+          {
+            "x": -48.17051696777344,
+            "y": 63.09659194946289
+          },
+          {
+            "x": -48.84895324707031,
+            "y": 63.77504348754883
+          }
+        ],
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 30,
+        "componentId": "polarization-controller-1794425769087-1tio832p9",
+        "type": "polarization-controller",
+        "name": "polarization-controller",
+        "x": 73,
+        "y": 17,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 26,
+        "children": [],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": false,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 4,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": "out1",
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 31,
+        "componentId": "polarization-controller-1794425776728-vln4uvhx1",
+        "type": "polarization-controller",
+        "name": "polarization-controller",
+        "x": 73,
+        "y": 49,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": true,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 26,
+        "children": [],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": false,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 4,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": "out2",
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 32,
+        "componentId": "draw-fiber-1794425825392-hlmc1thsy",
+        "type": "draw-fiber",
+        "name": "draw-fiber",
+        "x": 122.36551666259766,
+        "y": 16.400835037231445,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": -1.5948486328125,
+          "y": -115.33244705200195
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": null,
+        "children": [],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "manual",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 0,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "fiberPoints": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 3.1024398803710938,
+            "y": 0
+          },
+          {
+            "x": 6.204887390136719,
+            "y": -0.7756109237670898
+          },
+          {
+            "x": 9.307334899902344,
+            "y": -1.551222801208496
+          },
+          {
+            "x": 11.634162902832031,
+            "y": -1.551222801208496
+          },
+          {
+            "x": 14.736610412597656,
+            "y": -3.102444648742676
+          },
+          {
+            "x": 17.83905792236328,
+            "y": -3.8780555725097656
+          },
+          {
+            "x": 20.941490173339844,
+            "y": -5.429277420043945
+          },
+          {
+            "x": 24.04393768310547,
+            "y": -6.980500221252441
+          },
+          {
+            "x": 25.59516143798828,
+            "y": -7.756111145019531
+          },
+          {
+            "x": 26.37078094482422,
+            "y": -9.30733346939087
+          },
+          {
+            "x": 27.146385192871094,
+            "y": -10.082944393157959
+          },
+          {
+            "x": 28.697608947753906,
+            "y": -10.858555316925049
+          },
+          {
+            "x": 29.47321319580078,
+            "y": -12.409777641296387
+          },
+          {
+            "x": 30.24883270263672,
+            "y": -13.185388803482056
+          },
+          {
+            "x": 30.24883270263672,
+            "y": -14.736611008644104
+          },
+          {
+            "x": 31.024436950683594,
+            "y": -17.063444316387177
+          },
+          {
+            "x": 31.80005645751953,
+            "y": -19.39027762413025
+          },
+          {
+            "x": 33.351280212402344,
+            "y": -21.717111110687256
+          },
+          {
+            "x": 33.351280212402344,
+            "y": -24.819555282592773
+          },
+          {
+            "x": 33.351280212402344,
+            "y": -26.370777130126953
+          },
+          {
+            "x": 34.12688446044922,
+            "y": -27.92199993133545
+          },
+          {
+            "x": 34.902503967285156,
+            "y": -30.24883270263672
+          },
+          {
+            "x": 35.67810821533203,
+            "y": -32.575666427612305
+          },
+          {
+            "x": 36.453712463378906,
+            "y": -34.126888275146484
+          },
+          {
+            "x": 36.453712463378906,
+            "y": -36.45372200012207
+          },
+          {
+            "x": 36.453712463378906,
+            "y": -38.00494384765625
+          },
+          {
+            "x": 36.453712463378906,
+            "y": -39.55616569519043
+          },
+          {
+            "x": 37.229331970214844,
+            "y": -41.882999420166016
+          },
+          {
+            "x": 37.229331970214844,
+            "y": -43.434221267700195
+          },
+          {
+            "x": 37.229331970214844,
+            "y": -44.985443115234375
+          },
+          {
+            "x": 37.229331970214844,
+            "y": -46.53666687011719
+          },
+          {
+            "x": 37.229331970214844,
+            "y": -48.08788871765137
+          },
+          {
+            "x": 37.229331970214844,
+            "y": -49.639108657836914
+          },
+          {
+            "x": 37.229331970214844,
+            "y": -51.19033241271973
+          },
+          {
+            "x": 37.229331970214844,
+            "y": -52.74155616760254
+          },
+          {
+            "x": 37.229331970214844,
+            "y": -54.292776107788086
+          },
+          {
+            "x": 37.229331970214844,
+            "y": -55.06838798522949
+          }
+        ],
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 49,
+        "componentId": "plane-1794427664241-8zloa8y8h",
+        "type": "plane",
+        "name": "plane",
+        "x": 280.40000000000003,
+        "y": -141.28803930673902,
+        "rotation": 180,
+        "scale": 0.8,
+        "visible": false,
+        "compositeDefinedVisible": false,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": 17.599999999999966,
+          "y": -0.711960693260977
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": null,
+        "children": [
+          50,
+          52
+        ],
+        "isGrouped": true,
+        "groupMembers": [
+          50,
+          51
+        ],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": true,
+        "compositeKey": "user_rc_ver2_1794427642983",
+        "compositeInstanceId": 2,
+        "isExitPort": true,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 50,
+        "componentId": "reflective-collimator-1794427664242-0iyjar3qd",
+        "type": "reflective-collimator",
+        "name": "reflective-collimator",
+        "x": 160.40000000000003,
+        "y": -141.28803930673902,
+        "rotation": 180,
+        "scale": 1.2000000000000002,
+        "visible": true,
+        "compositeDefinedVisible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 49,
+        "children": [
+          51
+        ],
+        "isGrouped": true,
+        "groupMembers": [
+          49,
+          51
+        ],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": true,
+        "compositeKey": "user_rc_ver2_1794427642983",
+        "compositeInstanceId": 2,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 51,
+        "componentId": "point-1794427664242-d2c91ws8k",
+        "type": "point",
+        "name": "point",
+        "x": 159.60000000000002,
+        "y": -39.68803930673903,
+        "rotation": 90.45113854678729,
+        "scale": 0.8,
+        "visible": false,
+        "compositeDefinedVisible": false,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": true,
+        "arrowVector": {
+          "x": -1.1810657496607793,
+          "y": 149.99535020691468
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 50,
+        "children": [],
+        "isGrouped": true,
+        "groupMembers": [
+          49,
+          50
+        ],
+        "rayShape": "convergent",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 13.01,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": true,
+        "compositeKey": "user_rc_ver2_1794427642983",
+        "compositeInstanceId": 2,
+        "isExitPort": false,
+        "isEntryPort": true,
+        "rayLocked": false
+      },
+      {
+        "mapId": 52,
+        "componentId": "lens-1794427697421-a2h6w6llm",
+        "type": "lens",
+        "name": "lens",
+        "x": 298,
+        "y": -142,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 56,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 49,
+        "children": [
+          53
+        ],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 53,
+        "componentId": "point-1794427718321-djvt9x8ym",
+        "type": "point",
+        "name": "point",
+        "x": 354,
+        "y": -142,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 92,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 52,
+        "children": [
+          54
+        ],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "convergent",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 17.82,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 54,
+        "componentId": "lens-1794427730229-cjfoclznt",
+        "type": "lens",
+        "name": "lens",
+        "x": 446,
+        "y": -142,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 53,
+        "children": [
+          55
+        ],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "divergent",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 29.57,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 17.82,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 55,
+        "componentId": "mirror-1794427740755-u0wwumbbt",
+        "type": "mirror",
+        "name": "mirror",
+        "x": 596,
+        "y": -142,
+        "rotation": 0,
+        "scale": 1.5,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 54,
+        "children": [],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 29.57,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 59,
+        "componentId": "plane-1794427810773-uua617foo",
+        "type": "plane",
+        "name": "plane",
+        "x": 280.3,
+        "y": 192.9176462393486,
+        "rotation": 180,
+        "scale": 0.8,
+        "visible": false,
+        "compositeDefinedVisible": false,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 30.69999999999999,
+          "y": 0.08235376065138666
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": null,
+        "children": [
+          60,
+          66
+        ],
+        "isGrouped": true,
+        "groupMembers": [
+          60,
+          61
+        ],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": true,
+        "compositeKey": "user_rc_ver2_1794427642983",
+        "compositeInstanceId": 4,
+        "isExitPort": true,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 60,
+        "componentId": "reflective-collimator-1794427810773-tl3wk4klg",
+        "type": "reflective-collimator",
+        "name": "reflective-collimator",
+        "x": 160.3,
+        "y": 192.9176462393486,
+        "rotation": 180,
+        "scale": 1.2000000000000002,
+        "visible": true,
+        "compositeDefinedVisible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": -150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 59,
+        "children": [
+          61
+        ],
+        "isGrouped": true,
+        "groupMembers": [
+          59,
+          61
+        ],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": true,
+        "compositeKey": "user_rc_ver2_1794427642983",
+        "compositeInstanceId": 4,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 61,
+        "componentId": "point-1794427810773-h7bqbtkvw",
+        "type": "point",
+        "name": "point",
+        "x": 159.5,
+        "y": 91.31764623934862,
+        "rotation": 269.5488614532127,
+        "scale": 0.8,
+        "visible": false,
+        "compositeDefinedVisible": false,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": -1.1810657496607793,
+          "y": -149.99535020691468
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 60,
+        "children": [],
+        "isGrouped": true,
+        "groupMembers": [
+          59,
+          60
+        ],
+        "rayShape": "convergent",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 13.01,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": true,
+        "compositeKey": "user_rc_ver2_1794427642983",
+        "compositeInstanceId": 4,
+        "isExitPort": false,
+        "isEntryPort": true,
+        "rayLocked": false
+      },
+      {
+        "mapId": 62,
+        "componentId": "draw-fiber-1794427859915-dx16conm2",
+        "type": "draw-fiber",
+        "name": "draw-fiber",
+        "x": 121.44575500488281,
+        "y": 48.52348327636719,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 150,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": null,
+        "children": [],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "manual",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 0,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "fiberPoints": [
+          {
+            "x": 0,
+            "y": 0
+          },
+          {
+            "x": 1.5722503662109375,
+            "y": 0
+          },
+          {
+            "x": 3.9306411743164062,
+            "y": 0
+          },
+          {
+            "x": 5.502899169921875,
+            "y": 0
+          },
+          {
+            "x": 7.8612823486328125,
+            "y": 0
+          },
+          {
+            "x": 9.43353271484375,
+            "y": 0
+          },
+          {
+            "x": 11.79193115234375,
+            "y": 0
+          },
+          {
+            "x": 12.578048706054688,
+            "y": 0.7861289978027344
+          },
+          {
+            "x": 13.364181518554688,
+            "y": 1.5722579956054688
+          },
+          {
+            "x": 14.936431884765625,
+            "y": 1.5722579956054688
+          },
+          {
+            "x": 16.508697509765625,
+            "y": 1.5722579956054688
+          },
+          {
+            "x": 16.508697509765625,
+            "y": 3.144512176513672
+          },
+          {
+            "x": 18.080947875976562,
+            "y": 3.144512176513672
+          },
+          {
+            "x": 19.653213500976562,
+            "y": 4.716770172119141
+          },
+          {
+            "x": 20.4393310546875,
+            "y": 5.502899169921875
+          },
+          {
+            "x": 21.2254638671875,
+            "y": 6.289028167724609
+          },
+          {
+            "x": 22.0115966796875,
+            "y": 7.075157165527344
+          },
+          {
+            "x": 22.7977294921875,
+            "y": 7.861286163330078
+          },
+          {
+            "x": 23.583847045898438,
+            "y": 8.647411346435547
+          },
+          {
+            "x": 24.369979858398438,
+            "y": 9.433540344238281
+          },
+          {
+            "x": 25.942230224609375,
+            "y": 11.00579833984375
+          },
+          {
+            "x": 26.728363037109375,
+            "y": 12.578056335449219
+          },
+          {
+            "x": 27.514495849609375,
+            "y": 13.364185333251953
+          },
+          {
+            "x": 28.300628662109375,
+            "y": 14.150314331054688
+          },
+          {
+            "x": 29.086746215820312,
+            "y": 14.936439514160156
+          },
+          {
+            "x": 29.872879028320312,
+            "y": 16.508697509765625
+          },
+          {
+            "x": 30.659011840820312,
+            "y": 17.294830322265625
+          },
+          {
+            "x": 31.44512939453125,
+            "y": 18.867080688476562
+          },
+          {
+            "x": 32.23126220703125,
+            "y": 20.43933868408203
+          },
+          {
+            "x": 32.23126220703125,
+            "y": 22.0115966796875
+          },
+          {
+            "x": 33.80352783203125,
+            "y": 23.58385467529297
+          },
+          {
+            "x": 33.80352783203125,
+            "y": 25.156112670898438
+          },
+          {
+            "x": 34.58964538574219,
+            "y": 25.942237854003906
+          },
+          {
+            "x": 35.37577819824219,
+            "y": 27.514495849609375
+          },
+          {
+            "x": 36.16191101074219,
+            "y": 29.872879028320312
+          },
+          {
+            "x": 36.94804382324219,
+            "y": 31.44513702392578
+          },
+          {
+            "x": 36.94804382324219,
+            "y": 33.01739501953125
+          },
+          {
+            "x": 37.734161376953125,
+            "y": 34.58965301513672
+          },
+          {
+            "x": 38.520294189453125,
+            "y": 36.16191101074219
+          },
+          {
+            "x": 38.520294189453125,
+            "y": 37.734169006347656
+          },
+          {
+            "x": 38.520294189453125,
+            "y": 39.306427001953125
+          },
+          {
+            "x": 38.520294189453125,
+            "y": 40.092552185058594
+          }
+        ],
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 66,
+        "componentId": "lens-1794427921474-gs9xqi9s8",
+        "type": "lens",
+        "name": "lens",
+        "x": 311,
+        "y": 193,
+        "rotation": 0.1536974460673353,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 57,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": 1
+        },
+        "parent": 59,
+        "children": [
+          67
+        ],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 17.999935236503713,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 67,
+        "componentId": "point-1794427931952-f1ibfzeu0",
+        "type": "point",
+        "name": "point",
+        "x": 368,
+        "y": 193,
+        "rotation": 0,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 104,
+          "y": 1
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 66,
+        "children": [
+          68
+        ],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "convergent",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 17.51,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 68,
+        "componentId": "lens-1794427937437-ph73o4ppi",
+        "type": "lens",
+        "name": "lens",
+        "x": 472,
+        "y": 194,
+        "rotation": 0.5509039792185729,
+        "scale": 1.3,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 149.99306630919267,
+          "y": 1.4422410222037758
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 67,
+        "children": [
+          69
+        ],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "divergent",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 32.81,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 17.51,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 69,
+        "componentId": "mirror-1794427947904-tfptr1vbc",
+        "type": "mirror",
+        "name": "mirror",
+        "x": 621.9930663091927,
+        "y": 195.44224102220377,
+        "rotation": -45,
+        "scale": 2,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": -1.9930663091927272,
+          "y": 119.55775897779623
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 68,
+        "children": [
+          71
+        ],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 46.853001548614046,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 71,
+        "componentId": "objective-1794427975895-afagbkw81",
+        "type": "objective",
+        "name": "objective",
+        "x": 622,
+        "y": 361,
+        "rotation": -90,
+        "scale": 1.2000000000000002,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 1,
+          "y": 104
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 69,
+        "children": [
+          72
+        ],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "collimated",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 33.12868760003602,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 72,
+        "componentId": "point-1794428026134-t2g0oe9w3",
+        "type": "point",
+        "name": "point",
+        "x": 623,
+        "y": 465,
+        "rotation": 89.44909602078144,
+        "scale": 1,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": 0,
+          "y": 0
+        },
+        "upVector": {
+          "x": 0,
+          "y": -1
+        },
+        "parent": 71,
+        "children": [],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "convergent",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 18,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 17.62,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      },
+      {
+        "mapId": 75,
+        "componentId": "mouse-sample-1794428194177-wvr1lsqbm",
+        "type": "mouse-sample",
+        "name": "mouse-sample",
+        "x": 592,
+        "y": 453,
+        "rotation": -10,
+        "scale": 0.8,
+        "visible": true,
+        "flipX": false,
+        "flipY": false,
+        "groupMirror": false,
+        "arrowVector": {
+          "x": -26.04722665003957,
+          "y": -147.7211629518312
+        },
+        "upVector": {
+          "x": 1,
+          "y": 0
+        },
+        "parent": null,
+        "children": [],
+        "isGrouped": false,
+        "groupMembers": [],
+        "rayShape": "convergent",
+        "rayPolygonColor": "#0095ff",
+        "rayPolygonOpacity": 0.2,
+        "rayColorInheritFromParent": true,
+        "rayGradientEnabled": false,
+        "rayPolygonColor2": "#0095ff",
+        "apertureRadius": 5,
+        "apertureCenterOffset": 0,
+        "arraySegments": 3,
+        "arraySizeRatio": 1,
+        "arrayPositionRatio": 1,
+        "coneAngle": 0,
+        "couplerSplitRatio": 50,
+        "couplerArmLength": 40,
+        "couplerInputPort": "in1",
+        "couplerActivePort": "out1",
+        "parentPort": null,
+        "isCompositeInstance": false,
+        "compositeKey": null,
+        "compositeInstanceId": null,
+        "isExitPort": false,
+        "isEntryPort": false,
+        "rayLocked": false
+      }
+    ]
+  }
+}

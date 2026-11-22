@@ -133,6 +133,10 @@ export function buildUserComponentsPayload() {
 
 export function exportUserComponentsJSON() {
   const payload = buildUserComponentsPayload();
+  if (payload.components.length === 0) {
+    alert('No saved user components to export. Select your components on the canvas and use Save component first. To save the entire drawing instead, use File > Export JSON.');
+    return;
+  }
   downloadTextFile(
     `${sanitizeFilename(getFilename())}-user-components.json`,
     JSON.stringify(payload, null, 2),
@@ -149,6 +153,7 @@ export async function importUserComponentsJSON() {
     validateUserComponentsPayload(data);
     const count = importUserComponents(data.components);
     console.log(`[Fileio] Imported ${count} user component(s).`);
+    alert(`Imported ${count} user component(s). Find them in the component sidebar.`);
   } catch (error) {
     console.error('[Fileio] Failed to import user components:', error);
     alert(`Failed to import user components: ${error.message}`);
@@ -207,6 +212,9 @@ function validateUserComponentsPayload(data) {
   }
   if (!Array.isArray(data.components)) {
     throw new Error('User components file is missing a components array.');
+  }
+  if (data.components.length === 0) {
+    throw new Error('This file contains no user components (components is empty). Save the desired canvas selection using Save component, then export user components again.');
   }
 }
 

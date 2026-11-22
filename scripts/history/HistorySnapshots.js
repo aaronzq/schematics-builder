@@ -25,6 +25,7 @@ function captureComponent(id, component) {
     compositeDefinedVisible: component.compositeDefinedVisible,
     flipX: component.flipX,
     flipY: component.flipY,
+    groupMirror: component.groupMirror,
     arrowVector: clonePoint(component.arrowVector),
     upVector: clonePoint(component.upVector),
     parent: component.parent,
@@ -43,6 +44,12 @@ function captureComponent(id, component) {
     arraySizeRatio: component.arraySizeRatio,
     arrayPositionRatio: component.arrayPositionRatio,
     coneAngle: component.coneAngle,
+    couplerSplitRatio: component.couplerSplitRatio,
+    couplerArmLength: component.couplerArmLength,
+    couplerInputPort: component.couplerInputPort,
+    couplerActivePort: component.couplerActivePort,
+    parentPort: component.parentPort,
+    fiberPoints: component.fiberPoints?.map(p => ({ ...p })),
     isCompositeInstance: component.isCompositeInstance,
     compositeKey: component.compositeKey,
     compositeInstanceId: component.compositeInstanceId,
@@ -82,6 +89,7 @@ function restoreComponent(snapshot) {
 
   component.flipX = !!snapshot.flipX;
   component.flipY = !!snapshot.flipY;
+  component.groupMirror = !!snapshot.groupMirror;
   if (snapshot.upVector) component.upVector = clonePoint(snapshot.upVector);
   component.rayShape = snapshot.rayShape || 'collimated';
   component.rayPolygonColor = snapshot.rayPolygonColor || component.rayPolygonColor;
@@ -90,6 +98,12 @@ function restoreComponent(snapshot) {
   component.rayGradientEnabled = snapshot.rayGradientEnabled ?? component.rayGradientEnabled;
   component.rayPolygonColor2 = snapshot.rayPolygonColor2 || component.rayPolygonColor2;
   component.coneAngle = snapshot.coneAngle ?? 0;
+  component.setCouplerSplitRatio(snapshot.couplerSplitRatio ?? component.couplerSplitRatio);
+  component.setCouplerArmLength(snapshot.couplerArmLength ?? component.couplerArmLength);
+  component.couplerInputPort = snapshot.couplerInputPort || 'in1';
+  component.couplerActivePort = snapshot.couplerActivePort || 'out1';
+  component.parentPort = snapshot.parentPort ?? null;
+  if (snapshot.fiberPoints?.length) component.setFiberPoints(snapshot.fiberPoints);
   component.setArraySegments(snapshot.arraySegments ?? component.arraySegments);
   component.setArraySizeRatio(snapshot.arraySizeRatio ?? component.arraySizeRatio);
   component.setArrayPositionRatio(snapshot.arrayPositionRatio ?? component.arrayPositionRatio);
